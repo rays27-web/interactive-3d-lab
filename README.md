@@ -223,5 +223,81 @@ Experiment 05 exposes 4 parameters through `ExperimentControls.jsx`:
 - **Beam Collimation** ($0.3\times - 2.5\times$): Adjusts polar beam cone tightness and observer pulse sharpness.
 - **Plasma Density** ($20\% - 200\%$): Tunes magnetospheric particle density, opacity, and polar cap hotspot intensity.
 
+## Security & Deployment
+
+The Interactive 3D Lab applies a **defense-in-depth, security-hardened** design tailored for static single-page application (SPA) architectures and WebGL graphics runtimes.
+
+### Implemented Security Protections
+
+1. **Content Security Policy (CSP)**:
+   - Configured via `<meta http-equiv="Content-Security-Policy">` in `index.html` and HTTP response headers in `public/_headers`.
+   - Restricts resource loading strictly to trusted sources:
+     - `default-src 'self'`
+     - `script-src 'self' 'unsafe-inline'`
+     - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`
+     - `font-src 'self' https://fonts.gstatic.com data:`
+     - `img-src 'self' data:`
+     - `connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com`
+     - `object-src 'none'` (disables legacy plugins like Flash or Java)
+     - `base-uri 'self'` (prevents `<base>` tag injection attacks)
+     - `frame-ancestors 'none'` (mitigates clickjacking attacks)
+     - `form-action 'self'`
+2. **MIME Sniffing & Referrer Defense**:
+   - `X-Content-Type-Options: nosniff` prevents browsers from MIME-sniffing responses away from declared content types.
+   - `Referrer-Policy: strict-origin-when-cross-origin` restricts referrer leakage across cross-origin requests.
+3. **Zero HTML Injection Surfaces**:
+   - React manages all UI state and text nodes declaratively.
+   - The codebase contains zero calls to `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `document.write`, or `eval()`.
+4. **Hardened Git Ignore Rules**:
+   - `.gitignore` strictly blocks all environment files (`.env`, `.env.local`, `.env.*.local`, `*.env`), keys/certificates (`*.pem`, `*.key`), editor configurations, temporary test files, and build outputs (`dist/`).
+5. **Optimized Code Splitting**:
+   - `vite.config.js` separates `three` (~533 kB) and `react`/`react-dom` (~189 kB) into dedicated, long-term cacheable vendor chunks.
+   - The main application entry bundle is reduced to **~56 kB** (gzip ~15 kB).
+
+### What Must NEVER Be Committed
+
+- API keys, service tokens, personal access tokens (PATs), or passwords.
+- Private encryption keys (`.pem`, `.key`, `.pfx`).
+- Local `.env` or `.env.*` configuration files containing credentials.
+- Test artifacts or debugging session dumps.
+
+### Environment Variable Rules
+
+- Vite embeds all variables prefixed with `VITE_` into client-side bundles in plain text at build time.
+- **Rule**: NEVER store sensitive API secrets, server credentials, or private access tokens in `VITE_*` environment variables.
+- Environment variables should only be used for public, non-sensitive application settings (e.g. public API endpoints or feature flags).
+
+### Deployment-Level Protections
+
+When hosting the production build on a CDN or static hosting platform (e.g., Cloudflare Pages, Netlify, Vercel, Nginx, AWS CloudFront), ensure the following server-side response headers are enforced:
+
+- `X-Frame-Options: DENY`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
+
+> Note: The included `public/_headers` file automatically applies these response headers for platforms supporting `_headers` syntax (Cloudflare Pages, Netlify).
+
+### Pre-Release Security Checklist
+
+Before releasing updates or deploying to production, execute the following audit routine:
+
+```bash
+# 1. Verify dependency security
+pnpm audit
+
+# 2. Check that no secret or environment files are tracked
+git status --ignored
+git ls-files | grep -E "(\.env|key|secret|token|credential)"
+
+# 3. Verify clean production build and chunk sizes
+pnpm build
+
+# 4. Verify test suite and WebGL lifecycle
+node scratch/test_phase8.cjs
+```
+
+
 
 
