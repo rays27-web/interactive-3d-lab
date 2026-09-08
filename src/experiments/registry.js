@@ -1,6 +1,7 @@
 import { createPlanetScene } from '../scenes/PlanetScene'
 import { createGalaxyScene } from '../scenes/GalaxyScene'
 import { createBlackHoleScene } from '../scenes/BlackHoleScene'
+import { createFluidScene } from '../scenes/FluidScene'
 
 // The shell reads this registry; scenes stay independent from navigation and UI.
 export const experimentRegistry = [
@@ -153,7 +154,61 @@ export const experimentRegistry = [
       },
     ],
   },
-  { id: 'fluid', index: '04', name: 'FLUID', status: 'signal' },
+  {
+    id: 'fluid',
+    index: '04',
+    name: 'FLUID',
+    status: 'active',
+    createScene: createFluidScene,
+    eyebrow: 'FIELD STUDY / 004 · CONTINUUM MECHANICS',
+    titleLead: 'Dynamics of',
+    titleAccent: 'flow.',
+    description: 'Divergence-free curl-noise advection, Kelvin-Helmholtz vortex shear, and astrochemical thermal convection.',
+    parameters: 'CURL-NOISE ADVECTION · INCOMPRESSIBLE VORTICITY · BOUSSINESQ PLUME',
+    controls: [
+      {
+        id: 'flowVelocity',
+        label: 'ADVECTION VELOCITY',
+        type: 'range',
+        min: 0.2,
+        max: 3.0,
+        step: 0.1,
+        default: 1.0,
+        format: (val) => `${val.toFixed(1)}×`,
+      },
+      {
+        id: 'vorticityScale',
+        label: 'VORTEX SCALE',
+        type: 'range',
+        min: 0.3,
+        max: 2.5,
+        step: 0.1,
+        default: 1.0,
+        format: (val) => `${val.toFixed(1)}×`,
+      },
+      {
+        id: 'viscosity',
+        label: 'SHEAR VISCOSITY',
+        type: 'range',
+        min: 0.1,
+        max: 2.5,
+        step: 0.1,
+        default: 1.0,
+        format: (val) => `${Math.round(val * 100)}%`,
+      },
+      {
+        id: 'thermalBuoyancy',
+        label: 'THERMAL BUOYANCY',
+        type: 'range',
+        min: 0.0,
+        max: 2.0,
+        step: 0.1,
+        default: 1.0,
+        format: (val) => `${Math.round(val * 100)}%`,
+      },
+    ],
+  },
+  { id: 'pulsar', index: '05', name: 'PULSAR', status: 'signal' },
 ]
 
 export const availableExperiments = experimentRegistry.filter((experiment) => experiment.status === 'active')

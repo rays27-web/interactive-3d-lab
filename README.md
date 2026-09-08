@@ -36,6 +36,7 @@ src/
   scenes/PlanetScene.js       Experiment 01: scene, lights, stars, interaction, animation
   scenes/GalaxyScene.js       Experiment 02: 4-arm spiral, 3D bulge, stellar drift
   scenes/BlackHoleScene.js    Experiment 03: gravitational lensing, accretion disk, photon ring
+  scenes/FluidScene.js        Experiment 04: curl-noise advection, kinetic impeller, thermal plume
   styles/global.css           Visual layout and responsive styling
   App.jsx                     Page content around the canvas
   main.jsx                    React entry point
@@ -47,7 +48,8 @@ The React application shell owns the active experiment state and navigation. The
 - **Experiment 01 — PLANET**: Procedural physical icosahedron, atmospheric Fresnel scattering, and 3-tier stellar parallax.
 - **Experiment 02 — GALAXY**: 4-arm logarithmic spiral density waves, 3D oblate central bulge, and GPU-driven stellar kinematics.
 - **Experiment 03 — BLACK HOLE**: Relativistic gravitational lensing approximation, differential Keplerian shear, Doppler beaming asymmetry, and photon sphere silhouette.
-- **Future studies (Fluid)**: Maintained as locked signals in the registry until their scene factories are implemented.
+- **Experiment 04 — FLUID**: Incompressible divergence-free curl-noise advection, kinetic pointer vortex impeller, and astrochemical thermal plume.
+- **Future studies (Pulsar)**: Maintained as locked signals in the registry until their scene factories are implemented.
 
 Each registry entry exposes metadata (`eyebrow`, `titleLead`, `titleAccent`, `description`, `parameters`) that dynamically populates the laboratory shell. When switching experiments, `SceneCanvas` manages a three-stage lifecycle:
 1. **Visual withdrawal**: Canvas and typography dim while a status indicator announces the target experiment.
@@ -144,4 +146,40 @@ The experiment exposes 4 laboratory parameters through `ExperimentControls.jsx`:
 - **Emission Flux** ($20\% - 250\%$): Tunes the relativistic radiance and additive blending luminance of the disk and photon ring.
 
 All parameter updates mutate Three.js GLSL uniform values in place without scene disposal, texture re-allocation, or shader recompilation.
+
+## Experiment 04: Astrochemical Hydrodynamics & Fluid Vorticity
+
+### Physical principles & computational architecture
+
+Experiment 04 simulates the complex turbulent hydrodynamics of interstellar molecular clouds where star formation and shock waves take place:
+
+1. **Divergence-Free Curl Velocity Field ($\nabla \cdot \vec{v} \equiv 0$)**:
+   - Rather than relying on a heavy 3D grid solver requiring multi-pass ping-pong textures, the velocity field is computed directly on the GPU as the curl of a 3D procedural vector potential:
+     $$\vec{v}(\vec{x}, t) = \nabla \times \vec{\Psi}(\vec{x}, t)$$
+   - By vector calculus identity $\nabla \cdot (\nabla \times \vec{\Psi}) \equiv 0$, the velocity field is mathematically divergence-free everywhere in 3D space, guaranteeing strict volume preservation and eliminating unnatural particle clustering or artificial compression.
+   - Evaluated via exact analytical partial derivatives in the custom GLSL vertex shader.
+
+2. **Kinetic Pointer Vortex Impeller**:
+   - Pointer coordinates and instantaneous velocity inject localized rotational shear into the fluid medium:
+     $$\vec{F}_{\text{vortex}}(\vec{x}) = \frac{\vec{v}_{\text{pointer}} \times (\vec{x} - \vec{p}_{\text{pointer}})}{\|\vec{x} - \vec{p}_{\text{pointer}}\|^2 + \delta^2} \cdot \exp\left(-\frac{\|\vec{x} - \vec{p}_{\text{pointer}}\|^2}{2\sigma^2}\right)$$
+   - Swirling eddies propagate across streamlines as the user moves their cursor or drags on touch displays.
+
+3. **Thermal Convection & Buoyancy (Boussinesq Approximation)**:
+   - Simulates temperature-driven buoyancy where core energized plasma filaments experience upward convective lift:
+     $$\vec{a}_{\text{buoyant}} = \alpha (T_i - T_{\text{ambient}}) \hat{y}$$
+   - Cooler outer filaments descend gently in dissipative recirculation loops.
+
+4. **Astrochemical Spectral Mapping**:
+   - High kinetic shear / core shock: Doubly ionized oxygen $[O_{III}]$ emission at $500.7\text{ nm}$ ($\text{electric cyan/teal}$).
+   - Mid-velocity laminar filaments: Hydrogen-Alpha $H_\alpha$ spectral line at $656.3\text{ nm}$ ($\text{rich crimson/vermilion}$).
+   - Low-velocity dissipative margins: Polycyclic aromatic hydrocarbon dust and neutral gas in deep ultraviolet/violet.
+
+### Real-Time Laboratory Controls
+
+Experiment 04 exposes 4 parameters through `ExperimentControls.jsx`:
+- **Advection Velocity** ($0.2\times - 3.0\times$): Modulates the global kinetic energy and streamline transport speed.
+- **Vortex Scale** ($0.3\times - 2.5\times$): Modulates the spatial wavelength of turbulent eddies.
+- **Shear Viscosity** ($10\% - 250\%$): Tunes viscous dissipation between chaotic micro-turbulence and laminar flow.
+- **Thermal Buoyancy** ($0\% - 200\%$): Adjusts vertical convective lift and plume elongation.
+
 
