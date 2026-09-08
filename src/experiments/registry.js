@@ -2,6 +2,7 @@ import { createPlanetScene } from '../scenes/PlanetScene'
 import { createGalaxyScene } from '../scenes/GalaxyScene'
 import { createBlackHoleScene } from '../scenes/BlackHoleScene'
 import { createFluidScene } from '../scenes/FluidScene'
+import { createPulsarScene } from '../scenes/PulsarScene'
 
 // The shell reads this registry; scenes stay independent from navigation and UI.
 export const experimentRegistry = [
@@ -208,7 +209,60 @@ export const experimentRegistry = [
       },
     ],
   },
-  { id: 'pulsar', index: '05', name: 'PULSAR', status: 'signal' },
+  {
+    id: 'pulsar',
+    index: '05',
+    name: 'PULSAR',
+    status: 'active',
+    createScene: createPulsarScene,
+    eyebrow: 'FIELD STUDY / 005 · RELATIVISTIC MAGNETOSPHERE',
+    titleLead: 'Cosmic beacon in',
+    titleAccent: 'extreme spin.',
+    description: 'Oblique dipole precession, relativistic synchrotron beams, and co-rotating magnetospheric plasma.',
+    parameters: 'OBLIQUE DIPOLE · SYNCHROTRON BEAMS · LIGHT CONE · 716 HZ ROTATION',
+    controls: [
+      {
+        id: 'spinVelocity',
+        label: 'SPIN FREQUENCY',
+        type: 'range',
+        min: 0.2,
+        max: 3.0,
+        step: 0.1,
+        default: 1.0,
+        format: (val) => `${val.toFixed(1)}×`,
+      },
+      {
+        id: 'magneticFlux',
+        label: 'MAGNETIC FLUX',
+        type: 'range',
+        min: 0.2,
+        max: 2.5,
+        step: 0.1,
+        default: 1.0,
+        format: (val) => `${val.toFixed(1)}×`,
+      },
+      {
+        id: 'beamCollimation',
+        label: 'BEAM COLLIMATION',
+        type: 'range',
+        min: 0.3,
+        max: 2.5,
+        step: 0.1,
+        default: 1.0,
+        format: (val) => `${val.toFixed(1)}×`,
+      },
+      {
+        id: 'plasmaDensity',
+        label: 'PLASMA DENSITY',
+        type: 'range',
+        min: 0.2,
+        max: 2.0,
+        step: 0.1,
+        default: 1.0,
+        format: (val) => `${Math.round(val * 100)}%`,
+      },
+    ],
+  },
 ]
 
 export const availableExperiments = experimentRegistry.filter((experiment) => experiment.status === 'active')

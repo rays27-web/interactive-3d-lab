@@ -37,6 +37,7 @@ src/
   scenes/GalaxyScene.js       Experiment 02: 4-arm spiral, 3D bulge, stellar drift
   scenes/BlackHoleScene.js    Experiment 03: gravitational lensing, accretion disk, photon ring
   scenes/FluidScene.js        Experiment 04: curl-noise advection, kinetic impeller, thermal plume
+  scenes/PulsarScene.js       Experiment 05: oblique dipole, relativistic polar beams, synchrotron plasma
   styles/global.css           Visual layout and responsive styling
   App.jsx                     Page content around the canvas
   main.jsx                    React entry point
@@ -49,7 +50,7 @@ The React application shell owns the active experiment state and navigation. The
 - **Experiment 02 — GALAXY**: 4-arm logarithmic spiral density waves, 3D oblate central bulge, and GPU-driven stellar kinematics.
 - **Experiment 03 — BLACK HOLE**: Relativistic gravitational lensing approximation, differential Keplerian shear, Doppler beaming asymmetry, and photon sphere silhouette.
 - **Experiment 04 — FLUID**: Incompressible divergence-free curl-noise advection, kinetic pointer vortex impeller, and astrochemical thermal plume.
-- **Future studies (Pulsar)**: Maintained as locked signals in the registry until their scene factories are implemented.
+- **Experiment 05 — PULSAR**: Oblique rotator dipole precession, relativistic synchrotron lighthouse beams, and co-rotating magnetospheric plasma.
 
 Each registry entry exposes metadata (`eyebrow`, `titleLead`, `titleAccent`, `description`, `parameters`) that dynamically populates the laboratory shell. When switching experiments, `SceneCanvas` manages a three-stage lifecycle:
 1. **Visual withdrawal**: Canvas and typography dim while a status indicator announces the target experiment.
@@ -181,5 +182,46 @@ Experiment 04 exposes 4 parameters through `ExperimentControls.jsx`:
 - **Vortex Scale** ($0.3\times - 2.5\times$): Modulates the spatial wavelength of turbulent eddies.
 - **Shear Viscosity** ($10\% - 250\%$): Tunes viscous dissipation between chaotic micro-turbulence and laminar flow.
 - **Thermal Buoyancy** ($0\% - 200\%$): Adjusts vertical convective lift and plume elongation.
+
+## Experiment 05: Pulsar & Relativistic Magnetosphere
+
+### Physical principles & computational architecture
+
+Experiment 05 models the high-energy electrodynamics of a rapidly rotating, magnetized neutron star (pulsar):
+
+1. **Oblique Rotator Precession**:
+   - The neutron star spins rapidly around a rotation axis $\hat{\Omega}$ while its magnetic dipole axis $\vec{M}(t)$ is tilted by an obliquity angle $\alpha \approx 36.7^\circ$ ($0.64\text{ rad}$).
+   - As the star rotates, the magnetic axis precesses in a 3D cone through space:
+     $$\vec{M}(t) = \sin\alpha \cos(\Omega t) \hat{x} + \cos\alpha \hat{y} + \sin\alpha \sin(\Omega t) \hat{z}$$
+   - This precession drives the iconic astrophysical "lighthouse effect".
+
+2. **Dipolar Magnetic Field Loops ($r(\theta) = r_0 \sin^2\theta$)**:
+   - Closed magnetic field lines are derived from the dipole potential in cylindrical coordinates:
+     $$\rho(\theta) = r_0 \sin^3\theta, \quad z(\theta) = r_0 \sin^2\theta \cos\theta$$
+   - Rendered via high-density line loops with a custom shader simulating relativistic electron-positron ($e^\pm$) wave packets streaming along the lines.
+
+3. **Relativistic Polar Radiation Beams ("Lighthouse Cones")**:
+   - Dual open cones expand outward from both magnetic poles.
+   - A custom GLSL shader calculates lateral collimation, longitudinal flux decay ($1/r^{1.6}$), and real-time observer line-of-sight interception.
+   - When the precessing magnetic beam sweeps across the camera's view vector, an intense optical pulsation flare is rendered via:
+     $$I_{\text{pulse}} = 1.0 + (\hat{M}_{\text{world}} \cdot \hat{v}_{\text{obs}})^{8 \cdot \theta_c} \cdot 4.2 \cdot \theta_c$$
+
+4. **Co-Rotating Magnetospheric Synchrotron Plasma Torus**:
+   - High-energy particles orbiting within the light cylinder radius $R_{\text{LC}} = c/\Omega$ are energized by synchrotron radiation.
+   - 12,000 particles on desktop (6,000 on mobile) rotate with relativistic shear $\Omega(r) \propto r^{-0.5}$, transitioning from cyan near the inner boundary to electric violet at the outer rim.
+
+5. **Neutron Star Core & Polar Cap Hotspots**:
+   - Superdense spherical core displaying relativistic limb darkening:
+     $$I_{\text{limb}} \propto (\hat{n} \cdot \hat{v})^{0.65}$$
+   - Incandescent magnetic polar cap hotspots ($T \sim 10^6\text{ K}$) glow at the magnetic poles and rotate synchronously with the magnetic axis.
+
+### Real-Time Laboratory Controls
+
+Experiment 05 exposes 4 parameters through `ExperimentControls.jsx`:
+- **Spin Frequency** ($0.2\times - 3.0\times$): Modulates the rotational angular velocity $\Omega$ and pulse rate.
+- **Magnetic Flux** ($0.2\times - 2.5\times$): Modulates dipole field line luminance and beam radiation flux.
+- **Beam Collimation** ($0.3\times - 2.5\times$): Adjusts polar beam cone tightness and observer pulse sharpness.
+- **Plasma Density** ($20\% - 200\%$): Tunes magnetospheric particle density, opacity, and polar cap hotspot intensity.
+
 
 
