@@ -34,7 +34,7 @@ function PlanetComparisonCard({
     >
       <div className="card-header">
         <div className="card-title-row">
-          <ScientificIcon name="planet" size={16} />
+          <ScientificIcon aria-hidden="true" name="planet" size={16} />
           <div>
             <span className="card-tag">PLANETARY GRAVITY APPARATUS</span>
             <h2 className="card-heading">{currentPlanet.name.toUpperCase()}</h2>
@@ -47,13 +47,14 @@ function PlanetComparisonCard({
         )}
       </div>
 
-      {/* 8-Planet Quick Selector Pills */}
+      {/* 8-Planet Quick Selector */}
       <div aria-label="Select planetary body" className="planet-selector-pills" role="radiogroup">
         {PLANETS_DATA.map((p) => {
           const isSelected = p.id === activePlanetId
           return (
             <button
               aria-checked={isSelected}
+              aria-label={`Select ${p.name}`}
               className={`planet-pill-btn ${isSelected ? 'is-active' : ''}`}
               key={p.id}
               onClick={() => handleSelect(p.id)}
@@ -61,8 +62,8 @@ function PlanetComparisonCard({
               style={{ '--planet-accent': p.color }}
               type="button"
             >
-              <span className="planet-pill-dot" />
-              <span>{p.name.slice(0, 3).toUpperCase()}</span>
+              <span aria-hidden="true" className="planet-pill-dot" />
+              <span className="planet-pill-name">{p.name}</span>
             </button>
           )
         })}
@@ -121,7 +122,6 @@ function PlanetComparisonCard({
               <strong className="readout-val weight-val">{earthWeightNewtons} N</strong>
               <small>(at 9.81 m/s²)</small>
             </div>
-            <div className="readout-arrow vs-arrow" aria-hidden="true">➔</div>
             <div className="readout-col weight-pill active-col active-planet">
               <span className="readout-label weight-lbl">{currentPlanet.name.toUpperCase()} WEIGHT</span>
               <strong className="readout-val weight-val highlight">{weightNewtons} N</strong>
@@ -136,7 +136,7 @@ function PlanetComparisonCard({
                 onClick={() => onTriggerDrop(surfaceG)}
                 type="button"
               >
-                <ScientificIcon name="run" size={13} />
+                <ScientificIcon aria-hidden="true" name="run" size={13} />
                 <span>TEST DROP IN 3D (g = {surfaceG.toFixed(2)} m/s²)</span>
               </button>
             )}

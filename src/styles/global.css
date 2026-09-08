@@ -5275,38 +5275,39 @@ h1 em {
 }
 
 .planet-selector-pills {
-  display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .planet-pill-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 3px 6px;
-  background: rgba(18, 24, 48, 0.6);
-  border: 1px solid rgba(133, 189, 255, 0.15);
-  border-radius: 4px;
-  color: #9cb5d9;
-  font: 8.5px/1 'DM Mono', monospace;
+  padding: 6px 3px;
+  background: rgba(18, 24, 48, 0.7);
+  border: 1px solid rgba(133, 189, 255, 0.18);
+  border-radius: 5px;
+  color: #c4d7f5;
+  font: 600 10.5px/1 'DM Mono', monospace;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .planet-pill-btn:hover {
-  border-color: rgba(133, 189, 255, 0.4);
+  background: rgba(28, 38, 72, 0.85);
+  border-color: rgba(133, 189, 255, 0.45);
   color: #ffffff;
 }
 
 .planet-pill-btn.is-active {
-  background: rgba(115, 255, 211, 0.12);
+  background: rgba(115, 255, 211, 0.16);
   border-color: #73ffd3;
   color: #ffffff;
-  box-shadow: 0 0 8px rgba(115, 255, 211, 0.25);
+  box-shadow: 0 0 10px rgba(115, 255, 211, 0.3);
 }
 
 .planet-pill-dot {
@@ -5314,6 +5315,13 @@ h1 em {
   height: 5px;
   border-radius: 50%;
   background: var(--planet-accent, #73ffd3);
+  flex-shrink: 0;
+}
+
+.planet-pill-name {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .planet-stats-grid {
@@ -5409,10 +5417,9 @@ h1 em {
 }
 
 .weight-comparison-display {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
@@ -5447,11 +5454,6 @@ h1 em {
   font-weight: 700;
 }
 
-.vs-arrow {
-  color: #85bdff;
-  font-size: 10px;
-}
-
 .apparatus-drop-action {
   display: flex;
   flex-direction: column;
@@ -5460,12 +5462,16 @@ h1 em {
 
 .test-drop-btn {
   width: 100%;
-  padding: 7px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
   background: linear-gradient(135deg, rgba(115, 255, 211, 0.2), rgba(64, 150, 255, 0.2));
   border: 1px solid rgba(115, 255, 211, 0.4);
   border-radius: 4px;
   color: #ffffff;
-  font: 700 9.5px 'DM Mono', monospace;
+  font: 700 11px 'DM Mono', monospace;
   letter-spacing: 0.06em;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -5475,6 +5481,21 @@ h1 em {
   background: linear-gradient(135deg, rgba(115, 255, 211, 0.35), rgba(64, 150, 255, 0.35));
   box-shadow: 0 0 14px rgba(115, 255, 211, 0.4);
   transform: translateY(-1px);
+}
+
+.scientific-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.scientific-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
 }
 
 .drop-hint {

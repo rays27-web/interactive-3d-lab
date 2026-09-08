@@ -162,16 +162,25 @@ const ICONS = {
   ),
 }
 
-function ScientificIcon({ name, size = 16, className = '', title, ariaLabel }) {
+function ScientificIcon({ name, size = 16, className = '', title, ariaLabel, 'aria-hidden': ariaHidden }) {
   const iconSvg = ICONS[name] || ICONS.question
-  const accessibleLabel = ariaLabel || title || `${name} icon`
+  const isHidden = ariaHidden === true || ariaHidden === 'true'
+  const accessibleLabel = isHidden ? undefined : (ariaLabel || title || `${name} icon`)
 
   return (
     <span
+      aria-hidden={isHidden ? 'true' : undefined}
       aria-label={accessibleLabel}
       className={`scientific-icon ${className}`}
-      role="img"
-      style={{ width: size, height: size, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+      role={isHidden ? undefined : 'img'}
+      style={{
+        width: size,
+        height: size,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        verticalAlign: 'middle',
+      }}
       title={title}
     >
       {iconSvg}

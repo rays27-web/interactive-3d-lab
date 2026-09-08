@@ -51,7 +51,7 @@ function App() {
 
   // Phase 29 & 38: Planet and Pulsar dedicated laboratory instruments
   const [selectedPlanetComparisonId, setSelectedPlanetComparisonId] = useState('earth')
-  const [objectMassKg, setObjectMassKg] = useState(50)
+  const [objectMassKg, setObjectMassKg] = useState(70)
   const [isPlanetCardOpen, setIsPlanetCardOpen] = useState(false)
   const [isOscilloscopeOpen, setIsOscilloscopeOpen] = useState(false)
 
