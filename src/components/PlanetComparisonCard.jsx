@@ -141,6 +141,18 @@ function PlanetComparisonCard({
               </button>
             )}
           </div>
+
+          {/* Phase 59: Student Guidance & Prediction */}
+          <div className="apparatus-student-guidance">
+            <div className="guidance-block">
+              <span className="guidance-label">WHAT TO WATCH</span>
+              <p className="guidance-text">Drop the same object on different planets. Compare how its motion changes.</p>
+            </div>
+            <div className="guidance-block prediction-block">
+              <span className="guidance-label prediction-label">PREDICT</span>
+              <p className="guidance-text">Which planet will make the object accelerate fastest?</p>
+            </div>
+          </div>
         </div>
       )}
 

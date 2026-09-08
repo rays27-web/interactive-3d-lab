@@ -173,8 +173,8 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
 
   // Downward Gravitational Force Vector Arrow (W = mg)
   const arrowDir = new THREE.Vector3(0, -1, 0)
-  const arrowOrigin = new THREE.Vector3(0, 0, 0)
-  const weightArrow = new THREE.ArrowHelper(arrowDir, arrowOrigin, 1.2, 0xff5533, 0.25, 0.15)
+  const arrowOrigin = new THREE.Vector3(0, -0.225, 0)
+  const weightArrow = new THREE.ArrowHelper(arrowDir, arrowOrigin, 1.0, 0xff5533, 0.2, 0.12)
   testObjectMesh.add(weightArrow)
 
   // Free fall physics state
@@ -182,13 +182,32 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   let dropVelocityY = 0
   let dropPosY = 1.6
   let surfaceAcceleration = currentPlanetData.surfaceGravityMs2 // e.g. 9.81
-  const restingHeight = -0.65
+
+  function updateWeightArrow(g) {
+    // Arrow length is strictly proportional to surface gravity: length = 1.0 at 9.81 m/s² (Earth baseline)
+    const arrowLength = Math.max(0.25, (g / 9.81) * 1.0)
+    const headLength = 0.20 * Math.min(1.4, Math.max(0.6, Math.sqrt(g / 9.81)))
+    const headWidth = 0.12 * Math.min(1.4, Math.max(0.6, Math.sqrt(g / 9.81)))
+    weightArrow.setLength(arrowLength, headLength, headWidth)
+  }
+
+  function getRestingHeight(g) {
+    // Proportional spring compression under gravitational weight:
+    // Mars (3.72 m/s²): light compression (rests higher at -0.63)
+    // Earth (9.81 m/s²): baseline compression (rests at -0.72)
+    // Jupiter (24.79 m/s²): deep compression (rests at -0.93)
+    const compression = 0.08 + 0.14 * (g / 9.81)
+    return -0.50 - compression
+  }
 
   function triggerDrop(g = currentPlanetData.surfaceGravityMs2) {
     surfaceAcceleration = g
     dropPosY = 1.6
     dropVelocityY = 0
     isDropping = true
+    updateWeightArrow(g)
+    springMesh.scale.y = 1.0
+    springMesh.position.y = -0.95
   }
 
   function setPlanet(planetId) {
@@ -204,11 +223,8 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     atmosphereUniforms.uInnerColor.value.set(p.color)
     atmosphere.visible = p.id !== 'mercury' // Mercury has no significant atmosphere
 
-    // Scale weight vector arrow proportionally to local surface gravity
-    const lengthNorm = Math.min(2.5, Math.max(0.4, (p.surfaceGravityMs2 / 9.81) * 1.2))
-    weightArrow.setLength(lengthNorm, 0.25, 0.15)
-
-    // Trigger visual drop on planet change to demonstrate local gravity
+    // Update weight arrow & trigger visual drop on planet change
+    updateWeightArrow(p.surfaceGravityMs2)
     triggerDrop(p.surfaceGravityMs2)
   }
 
@@ -263,15 +279,16 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     camera.lookAt(0.5, 0, 0)
 
     // Free fall physics simulation
+    const currentRestingHeight = getRestingHeight(surfaceAcceleration)
     if (isDropping) {
       // Normalized educational acceleration: dt * g * scaleFactor
       dropVelocityY -= surfaceAcceleration * dt * 0.42
       dropPosY += dropVelocityY * dt
-      if (dropPosY <= restingHeight) {
-        dropPosY = restingHeight
+      if (dropPosY <= currentRestingHeight) {
+        dropPosY = currentRestingHeight
         // Small inelastic rebound
         if (Math.abs(dropVelocityY) > 0.4) {
-          dropVelocityY = -dropVelocityY * 0.25
+          dropVelocityY = -dropVelocityY * 0.22
         } else {
           dropVelocityY = 0
           isDropping = false
@@ -279,6 +296,16 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
       }
     }
     testObjectMesh.position.y = dropPosY
+
+    // Dynamic spring scale compression matching the bottom of the test mass
+    if (dropPosY < -0.50) {
+      const currentSpringH = Math.max(0.08, (dropPosY - 0.225) - (-1.125))
+      springMesh.scale.y = currentSpringH / 0.45
+      springMesh.position.y = -1.125 + currentSpringH / 2
+    } else {
+      springMesh.scale.y = 1.0
+      springMesh.position.y = -0.95
+    }
 
     renderer.render(scene, camera)
     frameId = requestAnimationFrame(animate)

@@ -235,8 +235,8 @@ function App() {
     handleParamChange('objectMass', mass)
   }, [sceneApi, handleParamChange])
 
-  const handleTriggerDrop = useCallback(() => {
-    sceneApi?.triggerDrop?.()
+  const handleTriggerDrop = useCallback((g) => {
+    sceneApi?.triggerDrop?.(g)
   }, [sceneApi])
 
   // Callbacks passed to active scene

@@ -5505,6 +5505,39 @@ h1 em {
   text-align: center;
 }
 
+.apparatus-student-guidance {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(18, 28, 54, 0.6);
+  border: 1px solid rgba(133, 189, 255, 0.16);
+  border-radius: 6px;
+}
+
+.guidance-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guidance-label {
+  font: 700 9px/1 'DM Mono', monospace;
+  color: #73ffd3;
+  letter-spacing: 0.06em;
+}
+
+.guidance-label.prediction-label {
+  color: #ffb450;
+}
+
+.guidance-text {
+  font: 11px/1.35 Outfit, sans-serif;
+  color: #c4d7f5;
+  margin: 0;
+}
+
 .card-footer-scale {
   margin-top: 6px;
   padding-top: 6px;
