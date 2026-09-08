@@ -181,12 +181,59 @@ function createPlanetTexture(planetData) {
   return texture
 }
 
+function createSpacetimeWellGeometry(sourceX = -1.9, sourceZ = 0, g = 9.81) {
+  const xMin = -4.8, xMax = 3.6, xSteps = 28
+  const zMin = -3.2, zMax = 3.2, zSteps = 20
+  const yBase = -1.40
+  const wellDepth = 0.35 + 0.85 * (g / 9.81)
+
+  const positions = []
+
+  // Horizontal lines along X
+  for (let j = 0; j <= zSteps; j++) {
+    const z = zMin + (j / zSteps) * (zMax - zMin)
+    for (let i = 0; i < xSteps; i++) {
+      const x1 = xMin + (i / xSteps) * (xMax - xMin)
+      const x2 = xMin + ((i + 1) / xSteps) * (xMax - xMin)
+
+      const d1 = Math.sqrt((x1 - sourceX) ** 2 + (z - sourceZ) ** 2)
+      const d2 = Math.sqrt((x2 - sourceX) ** 2 + (z - sourceZ) ** 2)
+
+      const y1 = yBase - wellDepth / (1.0 + 0.80 * d1)
+      const y2 = yBase - wellDepth / (1.0 + 0.80 * d2)
+
+      positions.push(x1, y1, z, x2, y2, z)
+    }
+  }
+
+  // Lines along Z
+  for (let i = 0; i <= xSteps; i++) {
+    const x = xMin + (i / xSteps) * (xMax - xMin)
+    for (let j = 0; j < zSteps; j++) {
+      const z1 = zMin + (j / zSteps) * (zMax - zMin)
+      const z2 = zMin + ((j + 1) / zSteps) * (zMax - zMin)
+
+      const d1 = Math.sqrt((x - sourceX) ** 2 + (z1 - sourceZ) ** 2)
+      const d2 = Math.sqrt((x - sourceX) ** 2 + (z2 - sourceZ) ** 2)
+
+      const y1 = yBase - wellDepth / (1.0 + 0.80 * d1)
+      const y2 = yBase - wellDepth / (1.0 + 0.80 * d2)
+
+      positions.push(x, y1, z1, x, y2, z2)
+    }
+  }
+
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+  return geometry
+}
+
 export function createPlanetScene(container, initialParams = {}, callbacks = {}) {
   const scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2('#050614', 0.014)
 
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200)
-  camera.position.set(0, 0.35, 10)
+  camera.position.set(0, 0.4, 8.8)
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -201,6 +248,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   let currentPlanetData = PLANETS_DATA.find((p) => p.id === 'earth') || PLANETS_DATA[2]
 
   // Planet Sphere Mesh with Procedural Surface Geography Map
+  // Proportioned as the primary gravitational attractor in the chamber
   let currentTexture = createPlanetTexture(currentPlanetData)
   const planetMaterial = new THREE.MeshStandardMaterial({
     color: currentPlanetData.surfaceColorHex || '#286ea3',
@@ -209,7 +257,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     metalness: 0.1,
   })
 
-  const planetGeometry = new THREE.SphereGeometry(2.15, 64, 48)
+  const planetGeometry = new THREE.SphereGeometry(1.38, 64, 48)
   const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial)
 
   // Surface Reference Features: Attached directly as children to planetMesh
@@ -218,8 +266,8 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   surfaceReference.name = 'surfaceReference'
   planetMesh.add(surfaceReference)
 
-  // 1. Subtle 3D Coordinate Graticule (Meridians & Parallels) at R = 2.155
-  const graticuleRadius = 2.155
+  // 1. Subtle 3D Coordinate Graticule (Meridians & Parallels) at R = 1.384
+  const graticuleRadius = 1.384
   const graticulePositions = []
 
   // Meridians (every 30 degrees = 12 meridians)
@@ -269,8 +317,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   surfaceReference.add(graticuleMesh)
 
   // 2. Equatorial Prime Meridian Scientific Datum Marker
-  // Located at longitude 0, latitude 0: (0, 0, graticuleRadius)
-  const markerGeo = new THREE.RingGeometry(0.045, 0.085, 32)
+  const markerGeo = new THREE.RingGeometry(0.035, 0.065, 32)
   const markerMat = new THREE.MeshBasicMaterial({
     color: '#73ffd3',
     side: THREE.DoubleSide,
@@ -285,30 +332,31 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   // Subtle Prime Meridian tick / crosshair
   const crossGeo = new THREE.BufferGeometry()
   crossGeo.setAttribute('position', new THREE.Float32BufferAttribute([
-    -0.12, 0, graticuleRadius + 0.001,  0.12, 0, graticuleRadius + 0.001,
-    0, -0.12, graticuleRadius + 0.001,  0, 0.12, graticuleRadius + 0.001,
+    -0.10, 0, graticuleRadius + 0.001,  0.10, 0, graticuleRadius + 0.001,
+    0, -0.10, graticuleRadius + 0.001,  0, 0.10, graticuleRadius + 0.001,
   ], 3))
   const crossMat = new THREE.LineBasicMaterial({ color: '#73ffd3', transparent: true, opacity: 0.70, depthWrite: false })
   const crossMesh = new THREE.LineSegments(crossGeo, crossMat)
   surfaceReference.add(crossMesh)
 
-  // 3. Polar Axis Indicator Points (North & South Poles at (0, +/- graticuleRadius, 0))
+  // 3. Polar Axis Indicator Points
   const poleGeo = new THREE.BufferGeometry()
   poleGeo.setAttribute('position', new THREE.Float32BufferAttribute([
     0, graticuleRadius + 0.01, 0,
     0, -graticuleRadius - 0.01, 0,
   ], 3))
-  const poleMat = new THREE.PointsMaterial({ color: '#ffffff', size: 5, transparent: true, opacity: 0.85 })
+  const poleMat = new THREE.PointsMaterial({ color: '#ffffff', size: 4, transparent: true, opacity: 0.85 })
   const polePoints = new THREE.Points(poleGeo, poleMat)
   surfaceReference.add(polePoints)
 
-  // Planetary axial tilt group: preserves axial tilt while rotating around local polar axis
+  // Planetary axial tilt group: located at the gravitational source position (-1.9, 0, 0)
   const planetTiltGroup = new THREE.Group()
+  planetTiltGroup.position.set(-1.9, 0, 0)
   planetTiltGroup.rotation.z = (currentPlanetData.axialTiltDeg * Math.PI) / 180
   planetTiltGroup.add(planetMesh)
   world.add(planetTiltGroup)
 
-  // Atmospheric Fresnel Rim
+  // Atmospheric Fresnel Rim around the attractor
   const atmosphereUniforms = {
     uTime: { value: 0 },
     uPointer: { value: new THREE.Vector2() },
@@ -317,7 +365,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     uAtmosphereIntensity: { value: initialParams.atmosphereIntensity ?? 1.0 },
   }
   const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(2.31, 64, 64),
+    new THREE.SphereGeometry(1.48, 64, 64),
     new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
@@ -352,11 +400,93 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
       `,
     }),
   )
+  atmosphere.position.set(-1.9, 0, 0)
   world.add(atmosphere)
 
+  // 3D Gravitational Field Chamber Structures
+  const fieldGroup = new THREE.Group()
+  world.add(fieldGroup)
+
+  // A. Spacetime Curvature Manifold Grid (dips toward attractor according to g)
+  let wellGeo = createSpacetimeWellGeometry(-1.9, 0, currentPlanetData.surfaceGravityMs2)
+  const wellMat = new THREE.LineBasicMaterial({
+    color: '#38a2ff',
+    transparent: true,
+    opacity: 0.28,
+    depthWrite: false,
+  })
+  const wellMesh = new THREE.LineSegments(wellGeo, wellMat)
+  fieldGroup.add(wellMesh)
+
+  // B. Concentric Gravitational Equipotential Rings around attractor
+  const equipotentialGeo = new THREE.BufferGeometry()
+  const equipotentialPositions = []
+  const ringRadii = [1.85, 2.55, 3.40]
+  const ringSegments = 64
+  ringRadii.forEach((r) => {
+    for (let s = 0; s < ringSegments; s++) {
+      const th1 = (s / ringSegments) * Math.PI * 2
+      const th2 = ((s + 1) / ringSegments) * Math.PI * 2
+      equipotentialPositions.push(
+        -1.9 + r * Math.sin(th1), -0.1, r * Math.cos(th1),
+        -1.9 + r * Math.sin(th2), -0.1, r * Math.cos(th2),
+      )
+    }
+  })
+  equipotentialGeo.setAttribute('position', new THREE.Float32BufferAttribute(equipotentialPositions, 3))
+  const equipotentialMat = new THREE.LineBasicMaterial({
+    color: '#73ffd3',
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+  })
+  const equipotentialMesh = new THREE.LineSegments(equipotentialGeo, equipotentialMat)
+  fieldGroup.add(equipotentialMesh)
+
+  // C. Curved Gravitational Flux Trajectories (Streamlines directed toward the source)
+  const fluxGeo = new THREE.BufferGeometry()
+  const fluxPositions = []
+  const streamlineOrigins = [
+    [3.2, 1.8, -1.2],
+    [3.0, 0.9, 1.4],
+    [2.8, -0.6, -1.5],
+    [1.8, 2.2, 0.8],
+    [0.2, 2.4, -1.0],
+  ]
+  streamlineOrigins.forEach(([ox, oy, oz]) => {
+    const steps = 32
+    for (let s = 0; s < steps; s++) {
+      const t1 = s / steps
+      const t2 = (s + 1) / steps
+      const ctrlX = (ox - 1.9) * 0.5
+      const ctrlY = oy * 0.3 - 0.4
+      const ctrlZ = oz * 0.6
+
+      const x1 = (1 - t1) ** 2 * ox + 2 * (1 - t1) * t1 * ctrlX + t1 ** 2 * -1.9
+      const y1 = (1 - t1) ** 2 * oy + 2 * (1 - t1) * t1 * ctrlY + t1 ** 2 * 0
+      const z1 = (1 - t1) ** 2 * oz + 2 * (1 - t1) * t1 * ctrlZ + t1 ** 2 * 0
+
+      const x2 = (1 - t2) ** 2 * ox + 2 * (1 - t2) * t2 * ctrlX + t2 ** 2 * -1.9
+      const y2 = (1 - t2) ** 2 * oy + 2 * (1 - t2) * t2 * ctrlY + t2 ** 2 * 0
+      const z2 = (1 - t2) ** 2 * oz + 2 * (1 - t2) * t2 * ctrlZ + t2 ** 2 * 0
+
+      fluxPositions.push(x1, y1, z1, x2, y2, z2)
+    }
+  })
+  fluxGeo.setAttribute('position', new THREE.Float32BufferAttribute(fluxPositions, 3))
+  const fluxMat = new THREE.LineBasicMaterial({
+    color: '#87baff',
+    transparent: true,
+    opacity: 0.20,
+    depthWrite: false,
+  })
+  const fluxMesh = new THREE.LineSegments(fluxGeo, fluxMat)
+  fieldGroup.add(fluxMesh)
+
   // Phase 29: Interactive Free-Fall & Spring Scale Apparatus
+  // Positioned in clear, unobstructed view in the right half of the chamber
   const apparatusGroup = new THREE.Group()
-  apparatusGroup.position.set(3.2, -0.4, 0)
+  apparatusGroup.position.set(1.35, -0.25, 0)
   scene.add(apparatusGroup)
 
   // Spring Scale Base Pad
@@ -437,6 +567,10 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     atmosphereUniforms.uInnerColor.value.set(p.color)
     atmosphere.visible = p.id !== 'mercury' // Mercury has no significant atmosphere
 
+    // Update Spacetime Curvature Well Geometry to reflect new surface gravity
+    wellMesh.geometry.dispose()
+    wellMesh.geometry = createSpacetimeWellGeometry(-1.9, 0, p.surfaceGravityMs2)
+
     // Update weight arrow & trigger visual drop on planet change
     updateWeightArrow(p.surfaceGravityMs2)
     triggerDrop(p.surfaceGravityMs2)
@@ -487,14 +621,11 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     atmosphereUniforms.uTime.value = elapsed
     atmosphereUniforms.uPointer.value.copy(pointer)
 
-    // Calibrated continuous angular velocity around local polar axis:
-    // 0.2x = visibly slow (~3.8 deg/s)
-    // 1.0x = clear baseline rotation (~18.9 deg/s)
-    // 3.0x = visibly fastest (~56.7 deg/s)
+    // Calibrated continuous angular velocity around local polar axis
     planetMesh.rotation.y += 0.0055 * rotationSpeed
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 0.45, 0.02)
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.35 - pointer.y * 0.28, 0.02)
-    camera.lookAt(0.5, 0, 0)
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.40 - pointer.y * 0.28, 0.02)
+    camera.lookAt(0, 0, 0)
 
     // Free fall physics simulation
     const currentRestingHeight = getRestingHeight(surfaceAcceleration)
@@ -563,6 +694,12 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     crossMat.dispose()
     poleGeo.dispose()
     poleMat.dispose()
+    wellGeo.dispose()
+    wellMat.dispose()
+    equipotentialGeo.dispose()
+    equipotentialMat.dispose()
+    fluxGeo.dispose()
+    fluxMat.dispose()
     atmosphere.geometry.dispose()
     atmosphere.material.dispose()
     scaleBaseGeo.dispose()

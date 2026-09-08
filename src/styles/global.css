@@ -55,7 +55,7 @@ body {
 
 .topbar {
   position: relative;
-  z-index: 20;
+  z-index: 60;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -539,7 +539,7 @@ h1 em {
   border: 1px solid rgba(133, 189, 255, 0.28);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 24px rgba(78, 147, 255, 0.1);
   border-radius: 4px;
-  z-index: 10;
+  z-index: 100;
   animation: controlsAppear 180ms ease-out;
 }
 
@@ -7526,4 +7526,263 @@ h1 em {
 .bridge-prompt {
   font-family: 'DM Mono', monospace;
   letter-spacing: 0.05em;
+}
+
+/* =========================================================
+   PHASE 59: 3D GRAVITY FIELD CHAMBER & INSPECTOR
+   ========================================================= */
+
+.gravity-field-inspector {
+  position: fixed;
+  top: 76px;
+  right: 24px;
+  width: 350px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  background: rgba(9, 14, 30, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(115, 255, 211, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 24px rgba(77, 184, 255, 0.12);
+  padding: 16px 18px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 200ms ease;
+}
+
+.inspector-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(135, 186, 255, 0.15);
+  padding-bottom: 10px;
+}
+
+.inspector-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #73ffd3;
+  letter-spacing: 0.12em;
+  display: block;
+}
+
+.inspector-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.04em;
+  margin: 2px 0 0;
+}
+
+.inspector-planet-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  background: rgba(115, 255, 211, 0.12);
+  border: 1px solid rgba(115, 255, 211, 0.35);
+  border-radius: 4px;
+  color: #73ffd3;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.inspector-planet-selector {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.inspector-planet-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 4px;
+  text-align: center;
+  border: 1px solid rgba(135, 186, 255, 0.22);
+  background: rgba(14, 25, 55, 0.65);
+  color: #c4d7f5;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.inspector-planet-btn:hover {
+  background: rgba(77, 184, 255, 0.20);
+  border-color: rgba(115, 255, 211, 0.45);
+  color: #ffffff;
+}
+
+.inspector-planet-btn.is-active {
+  background: rgba(115, 255, 211, 0.24);
+  border-color: #73ffd3;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(115, 255, 211, 0.35);
+  font-weight: 800;
+}
+
+.inspector-measurements {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inspector-metric-card {
+  background: rgba(12, 20, 44, 0.75);
+  border: 1px solid rgba(135, 186, 255, 0.18);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.inspector-metric-card.metric-gravity {
+  border-left: 3px solid #73ffd3;
+}
+
+.inspector-metric-card.metric-mass {
+  border-left: 3px solid #ffb866;
+}
+
+.inspector-metric-card.metric-weight {
+  border-left: 3px solid #ff7777;
+}
+
+.metric-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #9bb7e0;
+  letter-spacing: 0.06em;
+  display: block;
+}
+
+.metric-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin: 3px 0 3px;
+}
+
+.metric-val {
+  font-size: 23px;
+  font-weight: 800;
+  color: #ffffff;
+  font-family: 'DM Mono', monospace;
+}
+
+.metric-unit {
+  font-size: 12.5px;
+  color: #73ffd3;
+  font-family: 'DM Mono', monospace;
+  font-weight: 600;
+}
+
+.metric-desc {
+  font-size: 11px;
+  color: #8aa0c2;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.inspector-drop-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(115, 255, 211, 0.32), rgba(77, 184, 255, 0.28));
+  border: 1px solid #73ffd3;
+  color: #ffffff;
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 180ms ease;
+  box-shadow: 0 4px 14px rgba(115, 255, 211, 0.22);
+}
+
+.inspector-drop-btn:hover {
+  background: linear-gradient(135deg, rgba(115, 255, 211, 0.48), rgba(77, 184, 255, 0.40));
+  box-shadow: 0 6px 20px rgba(115, 255, 211, 0.45);
+  transform: translateY(-1px);
+}
+
+.inspector-guidance {
+  background: rgba(10, 18, 38, 0.65);
+  border: 1px solid rgba(135, 186, 255, 0.15);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guidance-step {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guidance-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.watch-tag {
+  color: #73ffd3;
+}
+
+.predict-tag {
+  color: #ffd166;
+}
+
+.understand-tag {
+  color: #a78bfa;
+}
+
+.guidance-text {
+  font-size: 11.5px;
+  color: #d0e0ff;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Subdued Technical Metrics for Experiment 01 to eliminate clutter */
+.telemetry-item.is-subdued-diagnostics {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .gravity-field-inspector {
+    top: auto;
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
+    max-height: 48vh;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .inspector-title {
+    font-size: 17px;
+  }
+  .metric-val {
+    font-size: 19px;
+  }
+  .inspector-guidance {
+    display: none;
+  }
 }

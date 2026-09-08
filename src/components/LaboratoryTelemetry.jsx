@@ -184,8 +184,8 @@ function LaboratoryTelemetry({ experiment, values = {}, onOpenExplanation }) {
         </div>
       </div>
 
-      {/* Subdued Technical & Diagnostics */}
-      <div className="telemetry-item telemetry-fps telemetry-subtle">
+      {/* Subdued Technical & Diagnostics (Hidden from primary student view for Experiment 01) */}
+      <div className={`telemetry-item telemetry-fps telemetry-subtle ${experiment?.id === 'planet' ? 'is-subdued-diagnostics' : ''}`}>
         <span className="telemetry-label">SYSTEM / FPS</span>
         <span className="telemetry-val">
           <i className="telemetry-dot" aria-hidden="true" />
@@ -193,7 +193,7 @@ function LaboratoryTelemetry({ experiment, values = {}, onOpenExplanation }) {
         </span>
       </div>
 
-      <div className="telemetry-item telemetry-viewport telemetry-subtle">
+      <div className={`telemetry-item telemetry-viewport telemetry-subtle ${experiment?.id === 'planet' ? 'is-subdued-diagnostics' : ''}`}>
         <span className="telemetry-label">VIEWPORT</span>
         <span className="telemetry-val">
           {viewport.width}×{viewport.height} <small>DPR {viewport.dpr}</small>

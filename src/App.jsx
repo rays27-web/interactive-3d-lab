@@ -20,6 +20,8 @@ import ExperimentHeader from './components/ExperimentHeader'
 import PlanetComparisonCard from './components/PlanetComparisonCard'
 import SignalOscilloscope from './components/SignalOscilloscope'
 import ScientificIcon from './components/ScientificIcon'
+import GravityFieldInspector from './components/GravityFieldInspector'
+import { PLANETS_DATA } from './data/planets'
 import { availableExperiments, experimentRegistry } from './experiments/registry'
 import { CELESTIAL_BODIES } from './scenes/SolarSystemScene'
 import { CELESTIAL_PHYSICS_DATA } from './physics/celestialConstants'
@@ -683,6 +685,16 @@ function App() {
             }}
             sceneApi={sceneApi}
           />
+
+          {/* Phase 59: 3D Gravity Field Chamber Inspector */}
+          {displayedExperiment.id === 'planet' && labMode && !isPlanetCardOpen && (
+            <GravityFieldInspector
+              objectMassKg={objectMassKg}
+              onSelectPlanet={handleSelectPlanetComparison}
+              onTriggerDrop={handleTriggerDrop}
+              planet={PLANETS_DATA.find((p) => p.id === selectedPlanetComparisonId) || PLANETS_DATA[2]}
+            />
+          )}
 
           {/* Phase 29: Planet Comparison Card (Mass vs Weight Apparatus) */}
           {displayedExperiment.id === 'planet' && isPlanetCardOpen && (
