@@ -12,8 +12,9 @@ const EXPERIMENT_ICONS = {
 }
 
 function ExperimentHeader({ experiment, onOpenMission }) {
-  // Phase 54: Default state must be collapsed/closed on initial load
+  // Phase 54 & 56: Default state must be collapsed/closed on initial load
   const [isCollapsed, setIsCollapsed] = useState(true)
+  const [isEquationOpen, setIsEquationOpen] = useState(false)
   const meta = EXPERIMENT_MISSIONS_DATA[experiment.id] || EXPERIMENT_MISSIONS_DATA.planet
   const iconName = EXPERIMENT_ICONS[experiment.id] || 'planet'
 
@@ -40,7 +41,7 @@ function ExperimentHeader({ experiment, onOpenMission }) {
         </div>
 
         <div className="exp-header-actions">
-          {/* Phase 54: Compact toggle entry point for Scientific Inquiry */}
+          {/* Phase 54 & 56: Compact toggle entry point for Scientific Inquiry */}
           <button
             aria-expanded={!isCollapsed}
             aria-label={isCollapsed ? 'Expand scientific inquiry panel' : 'Collapse scientific inquiry panel'}
@@ -105,6 +106,24 @@ function ExperimentHeader({ experiment, onOpenMission }) {
               <span className="exp-header-val spec-val font-mono">{meta.governingPrinciple}</span>
             </div>
           </div>
+
+          {/* Optional Equation Toggle */}
+          {meta.formula && (
+            <div className="exp-header-equation-row">
+              <button
+                type="button"
+                className="exp-header-equation-toggle"
+                onClick={() => setIsEquationOpen((prev) => !prev)}
+              >
+                <span>{isEquationOpen ? '▾ HIDE GOVERNING EQUATION' : '▸ SHOW GOVERNING EQUATION'}</span>
+              </button>
+              {isEquationOpen && (
+                <div className="exp-header-equation-box">
+                  <code>{meta.formula}</code>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </header>

@@ -128,6 +128,8 @@ function App() {
         setSelectedPlanet(null)
         setPlanetStates([])
       }
+      setIsPlanetCardOpen(false)
+      setIsOscilloscopeOpen(false)
     }
   }, [])
 

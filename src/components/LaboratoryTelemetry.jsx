@@ -78,94 +78,127 @@ function LaboratoryTelemetry({ experiment, values = {}, onOpenExplanation }) {
   // Format parameter readouts with deltas
   const paramEntries = Object.entries(values).slice(0, 3)
 
+  // Physical measurement calculation per experiment
+  const getPhysicsReadout = () => {
+    const expId = experiment?.id || 'planet'
+    const grav = values.gravityStrength ?? 1.0
+    const rot = values.rotationSpeed ?? 1.0
+    const mass = values.objectMass ?? 50
+    const spin = values.spinVelocity ?? 1.0
+
+    if (expId === 'planet') {
+      const g = 9.81
+      const weight = (mass * g).toFixed(1)
+      return {
+        name: 'Gravitational Pull (Weight)',
+        value: `${weight} N`,
+        unit: 'Newtons',
+        explanation: 'How strongly Earth pulls on the object.',
+        before: '490.5 N',
+        change: rot !== 1.0 ? `${((rot - 1) * 25).toFixed(0)}%` : '0%',
+      }
+    }
+    if (expId === 'solar-system') {
+      return {
+        name: 'Gravitational Pull (F / F₀)',
+        value: `${grav.toFixed(2)} F₀`,
+        unit: 'Force Ratio',
+        explanation: 'How strongly the Sun pulls on the orbiting body.',
+        before: '1.00 F₀',
+        change: grav !== 1.0 ? `${((grav - 1) * 100).toFixed(0)}%` : '0%',
+      }
+    }
+    if (expId === 'galaxy') {
+      const coreMass = values.coreMass ?? 1.0
+      const vel = (220 * Math.sqrt(coreMass)).toFixed(0)
+      return {
+        name: 'Orbital Velocity',
+        value: `${vel} km/s`,
+        unit: 'km/s',
+        explanation: 'Tangential speed of outer stars in the galactic disk.',
+        before: '220 km/s',
+        change: coreMass !== 1.0 ? `${((Math.sqrt(coreMass) - 1) * 100).toFixed(0)}%` : '0%',
+      }
+    }
+    if (expId === 'pulsar') {
+      return {
+        name: 'Pulse Frequency',
+        value: `${(1.4 * spin).toFixed(2)} Hz`,
+        unit: 'Hertz',
+        explanation: 'Lighthouse beam sweep rate per second.',
+        before: '1.40 Hz',
+        change: spin !== 1.0 ? `${((spin - 1) * 100).toFixed(0)}%` : '0%',
+      }
+    }
+    if (expId === 'fluid') {
+      const visc = values.viscosity ?? 1.0
+      return {
+        name: 'Fluid Circulation',
+        value: `${(1.0 / visc).toFixed(2)} Re`,
+        unit: 'Reynolds',
+        explanation: 'Ratio of fluid flow momentum to viscous drag.',
+        before: '1.00 Re',
+        change: visc !== 1.0 ? `${(((1 / visc) - 1) * 100).toFixed(0)}%` : '0%',
+      }
+    }
+    return {
+      name: 'Spacetime Curvature',
+      value: `${(2.95 * (values.schwarzschildRadius ?? 1.0)).toFixed(1)} km`,
+      unit: 'Horizon Radius',
+      explanation: 'Distance where escape velocity reaches the speed of light.',
+      before: '2.95 km',
+      change: (values.schwarzschildRadius ?? 1.0) !== 1.0 ? `${(((values.schwarzschildRadius ?? 1.0) - 1) * 100).toFixed(0)}%` : '0%',
+    }
+  }
+
+  const readout = getPhysicsReadout()
+
   return (
     <aside aria-label="Laboratory telemetry" className="lab-telemetry">
-      <div className="telemetry-item telemetry-status">
+      {/* Primary Educational Measurement */}
+      <div className="telemetry-item telemetry-primary-measurement">
         <span className="telemetry-label">
-          SYSTEM
+          WHAT AM I MEASURING?
           <InfoTooltip
-            definition="Hardware-accelerated WebGL 2.0 rendering pipeline with 32-bit floating point buffers."
-            significance="Executes GPU shader calculations and numerical symplectic integration."
-            title="SYSTEM / WEBGL 2.0"
+            definition="Primary physical observable calculated in real-time from active simulation variables."
+            significance={readout.explanation}
+            title={readout.name}
           />
         </span>
-        <span className="telemetry-val">
-          <i className="telemetry-dot" aria-hidden="true" />
-          WEBGL 2.0
-        </span>
+        <div className="telemetry-main-row">
+          <span className="telemetry-measure-name">{readout.name}</span>
+          <strong className="telemetry-val telemetry-val-highlight">{readout.value}</strong>
+        </div>
+        <p className="telemetry-sub-desc">{readout.explanation}</p>
       </div>
 
-      <div className="telemetry-item telemetry-fps">
-        <span className="telemetry-label">
-          PERFORMANCE
-          <InfoTooltip
-            definition="Instantaneous animation refresh rate and frame delivery latency in milliseconds."
-            significance="Guarantees real-time physics integration stability and continuous simulation flow."
-            title="PERFORMANCE / FPS"
-          />
-        </span>
-        <span className="telemetry-val telemetry-val-highlight">
+      {/* Delta Comparison */}
+      <div className="telemetry-item telemetry-delta-card">
+        <span className="telemetry-label">BASELINE COMPARISON</span>
+        <div className="telemetry-delta-row">
+          <span className="delta-stat">Before: <strong>{readout.before}</strong></span>
+          <span className="delta-stat">Now: <strong>{readout.value}</strong></span>
+          <span className={`delta-badge ${readout.change.startsWith('-') ? 'is-negative' : ''}`}>
+            Change: {readout.change}
+          </span>
+        </div>
+      </div>
+
+      {/* Subdued Technical & Diagnostics */}
+      <div className="telemetry-item telemetry-fps telemetry-subtle">
+        <span className="telemetry-label">SYSTEM / FPS</span>
+        <span className="telemetry-val">
+          <i className="telemetry-dot" aria-hidden="true" />
           {metrics.fps} FPS <small>({metrics.frameTime}ms)</small>
         </span>
       </div>
 
-      <div className="telemetry-item telemetry-entities">
-        <span className="telemetry-label">
-          SIMULATION FLUX
-          <InfoTooltip
-            definition="Count of active physical bodies, particles, and geometry vertices simulated."
-            significance="Defines spatial resolution and particle density in the active field study."
-            title="SIMULATION FLUX"
-          />
-        </span>
-        <span className="telemetry-val" title={entityText}>
-          {entityText}
-        </span>
-      </div>
-
-      <div className="telemetry-item telemetry-viewport">
-        <span className="telemetry-label">
-          VIEWPORT
-          <InfoTooltip
-            definition="Display resolution and device pixel ratio (DPR) of the rendering viewport."
-            significance="Calibrates camera projection aspect ratios and particle point sizes."
-            title="VIEWPORT CALIBRATION"
-          />
-        </span>
+      <div className="telemetry-item telemetry-viewport telemetry-subtle">
+        <span className="telemetry-label">VIEWPORT</span>
         <span className="telemetry-val">
           {viewport.width}×{viewport.height} <small>DPR {viewport.dpr}</small>
         </span>
       </div>
-
-      {paramEntries.length > 0 && (
-        <div className="telemetry-item telemetry-params">
-          <span className="telemetry-label">
-            CALIBRATION DELTA
-            <InfoTooltip
-              definition="Comparison of active parameters against baseline reference calibration."
-              onLearnMore={onOpenExplanation}
-              significance="Reveals how perturbations from baseline drive physical responses."
-              title="CALIBRATION DELTA"
-            />
-          </span>
-          <span className="telemetry-val telemetry-params-list">
-            {paramEntries.map(([k, v]) => {
-              const base = defaultMap[k]
-              let deltaStr = ''
-              if (typeof v === 'number' && typeof base === 'number' && base !== 0 && v !== base) {
-                const pct = ((v - base) / base) * 100
-                deltaStr = ` (${pct > 0 ? '+' : ''}${Math.round(pct)}%)`
-              }
-              const display = typeof v === 'boolean'
-                ? (v ? 'HALTED' : 'RUN')
-                : typeof v === 'number'
-                ? v.toFixed(1)
-                : v
-              return `${k.slice(0, 3).toUpperCase()}:${display}${deltaStr}`
-            }).join(' · ')}
-          </span>
-        </div>
-      )}
     </aside>
   )
 }

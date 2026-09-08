@@ -9,6 +9,7 @@ function WhatAmIDoingPanel({
   activeMission,
 }) {
   const [isMinimized, setIsMinimized] = useState(true)
+  const [isEquationOpen, setIsEquationOpen] = useState(false)
   const meta = EXPERIMENT_MISSIONS_DATA[experiment.id] || EXPERIMENT_MISSIONS_DATA.planet
 
   return (
@@ -66,21 +67,35 @@ function WhatAmIDoingPanel({
             </div>
           </div>
 
-          {/* Principle / Formula */}
+          {/* Principle / Formula (Progressive Disclosure) */}
           <div className="hud-block hud-principle-block">
             <div className="hud-principle-row">
-              <span className="hud-block-label">GOVERNING PRINCIPLE</span>
+              <span className="hud-block-label">WHY DOES THIS HAPPEN?</span>
               <button
                 className="hud-learn-btn"
                 onClick={onOpenExplanation}
                 type="button"
               >
-                WHY? (4-LEVEL EXPLANATION) →
+                EXPLORE WHY →
               </button>
             </div>
-            <div className="hud-formula-code">
-              <code>{meta.formula}</code>
-            </div>
+            <p className="hud-principle-summary">{meta.governingPrinciple}</p>
+            {meta.formula && (
+              <div className="hud-formula-drawer">
+                <button
+                  className="hud-formula-toggle-btn"
+                  onClick={() => setIsEquationOpen((prev) => !prev)}
+                  type="button"
+                >
+                  {isEquationOpen ? '▾ HIDE EQUATION' : '▸ SHOW EQUATION'}
+                </button>
+                {isEquationOpen && (
+                  <div className="hud-formula-code">
+                    <code>{meta.formula}</code>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mission CTA */}

@@ -29,6 +29,7 @@ function ExperimentMission({
   const [hasRunSimulation, setHasRunSimulation] = useState(false)
   const [recordedSuccess, setRecordedSuccess] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
+  const [showDetails, setShowDetails] = useState(false)
 
   const activeMission = missions[selectedMissionIndex] || missions[0]
 
@@ -184,16 +185,40 @@ function ExperimentMission({
           {/* STEP 1: QUESTION */}
           {currentStep.id === 'question' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 1 · HYPOTHESIS & SCIENTIFIC QUESTION</span>
+              <span className="step-view-tag">STEP 1 · SCIENTIFIC QUESTION</span>
               <h3 className="step-view-question">{activeMission.question}</h3>
-              <div className="mission-context-card">
-                <span className="context-label">THEORETICAL CONTEXT</span>
-                <p className="context-text">{expData.learningObjective}</p>
-                <div className="context-principle">
-                  <span className="principle-tag">GOVERNING LAW</span>
-                  <code>{expData.formula}</code>
-                </div>
+
+              <div className="mission-classroom-task">
+                <span className="task-badge">YOUR TASK</span>
+                <ol className="task-steps-list">
+                  <li>Formulate your prediction for this experiment.</li>
+                  <li>Run the 3D simulation to calibrate variables.</li>
+                  <li>Watch how the physical system responds in real-time.</li>
+                  <li>Check the quantitative measurement.</li>
+                </ol>
               </div>
+
+              <div className="mission-details-toggle-row">
+                <button
+                  type="button"
+                  className="mission-details-toggle-btn"
+                  onClick={() => setShowDetails(!showDetails)}
+                >
+                  {showDetails ? '▾ HIDE MISSION DETAILS' : '▸ SHOW MISSION DETAILS'}
+                </button>
+              </div>
+
+              {showDetails && (
+                <div className="mission-context-card">
+                  <span className="context-label">THEORETICAL CONTEXT</span>
+                  <p className="context-text">{expData.learningObjective}</p>
+                  <div className="context-principle">
+                    <span className="principle-tag">GOVERNING LAW</span>
+                    <code>{expData.formula}</code>
+                  </div>
+                </div>
+              )}
+
               <div className="step-actions">
                 <button
                   className="step-primary-btn"
@@ -417,11 +442,11 @@ function ExperimentMission({
           {/* STEP 7: CONCLUSION (Phase 21: Conclusion Card) */}
           {currentStep.id === 'conclusion' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 7 · EXPERIMENT CONCLUSION</span>
+              <span className="step-view-tag">STEP 7 · MISSION COMPLETE</span>
               <div className="conclusion-summary-card">
                 <div className="conclusion-header">
-                  <span className="conclusion-icon" aria-hidden="true">✦</span>
-                  <h3 className="conclusion-title">Mission Investigation Complete</h3>
+                  <span className="conclusion-icon" aria-hidden="true">✓</span>
+                  <h3 className="conclusion-title">Mission Complete: What Did You Learn?</h3>
                 </div>
                 <p className="conclusion-desc">{activeMission.conclusion}</p>
 

@@ -312,14 +312,26 @@ function PlanetDetailPanel({
             </div>
           )}
 
+          {!isSun && (
+            <div className="overview-actions-row">
+              <button
+                type="button"
+                className="overview-run-exp-btn"
+                onClick={() => setActiveTab('experiments')}
+              >
+                🧪 RUN EXPERIMENT ON {enriched.name.toUpperCase()} →
+              </button>
+            </div>
+          )}
+
           {/* Expandable Advanced Astronomical Data */}
           <div className="advanced-data-accordion">
             <button
-              className="advanced-toggle-btn"
+              className="advanced-toggle-btn view-planet-facts-btn"
               onClick={() => setIsAdvancedOpen((prev) => !prev)}
               type="button"
             >
-              <span>{isAdvancedOpen ? '▾ HIDE ADVANCED ASTRONOMICAL DATA' : '▸ EXPAND ADVANCED ASTRONOMICAL DATA'}</span>
+              <span>{isAdvancedOpen ? '▾ HIDE PLANET FACTS' : '▸ VIEW PLANET FACTS'}</span>
               <span className="advanced-badge">{isAdvancedOpen ? 'OPEN' : 'MASS · RADIUS · DENSITY · GRAVITY'}</span>
             </button>
 

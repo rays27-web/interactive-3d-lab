@@ -68,6 +68,29 @@ function ExperimentControls({
 
           {activeTab === 'parameters' ? (
             <>
+              {/* Step 5: Primary Action Row */}
+              <div className="controls-primary-actions">
+                <button
+                  className="ctrl-action-btn ctrl-reset-action"
+                  onClick={onReset}
+                  type="button"
+                >
+                  ↺ RESET BASELINE
+                </button>
+              </div>
+
+              {/* Step 5: Student Educational Guidance Block */}
+              <div className="controls-guidance-card">
+                <div className="guidance-item">
+                  <span className="guidance-lbl">YOU ARE CHANGING:</span>
+                  <strong className="guidance-val">{controls[0]?.label || 'Physical Parameter'}</strong>
+                </div>
+                <div className="guidance-item">
+                  <span className="guidance-lbl">YOU ARE WATCHING:</span>
+                  <span className="guidance-text">{expMissions.observablesSummary || 'Dynamic 3D response & equilibrium'}</span>
+                </div>
+              </div>
+
               <div className="controls-list">
                 {controls.map((control) => {
                   const currentValue = values[control.id] ?? control.default
@@ -120,6 +143,10 @@ function ExperimentControls({
                           />
                         </span>
                         <span className="control-value">{displayValue}</span>
+                      </div>
+                      <div className="slider-direction-hints" aria-hidden="true">
+                        <span>Min ←</span>
+                        <span>→ Max</span>
                       </div>
                       <input
                         aria-label={control.label}

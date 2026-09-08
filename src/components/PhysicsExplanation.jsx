@@ -23,6 +23,7 @@ function PhysicsExplanation({
   onRecord,
 }) {
   const [activeLevel, setActiveLevel] = useState(1) // 1 | 2 | 3 | 4
+  const [maxUnlockedLevel, setMaxUnlockedLevel] = useState(1)
 
   if (!isOpen) return null
 
@@ -30,7 +31,7 @@ function PhysicsExplanation({
   const levels = {
     1: progressiveData?.level1 || {
       title: 'Level 1: Intuition (Physical Analogy)',
-      content: whatHappened || 'Interacting forces reach a dynamic equilibrium based on conservation laws.',
+      content: whatHappened || 'The object moved differently because changing the physical parameters adjusted the balance of gravitational and inertial forces.',
     },
     2: progressiveData?.level2 || {
       title: 'Level 2: Governing Equations',
@@ -50,6 +51,12 @@ function PhysicsExplanation({
 
   const currentLevelData = levels[activeLevel] || levels[1]
 
+  const handleUnlockNext = () => {
+    const next = Math.min(4, activeLevel + 1)
+    setMaxUnlockedLevel((prev) => Math.max(prev, next))
+    setActiveLevel(next)
+  }
+
   return (
     <aside
       aria-label="Physical Principle 4-Level Explanation"
@@ -59,7 +66,7 @@ function PhysicsExplanation({
       <div className="explanation-header">
         <div className="explanation-badge">
           <span className="badge-dot" aria-hidden="true" />
-          <span>WHY DID THIS HAPPEN? · 4-LEVEL DISCLOSURE</span>
+          <span>WHY DID THIS HAPPEN?</span>
         </div>
         <button
           aria-label="Close explanation"
@@ -74,66 +81,82 @@ function PhysicsExplanation({
       <div className="explanation-body">
         <h4 className="explanation-title">{title}</h4>
 
-        {whatChanged && (
-          <div className="explanation-field">
-            <span className="field-tag">VARIABLE PERTURBATION</span>
-            <p className="field-desc highlight">{whatChanged}</p>
-          </div>
-        )}
-
-        {deltaData && (
-          <div className="explanation-delta-box">
-            <div className="delta-header">
-              <span className="delta-tag">QUANTITATIVE EMPIRICAL DELTA</span>
-              <span className="delta-ratio-badge">{deltaData.ratio || 'Δ Measured'}</span>
-            </div>
-            <div className="delta-values-row">
-              <div className="delta-col">
-                <span className="delta-lbl">BASELINE</span>
-                <span className="delta-num">{deltaData.baseline}</span>
-              </div>
-              <span className="delta-arrow" aria-hidden="true">➔</span>
-              <div className="delta-col">
-                <span className="delta-lbl">CALIBRATED</span>
-                <span className="delta-num highlight">{deltaData.current}</span>
-              </div>
-            </div>
-            {deltaData.whyText && (
-              <p className="delta-why-text">{deltaData.whyText}</p>
-            )}
-          </div>
-        )}
-
-        {/* 4-Level Progressive Disclosure Tabs */}
-        <div aria-label="Explanation depth levels" className="progressive-tabs" role="tablist">
-          {[
-            { id: 1, label: '1 · INTUITION' },
-            { id: 2, label: '2 · EQUATION' },
-            { id: 3, label: '3 · DERIVATION' },
-            { id: 4, label: '4 · ADVANCED' },
-          ].map((tab) => (
-            <button
-              aria-selected={activeLevel === tab.id}
-              className={`progressive-tab ${activeLevel === tab.id ? 'is-active' : ''}`}
-              key={tab.id}
-              onClick={() => setActiveLevel(tab.id)}
-              role="tab"
-              type="button"
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Active Level Card */}
-        <div className="progressive-level-card" role="tabpanel">
+        {/* Level 1 Simple Explanation shown first */}
+        <div className="progressive-level-card level-1-card" role="tabpanel">
           <div className="progressive-level-header">
-            <span className="progressive-level-badge">DEPTH LEVEL 0{activeLevel}</span>
-            <strong className="progressive-level-title">{currentLevelData.title}</strong>
+            <span className="progressive-level-badge">LEVEL 1 · SIMPLE EXPLANATION</span>
+            <strong className="progressive-level-title">{levels[1].title}</strong>
           </div>
           <div className="progressive-level-body">
-            <pre className="progressive-text">{currentLevelData.content}</pre>
+            <p className="progressive-simple-text">{levels[1].content}</p>
           </div>
+        </div>
+
+        {/* Progressive Disclosure Unlocks */}
+        {maxUnlockedLevel >= 2 && (
+          <div className="unlocked-levels-nav" role="tablist">
+            {[
+              { id: 1, label: '1 · INTUITION' },
+              { id: 2, label: '2 · THE PHYSICS (EQUATION)' },
+              maxUnlockedLevel >= 3 && { id: 3, label: '3 · DERIVATION' },
+              maxUnlockedLevel >= 4 && { id: 4, label: '4 · ADVANCED' },
+            ].filter(Boolean).map((tab) => (
+              <button
+                aria-selected={activeLevel === tab.id}
+                className={`progressive-tab ${activeLevel === tab.id ? 'is-active' : ''}`}
+                key={tab.id}
+                onClick={() => setActiveLevel(tab.id)}
+                role="tab"
+                type="button"
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Deeper Levels Display when activeLevel > 1 */}
+        {activeLevel > 1 && (
+          <div className="progressive-level-card" role="tabpanel">
+            <div className="progressive-level-header">
+              <span className="progressive-level-badge">LEVEL 0{activeLevel}</span>
+              <strong className="progressive-level-title">{currentLevelData.title}</strong>
+            </div>
+            <div className="progressive-level-body">
+              <pre className="progressive-text">{currentLevelData.content}</pre>
+            </div>
+          </div>
+        )}
+
+        {/* Progressive Disclosure Action Triggers */}
+        <div className="progressive-unlock-actions">
+          {maxUnlockedLevel === 1 && (
+            <button
+              className="progressive-unlock-btn"
+              onClick={handleUnlockNext}
+              type="button"
+            >
+              📐 SHOW THE PHYSICS (EQUATION) →
+            </button>
+          )}
+          {maxUnlockedLevel === 2 && activeLevel <= 2 && (
+            <button
+              className="progressive-unlock-btn"
+              onClick={handleUnlockNext}
+              type="button"
+            >
+              🔬 SHOW MATHEMATICAL DERIVATION →
+            </button>
+          )}
+          {maxUnlockedLevel === 3 && activeLevel <= 3 && (
+            <button
+              className="progressive-unlock-btn"
+              onClick={handleUnlockNext}
+              type="button"
+            >
+              🌌 SHOW ADVANCED ASTROPHYSICAL CONSTRAINTS →
+            </button>
+          )}
         </div>
 
         {formula && activeLevel === 2 && (
