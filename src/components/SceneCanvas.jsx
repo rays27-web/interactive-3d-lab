@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 
-function SceneCanvas({ experiment, params, onTransitionChange }) {
+function SceneCanvas({
+  experiment,
+  params,
+  onTransitionChange,
+  callbacks,
+  onSceneReady,
+}) {
   const containerRef = useRef(null)
   const currentExperimentId = useRef(experiment.id)
   const sceneApiRef = useRef(null)
@@ -29,8 +35,9 @@ function SceneCanvas({ experiment, params, onTransitionChange }) {
   }, [experiment, onTransitionChange])
 
   useEffect(() => {
-    const sceneInstance = mountedExperiment.createScene(containerRef.current, params)
+    const sceneInstance = mountedExperiment.createScene(containerRef.current, params, callbacks)
     sceneApiRef.current = sceneInstance
+    onSceneReady?.(sceneInstance)
 
     return () => {
       if (typeof sceneInstance === 'function') {
@@ -39,6 +46,7 @@ function SceneCanvas({ experiment, params, onTransitionChange }) {
         sceneInstance.dispose()
       }
       sceneApiRef.current = null
+      onSceneReady?.(null)
     }
   }, [mountedExperiment])
 

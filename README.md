@@ -37,6 +37,9 @@ src/
     LaboratoryTelemetry.jsx     Throttled, non-allocating FPS & WebGL telemetry HUD
     ExperimentInfoPanel.jsx     Collapsible scientific dossier & physical equations
     LabModeToggle.jsx           Lab Mode vs Clean Mode presentation toggle
+    PlanetSelector.jsx          Docked celestial selector bar with real-time status pips
+    SolarSystemMiniMap.jsx      High-DPI 2D SVG radar overview & direct target selector
+    PlanetDetailPanel.jsx       Floating celestial telemetry dossier & kinematics HUD
   utils/
     presetStorage.js            Schema-validated localStorage with bounds clamping
   experiments/
@@ -47,6 +50,7 @@ src/
     BlackHoleScene.js           Experiment 03: gravitational lensing, accretion disk, photon ring
     FluidScene.js               Experiment 04: curl-noise advection, kinetic impeller, thermal plume
     PulsarScene.js              Experiment 05: oblique dipole, relativistic polar beams, synchrotron plasma
+    SolarSystemScene.js         Experiment 06: symplectic Velocity Verlet N-body gravity, 8 procedural planets
   styles/
     global.css                  Command Center visual layout, telemetry HUD, and responsive styling
   App.jsx                       Command Center shell & keyboard orchestration
@@ -61,6 +65,7 @@ The React application shell owns the active experiment state and navigation. The
 - **Experiment 03 — BLACK HOLE**: Relativistic gravitational lensing approximation, differential Keplerian shear, Doppler beaming asymmetry, and photon sphere silhouette.
 - **Experiment 04 — FLUID**: Incompressible divergence-free curl-noise advection, kinetic pointer vortex impeller, and astrochemical thermal plume.
 - **Experiment 05 — PULSAR**: Oblique rotator dipole precession, relativistic synchrotron lighthouse beams, and co-rotating magnetospheric plasma.
+- **Experiment 06 — SOLAR SYSTEM**: Symplectic Velocity Verlet N-body gravitation, Sun granulation & corona glow, 8 procedural planets with axial tilts and Saturnian rings, ring-buffered orbital trails, and real-time astronomical kinematics.
 
 Each registry entry exposes metadata (`eyebrow`, `titleLead`, `titleAccent`, `description`, `parameters`) that dynamically populates the laboratory shell. When switching experiments, `SceneCanvas` manages a three-stage lifecycle:
 1. **Visual withdrawal**: Canvas and typography dim while a status indicator announces the target experiment.
@@ -233,6 +238,60 @@ Experiment 05 exposes 4 parameters through `ExperimentControls.jsx`:
 - **Beam Collimation** ($0.3\times - 2.5\times$): Adjusts polar beam cone tightness and observer pulse sharpness.
 - **Plasma Density** ($20\% - 200\%$): Tunes magnetospheric particle density, opacity, and polar cap hotspot intensity.
 
+## Experiment 06: Solar System & N-Body Gravitation
+
+### Physical principles & computational architecture
+
+Experiment 06 models the celestial mechanics of our solar system using an authentic N-body Newtonian gravitation framework integrated with a stable, symplectic numerical solver:
+
+1. **Newtonian Gravitation & N-Body Dynamics**:
+   - Universal Law of Gravitation:
+     $$\vec{F}_{ij} = -G \frac{m_i m_j}{\|\vec{r}_i - \vec{r}_j\|^2} \frac{\vec{r}_i - \vec{r}_j}{\|\vec{r}_i - \vec{r}_j\|}$$
+   - Acceleration on body $i$ due to the central mass and interplanetary gravitational perturbations with Plummer softening ($\epsilon = 0.5$):
+     $$\vec{a}_i = -\sum_{j \ne i} \frac{G m_j (\vec{r}_i - \vec{r}_j)}{(\|\vec{r}_i - \vec{r}_j\|^2 + \epsilon^2)^{3/2}}$$
+
+2. **Symplectic Velocity Verlet Numerical Integrator**:
+   - Standard Forward Euler integration causes rapid artificial energy growth and orbital spiral-out within seconds.
+   - Experiment 06 implements a symplectic **Velocity Verlet** scheme that preserves phase space volume and angular momentum over indefinite runtimes:
+     $$\vec{r}(t + \Delta t) = \vec{r}(t) + \vec{v}(t)\Delta t + \frac{1}{2}\vec{a}(t)\Delta t^2$$
+     $$\vec{v}(t + \Delta t) = \vec{v}(t) + \frac{1}{2}\left[\vec{a}(t) + \vec{a}(t + \Delta t)\right]\Delta t$$
+   - Multi-substep integration: executes 3 micro-steps per frame ($\Delta t_{\text{sub}} = \Delta t / 3$) to maintain orbital stability even at $50\times$ simulation speed.
+
+3. **Visual Scale Calibration vs. Physical Realism**:
+   - In physical reality, Neptune orbits at $30.1\text{ AU}$ while Mercury orbits at $0.39\text{ AU}$ (a $77:1$ distance ratio), and the Sun's radius is $109\times$ Earth's radius. A 1:1 linear scale renders inner planets invisible or outer planets far off-screen.
+   - Calibrated visualization scale:
+     $$r_{\text{vis}} = r_{\text{base}} \cdot a^{0.58}$$
+   - Compresses the distance ratio to $\approx 7.7:1$, keeping all 8 planets visible and interactable simultaneously while strictly maintaining relative orbital ordering, orbital velocities, and Kepler's Third Law ($T^2 \propto a^3$).
+
+4. **Procedural Celestial Bodies & Shaders**:
+   - **The Sun**: Dynamic procedural granulation shader driven by harmonic high-frequency noise, overlaid with an additive solar corona billboard and dynamic point light.
+   - **Earth**: Procedural terrestrial shader with continent/ocean elevation thresholds, atmospheric blue Rayleigh scattering, and semi-transparent orbiting cloud layer.
+   - **Jupiter**: Multi-frequency latitudinal bands with Great Red Spot atmospheric vortex perturbation.
+   - **Saturn**: Double-sided ring geometry with procedural radial Cassini division and density opacity gradient.
+   - **Uranus & Neptune**: Methane ice giants rendered in ice-cyan and azure with Uranus's realistic $97.8^\circ$ retrograde axial tilt.
+   - **Mercury, Venus, & Mars**: Distinct surface albedos, crater roughness, and Venusian sulfuric cloud blanket.
+
+5. **Preallocated Ring-Buffered Orbital Motion Trails**:
+   - Each planet records its trajectory into a fixed `Float32Array(MAX_TRAIL_POINTS * 3)` ring buffer.
+   - Zero heap allocations during animation: points are written directly into the preallocated buffer and flagged with `geometry.attributes.position.needsUpdate = true`.
+
+6. **Single-Canvas Invariant & High-DPI Radar Mini-Map (`SolarSystemMiniMap.jsx`)**:
+   - Displays a live 2D SVG radar overview of orbital tracks and planetary positions without creating a secondary WebGL canvas context.
+   - Features direct orbit/planet targeting and pulsing active target beacons.
+
+### Real-Time Laboratory Controls
+
+Experiment 06 exposes 9 laboratory parameters through `ExperimentControls.jsx`:
+- **Simulation Speed** ($0.1\times - 50.0\times$): Modulates physical time step $\Delta t$.
+- **Gravity Strength** ($0\% - 200\%$): Scales gravitational constant $G$.
+- **Orbit Scale** ($0.5\times - 2.0\times$): Expands or contracts orbital semi-major axes.
+- **Trail Length** ($0\% - 100\%$): Adjusts motion trail point retention.
+- **Time Integration** (`RUNNING` / `PAUSED`): Pauses physical integration while maintaining camera navigation.
+- **Orbit Paths** (`VISIBLE` / `HIDDEN`): Toggles precalculated elliptical orbit guide rings.
+- **Motion Trails** (`VISIBLE` / `HIDDEN`): Toggles dynamic historical trajectory trails.
+- **Gravity Vectors** (`VISIBLE` / `HIDDEN`): Renders real-time gravitational acceleration vectors pointing toward the Sun.
+- **Follow Planet** (`ENGAGED` / `DISENGAGED`): Locks camera focus to the selected celestial body.
+
 ## Phase 10: Laboratory Command Center
 
 Phase 10 transforms the Interactive 3D Lab into a unified scientific **Laboratory Command Center** while preserving existing WebGL scene lifecycle and rendering performance:
@@ -356,7 +415,7 @@ git ls-files | grep -E "(\.env|key|secret|token|credential)"
 pnpm build
 
 # 4. Verify test suite, WebGL lifecycle, and responsive UI
-node scratch/test_phase10.cjs
+node scratch/test_phase11.cjs
 ```
 
 

@@ -17,6 +17,7 @@ function ExperimentInfoPanel({ experiment, isOpen, onClose }) {
 
   const controls = experiment.controls || []
   const paramGuides = experiment.parameterGuides || {}
+  const isSolarSystem = experiment.id === 'solar-system'
 
   return (
     <div className="dossier-overlay" onClick={onClose} role="presentation">
@@ -56,6 +57,49 @@ function ExperimentInfoPanel({ experiment, isOpen, onClose }) {
               <code>{experiment.equation || 'Analytical differential formulation'}</code>
             </div>
           </div>
+
+          {isSolarSystem && (
+            <>
+              <div className="dossier-section">
+                <h3 className="dossier-section-title">FUNDAMENTAL GRAVITATIONAL LAWS</h3>
+                <div className="dossier-laws-grid">
+                  <div className="dossier-law-card">
+                    <strong>NEWTON&apos;S LAW OF UNIVERSAL GRAVITATION</strong>
+                    <code>F = G · (m₁ · m₂) / r²</code>
+                    <p>Every celestial particle attracts every other particle with a force directly proportional to the product of their masses and inversely proportional to the square of their separation distance.</p>
+                  </div>
+                  <div className="dossier-law-card">
+                    <strong>NEWTON&apos;S SECOND LAW OF MOTION</strong>
+                    <code>F = m · a  ⟹  a = -G · M / r² · r̂</code>
+                    <p>Gravitational acceleration is independent of the orbiting body&apos;s mass, causing all bodies at distance r to accelerate toward the central star identically.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="dossier-section">
+                <h3 className="dossier-section-title">KEPLER&apos;S LAWS OF PLANETARY MOTION</h3>
+                <div className="dossier-laws-grid">
+                  <div className="dossier-law-card">
+                    <strong>1. LAW OF ELLIPSES</strong>
+                    <p>Planetary orbits trace ellipses with the Sun located at one of the two foci, producing subtle perihelion and aphelion orbital distances.</p>
+                  </div>
+                  <div className="dossier-law-card">
+                    <strong>2. LAW OF EQUAL AREAS</strong>
+                    <p>A radius vector joining a planet to the Sun sweeps out equal areas during equal intervals of time; planets accelerate near perihelion.</p>
+                  </div>
+                  <div className="dossier-law-card">
+                    <strong>3. HARMONIC LAW (T² ∝ a³)</strong>
+                    <code>T² = (4π² / GM) · a³</code>
+                    <p>The square of a planet&apos;s orbital period is strictly proportional to the cube of the semi-major axis of its orbit.</p>
+                  </div>
+                  <div className="dossier-law-card">
+                    <strong>CELESTIAL EQUILIBRIUM & VELOCITY GRADIENT</strong>
+                    <p>Planets do not fall into the Sun because tangential velocity generates centrifugal equilibrium (v = √(GM/r)). Outer planets move significantly slower because gravitational acceleration diminishes with 1/r².</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="dossier-section">
             <h3 className="dossier-section-title">PHYSICAL PHENOMENON & OBSERVATION</h3>

@@ -1,11 +1,15 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import ExperimentControls from './components/ExperimentControls'
 import ExperimentInfoPanel from './components/ExperimentInfoPanel'
 import ExperimentNavigator from './components/ExperimentNavigator'
 import LaboratoryTelemetry from './components/LaboratoryTelemetry'
 import LabModeToggle from './components/LabModeToggle'
+import PlanetDetailPanel from './components/PlanetDetailPanel'
+import PlanetSelector from './components/PlanetSelector'
 import SceneCanvas from './components/SceneCanvas'
+import SolarSystemMiniMap from './components/SolarSystemMiniMap'
 import { availableExperiments, experimentRegistry } from './experiments/registry'
+import { CELESTIAL_BODIES } from './scenes/SolarSystemScene'
 
 function getDefaultParams(experiment) {
   const defaults = {}
@@ -22,6 +26,11 @@ function App() {
   const [labMode, setLabMode] = useState(true)
   const [isControlsOpen, setIsControlsOpen] = useState(false)
   const [isInfoOpen, setIsInfoOpen] = useState(false)
+
+  // Solar System specific state
+  const [selectedPlanet, setSelectedPlanet] = useState(null)
+  const [planetStates, setPlanetStates] = useState([])
+  const [sceneApi, setSceneApi] = useState(null)
 
   const [paramsByExperiment, setParamsByExperiment] = useState(() => {
     const initial = {}
@@ -64,25 +73,80 @@ function App() {
     setTransition(transitionState)
     if (transitionState?.phase === 'emerging') {
       setDisplayedExperiment(transitionState.experiment)
+      if (transitionState.experiment.id !== 'solar-system') {
+        setSelectedPlanet(null)
+        setPlanetStates([])
+      }
     }
   }, [])
 
-  // Keyboard shortcut listener: Escape closes open panels
+  // Solar system selection and focus handlers
+  const handleSelectPlanet = useCallback((planetId) => {
+    if (!planetId) {
+      setSelectedPlanet(null)
+      sceneApi?.selectPlanet?.(null)
+      return
+    }
+    const body = CELESTIAL_BODIES.find((b) => b.id === planetId)
+    if (body) {
+      setSelectedPlanet(body)
+      sceneApi?.selectPlanet?.(planetId)
+    }
+  }, [sceneApi])
+
+  const handleFocusPlanet = useCallback((planetId) => {
+    sceneApi?.focusPlanet?.(planetId)
+  }, [sceneApi])
+
+  const handleToggleFollow = useCallback(() => {
+    setParamsByExperiment((prev) => {
+      const currentVal = Boolean(prev['solar-system']?.followPlanet)
+      return {
+        ...prev,
+        'solar-system': {
+          ...prev['solar-system'],
+          followPlanet: !currentVal,
+        },
+      }
+    })
+  }, [])
+
+  // Callbacks passed to active scene
+  const sceneCallbacks = useMemo(() => ({
+    onSelectPlanet: (planetData) => {
+      setSelectedPlanet(planetData)
+    },
+    onTelemetry: (states) => {
+      setPlanetStates(states)
+    },
+  }), [])
+
+  // Global keyboard shortcut listener: Escape closes open panels
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape') {
-        setIsInfoOpen(false)
-        setIsControlsOpen(false)
+        if (selectedPlanet) {
+          setSelectedPlanet(null)
+          sceneApi?.selectPlanet?.(null)
+        } else if (isInfoOpen) {
+          setIsInfoOpen(false)
+        } else if (isControlsOpen) {
+          setIsControlsOpen(false)
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [selectedPlanet, isInfoOpen, isControlsOpen, sceneApi])
+
+  const isSolarSystem = displayedExperiment.id === 'solar-system'
 
   return (
     <main className={`app-shell ${labMode ? 'mode-lab' : 'mode-clean'}`}>
       <SceneCanvas
+        callbacks={sceneCallbacks}
         experiment={activeExperiment}
+        onSceneReady={setSceneApi}
         onTransitionChange={handleTransitionChange}
         params={currentParams}
       />
@@ -138,6 +202,29 @@ function App() {
         />
       )}
 
+      {/* Solar System Specific HUD: Mini-Map */}
+      {isSolarSystem && labMode && (
+        <SolarSystemMiniMap
+          onSelectPlanet={handleSelectPlanet}
+          planetStates={planetStates}
+          selectedPlanetId={selectedPlanet?.id}
+        />
+      )}
+
+      {/* Solar System Specific HUD: Planet Details */}
+      {isSolarSystem && labMode && selectedPlanet && (
+        <PlanetDetailPanel
+          isFollowing={Boolean(currentParams.followPlanet)}
+          onClose={() => {
+            setSelectedPlanet(null)
+            sceneApi?.selectPlanet?.(null)
+          }}
+          onFocus={handleFocusPlanet}
+          onToggleFollow={handleToggleFollow}
+          planet={selectedPlanet}
+        />
+      )}
+
       <section
         aria-labelledby="hero-title"
         className={`hero ${transition ? 'is-transitioning' : ''} ${labMode ? '' : 'is-clean-hero'}`}
@@ -153,6 +240,14 @@ function App() {
           <span className="cursor-icon">⌁</span> MOVE TO EXPLORE
         </div>
       </section>
+
+      {/* Solar System Bottom Planet Selector */}
+      {isSolarSystem && (
+        <PlanetSelector
+          onSelectPlanet={handleSelectPlanet}
+          selectedPlanetId={selectedPlanet?.id}
+        />
+      )}
 
       <footer className="footer-note">
         <span className="footer-params">{displayedExperiment.parameters}</span>

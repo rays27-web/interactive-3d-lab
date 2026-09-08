@@ -1075,9 +1075,382 @@ h1 em {
   color: #73ffd3;
 }
 
+/* Solar System Bottom Planet Selector */
+.planet-selector-bar {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  max-width: calc(100vw - 48px);
+  background: rgba(5, 9, 26, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(133, 189, 255, 0.24);
+  border-radius: 24px;
+  padding: 4px 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(82, 151, 255, 0.12);
+  animation: selectorPop 220ms ease-out;
+}
+
+@keyframes selectorPop {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.planet-selector-scroll {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px 4px;
+}
+
+.planet-selector-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.planet-selector-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  padding: 5px 11px;
+  color: #8da2c4;
+  font: 8.5px 'DM Mono', monospace;
+  letter-spacing: .12em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 180ms ease;
+}
+
+.planet-selector-btn:hover {
+  color: #e5f1ff;
+  background: rgba(83, 149, 255, 0.12);
+}
+
+.planet-selector-btn.is-selected {
+  color: #ffffff;
+  background: rgba(83, 149, 255, 0.22);
+  border-color: rgba(133, 189, 255, 0.45);
+  box-shadow: 0 0 12px rgba(83, 149, 255, 0.2);
+}
+
+.planet-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: transform 180ms ease;
+}
+
+.planet-selector-btn.is-selected .planet-pip {
+  transform: scale(1.3);
+}
+
+/* Solar System Mini-Map Radar */
+.sol-minimap {
+  position: absolute;
+  top: 80px;
+  right: clamp(24px, 5vw, 74px);
+  width: 144px;
+  background: rgba(5, 8, 24, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(133, 189, 255, 0.22);
+  border-radius: 6px;
+  padding: 10px;
+  z-index: 8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  animation: minimapFade 220ms ease-out;
+}
+
+@keyframes minimapFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.minimap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font: 7.5px 'DM Mono', monospace;
+  letter-spacing: .12em;
+}
+
+.minimap-title {
+  color: #7284a6;
+}
+
+.minimap-hint {
+  color: #73ffd3;
+  font-size: 7px;
+}
+
+.minimap-svg {
+  width: 100%;
+  height: 124px;
+  display: block;
+}
+
+.minimap-orbit {
+  fill: none;
+  stroke: rgba(146, 181, 240, 0.18);
+  stroke-width: 0.6;
+  cursor: pointer;
+  pointer-events: stroke;
+  transition: stroke 150ms ease;
+}
+
+.minimap-orbit:hover, .minimap-orbit.is-selected {
+  stroke: rgba(115, 255, 211, 0.65);
+  stroke-width: 0.9;
+}
+
+.minimap-sun {
+  fill: #ffb732;
+  cursor: pointer;
+  filter: drop-shadow(0 0 4px #ff8800);
+}
+
+.minimap-planet {
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.minimap-planet:hover {
+  r: 3.2;
+}
+
+.minimap-ping {
+  fill: none;
+  stroke: #73ffd3;
+  stroke-width: 0.8;
+  animation: pingRing 1.4s infinite ease-out;
+}
+
+@keyframes pingRing {
+  from { r: 1.6; opacity: 1; }
+  to { r: 5.4; opacity: 0; }
+}
+
+/* Solar System Planet Detail Telemetry Panel */
+.planet-detail-panel {
+  position: absolute;
+  top: 242px;
+  right: clamp(24px, 5vw, 74px);
+  width: 290px;
+  background: linear-gradient(180deg, rgba(8, 14, 38, 0.94), rgba(4, 7, 20, 0.96));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(133, 189, 255, 0.28);
+  border-radius: 6px;
+  padding: 16px 18px;
+  z-index: 9;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 24px rgba(82, 151, 255, 0.12);
+  animation: detailSlide 200ms ease-out;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@keyframes detailSlide {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.planet-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(146, 181, 240, 0.18);
+}
+
+.planet-detail-tag {
+  font: 7.5px 'DM Mono', monospace;
+  letter-spacing: .16em;
+  color: #7284a6;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.planet-detail-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.planet-detail-type {
+  font: 8.5px 'DM Mono', monospace;
+  letter-spacing: .08em;
+  color: #8da3c7;
+  display: block;
+}
+
+.planet-detail-close-btn {
+  background: transparent;
+  border: 1px solid rgba(133, 189, 255, 0.2);
+  border-radius: 3px;
+  color: #8396b7;
+  font-size: 11px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.planet-detail-close-btn:hover {
+  color: #ffffff;
+  border-color: #85bdff;
+}
+
+.planet-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 10px;
+}
+
+.planet-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-label {
+  font: 7.5px 'DM Mono', monospace;
+  letter-spacing: .12em;
+  color: #6e7f9e;
+}
+
+.detail-val {
+  font: 9px 'DM Mono', monospace;
+  color: #dbe7fa;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planet-detail-sim {
+  background: rgba(4, 7, 18, 0.7);
+  border: 1px solid rgba(133, 189, 255, 0.14);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sim-title {
+  font: 7.5px 'DM Mono', monospace;
+  letter-spacing: .14em;
+  color: #73ffd3;
+}
+
+.sim-metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.sim-sublabel {
+  font: 7px 'DM Mono', monospace;
+  color: #6a7c9d;
+  display: block;
+}
+
+.sim-subval {
+  font: 8.5px 'DM Mono', monospace;
+  color: #c9ddfc;
+  display: block;
+}
+
+.planet-detail-actions {
+  display: flex;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.planet-action-btn {
+  flex: 1;
+  background: rgba(83, 149, 255, 0.12);
+  border: 1px solid rgba(133, 189, 255, 0.3);
+  border-radius: 3px;
+  color: #9ec5ff;
+  font: 8px 'DM Mono', monospace;
+  letter-spacing: .11em;
+  padding: 6px 0;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.planet-action-btn:hover {
+  background: rgba(83, 149, 255, 0.22);
+  color: #ffffff;
+  border-color: #85bdff;
+}
+
+.planet-action-btn.btn-follow.is-following {
+  background: rgba(115, 255, 211, 0.16);
+  border-color: #73ffd3;
+  color: #73ffd3;
+}
+
+/* Dossier Educational Laws Grid */
+.dossier-laws-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.dossier-law-card {
+  background: rgba(10, 16, 40, 0.5);
+  border: 1px solid rgba(133, 189, 255, 0.16);
+  border-radius: 4px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dossier-law-card strong {
+  font: 8.5px 'DM Mono', monospace;
+  letter-spacing: .11em;
+  color: #9ec5ff;
+}
+
+.dossier-law-card code {
+  font: 9.5px 'DM Mono', monospace;
+  color: #73ffd3;
+  background: rgba(4, 7, 18, 0.75);
+  padding: 3px 6px;
+  border-radius: 3px;
+  width: fit-content;
+}
+
+.dossier-law-card p {
+  margin: 0;
+  color: #9cb0ce;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
 /* Responsive Breakpoints */
 @media (max-width: 768px) {
   .dossier-params-grid {
+    grid-template-columns: 1fr;
+  }
+  .dossier-laws-grid {
     grid-template-columns: 1fr;
   }
   .lab-telemetry {
@@ -1085,6 +1458,17 @@ h1 em {
     left: 20px;
     right: 20px;
     max-width: calc(100vw - 40px);
+  }
+  .sol-minimap {
+    display: none;
+  }
+  .planet-detail-panel {
+    top: auto;
+    bottom: 120px;
+    right: 20px;
+    left: 20px;
+    width: auto;
+    max-width: none;
   }
 }
 
@@ -1137,5 +1521,16 @@ h1 em {
   .dossier-panel {
     padding: 18px 16px;
     max-height: 90vh;
+  }
+  .planet-selector-bar {
+    bottom: 58px;
+    max-width: calc(100vw - 32px);
+  }
+  .planet-detail-panel {
+    bottom: 112px;
+    left: 16px;
+    right: 16px;
+    max-height: 48vh;
+    overflow-y: auto;
   }
 }
