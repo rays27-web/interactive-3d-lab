@@ -63,6 +63,124 @@ function createStarLayer({ count, minRadius, maxRadius, size, opacity }) {
   return new THREE.Points(geometry, material)
 }
 
+function createPlanetTexture(planetData) {
+  const canvas = document.createElement('canvas')
+  canvas.width = 1024
+  canvas.height = 512
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+
+  const id = planetData?.id || 'earth'
+  const baseColor = planetData?.surfaceColorHex || planetData?.color || '#286ea3'
+
+  // Fill base surface color
+  ctx.fillStyle = baseColor
+  ctx.fillRect(0, 0, 1024, 512)
+
+  if (id === 'jupiter' || id === 'saturn') {
+    // Gas giant cloud bands (zones and belts)
+    const bandCount = 28
+    for (let i = 0; i < bandCount; i++) {
+      const y = (i / bandCount) * 512
+      const h = 512 / bandCount
+      const isBelt = i % 2 === 0
+      ctx.fillStyle = isBelt ? 'rgba(0, 0, 0, 0.20)' : 'rgba(255, 255, 255, 0.16)'
+      ctx.fillRect(0, y, 1024, h)
+      ctx.fillStyle = isBelt ? 'rgba(190, 85, 30, 0.15)' : 'rgba(255, 240, 210, 0.12)'
+      ctx.fillRect(0, y + h * 0.25, 1024, h * 0.5)
+    }
+    if (id === 'jupiter') {
+      // Great Red Spot
+      ctx.fillStyle = 'rgba(200, 60, 30, 0.85)'
+      ctx.beginPath()
+      ctx.ellipse(620, 310, 52, 30, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(250, 190, 150, 0.6)'
+      ctx.lineWidth = 4
+      ctx.stroke()
+    }
+  } else if (id === 'mars') {
+    // Mars: darker volcanic provinces (Syrtis Major, Tharsis, Acidalia) + white polar caps
+    ctx.fillStyle = 'rgba(60, 20, 12, 0.40)'
+    const darkPatches = [
+      [320, 220, 110, 70],
+      [580, 260, 140, 80],
+      [780, 210, 90, 60],
+      [180, 310, 80, 50],
+      [480, 170, 70, 45],
+    ]
+    darkPatches.forEach(([cx, cy, rx, ry]) => {
+      ctx.beginPath()
+      ctx.ellipse(cx, cy, rx, ry, 0.2, 0, Math.PI * 2)
+      ctx.fill()
+    })
+    ctx.fillStyle = 'rgba(245, 250, 255, 0.85)'
+    ctx.fillRect(0, 0, 1024, 28)
+    ctx.fillRect(0, 484, 1024, 28)
+  } else {
+    // Earth / Terrestrial / General Exoplanetary landmasses & continents
+    ctx.fillStyle = id === 'earth' ? 'rgba(46, 125, 50, 0.55)' : 'rgba(0, 0, 0, 0.24)'
+    const continents = [
+      [520, 230, 95, 110], // Africa
+      [530, 120, 80, 60],  // Europe
+      [680, 150, 130, 85], // Asia
+      [240, 140, 90, 75],  // North America
+      [310, 320, 75, 105], // South America
+      [820, 350, 55, 45],  // Australia
+    ]
+    continents.forEach(([cx, cy, rx, ry]) => {
+      ctx.beginPath()
+      ctx.ellipse(cx, cy, rx, ry, -0.15, 0, Math.PI * 2)
+      ctx.fill()
+    })
+    if (id === 'earth') {
+      ctx.fillStyle = 'rgba(240, 248, 255, 0.8)'
+      ctx.fillRect(0, 0, 1024, 24)
+      ctx.fillRect(0, 488, 1024, 24)
+      ctx.strokeStyle = 'rgba(72, 209, 204, 0.38)'
+      ctx.lineWidth = 6
+      continents.forEach(([cx, cy, rx, ry]) => {
+        ctx.beginPath()
+        ctx.ellipse(cx, cy, rx + 8, ry + 8, -0.15, 0, Math.PI * 2)
+        ctx.stroke()
+      })
+    }
+  }
+
+  // Subtle coordinate graticule on texture
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'
+  ctx.lineWidth = 1
+  for (let lat = 1; lat < 6; lat++) {
+    const y = (lat / 6) * 512
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.lineTo(1024, y)
+    ctx.stroke()
+  }
+  ctx.strokeStyle = 'rgba(115, 255, 211, 0.28)'
+  ctx.lineWidth = 1.5
+  ctx.beginPath()
+  ctx.moveTo(0, 256)
+  ctx.lineTo(1024, 256)
+  ctx.stroke()
+
+  for (let lon = 0; lon < 12; lon++) {
+    const x = (lon / 12) * 1024
+    ctx.strokeStyle = lon === 0 ? 'rgba(115, 255, 211, 0.38)' : 'rgba(255, 255, 255, 0.12)'
+    ctx.lineWidth = lon === 0 ? 2 : 1
+    ctx.beginPath()
+    ctx.moveTo(x, 0)
+    ctx.lineTo(x, 512)
+    ctx.stroke()
+  }
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.wrapS = THREE.RepeatWrapping
+  texture.wrapT = THREE.ClampToEdgeWrapping
+  texture.colorSpace = THREE.SRGBColorSpace
+  return texture
+}
+
 export function createPlanetScene(container, initialParams = {}, callbacks = {}) {
   const scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2('#050614', 0.014)
@@ -82,15 +200,107 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   let rotationSpeed = initialParams.rotationSpeed ?? 1.0
   let currentPlanetData = PLANETS_DATA.find((p) => p.id === 'earth') || PLANETS_DATA[2]
 
-  // Planet Sphere Mesh
+  // Planet Sphere Mesh with Procedural Surface Geography Map
+  let currentTexture = createPlanetTexture(currentPlanetData)
   const planetMaterial = new THREE.MeshStandardMaterial({
     color: currentPlanetData.surfaceColorHex || '#286ea3',
+    map: currentTexture,
     roughness: 0.55,
     metalness: 0.1,
   })
 
   const planetGeometry = new THREE.SphereGeometry(2.15, 64, 48)
   const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial)
+
+  // Surface Reference Features: Attached directly as children to planetMesh
+  // Hierarchy: world -> planetTiltGroup -> planetMesh -> surfaceReference
+  const surfaceReference = new THREE.Group()
+  surfaceReference.name = 'surfaceReference'
+  planetMesh.add(surfaceReference)
+
+  // 1. Subtle 3D Coordinate Graticule (Meridians & Parallels) at R = 2.155
+  const graticuleRadius = 2.155
+  const graticulePositions = []
+
+  // Meridians (every 30 degrees = 12 meridians)
+  const meridianCount = 12
+  const meridianSegments = 48
+  for (let m = 0; m < meridianCount; m++) {
+    const lon = (m / meridianCount) * Math.PI * 2
+    for (let s = 0; s < meridianSegments; s++) {
+      const phi1 = -Math.PI / 2 + (s / meridianSegments) * Math.PI
+      const phi2 = -Math.PI / 2 + ((s + 1) / meridianSegments) * Math.PI
+      graticulePositions.push(
+        graticuleRadius * Math.cos(phi1) * Math.sin(lon),
+        graticuleRadius * Math.sin(phi1),
+        graticuleRadius * Math.cos(phi1) * Math.cos(lon),
+        graticuleRadius * Math.cos(phi2) * Math.sin(lon),
+        graticuleRadius * Math.sin(phi2),
+        graticuleRadius * Math.cos(phi2) * Math.cos(lon),
+      )
+    }
+  }
+
+  // Parallels (Equator, +/-30 deg, +/-60 deg)
+  const latitudes = [-Math.PI / 3, -Math.PI / 6, 0, Math.PI / 6, Math.PI / 3]
+  const parallelSegments = 64
+  latitudes.forEach((lat) => {
+    const y = graticuleRadius * Math.sin(lat)
+    const r = graticuleRadius * Math.cos(lat)
+    for (let s = 0; s < parallelSegments; s++) {
+      const th1 = (s / parallelSegments) * Math.PI * 2
+      const th2 = ((s + 1) / parallelSegments) * Math.PI * 2
+      graticulePositions.push(
+        r * Math.sin(th1), y, r * Math.cos(th1),
+        r * Math.sin(th2), y, r * Math.cos(th2),
+      )
+    }
+  })
+
+  const graticuleGeo = new THREE.BufferGeometry()
+  graticuleGeo.setAttribute('position', new THREE.Float32BufferAttribute(graticulePositions, 3))
+  const graticuleMat = new THREE.LineBasicMaterial({
+    color: '#87baff',
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+  })
+  const graticuleMesh = new THREE.LineSegments(graticuleGeo, graticuleMat)
+  surfaceReference.add(graticuleMesh)
+
+  // 2. Equatorial Prime Meridian Scientific Datum Marker
+  // Located at longitude 0, latitude 0: (0, 0, graticuleRadius)
+  const markerGeo = new THREE.RingGeometry(0.045, 0.085, 32)
+  const markerMat = new THREE.MeshBasicMaterial({
+    color: '#73ffd3',
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.80,
+    depthWrite: false,
+  })
+  const datumMarker = new THREE.Mesh(markerGeo, markerMat)
+  datumMarker.position.set(0, 0, graticuleRadius)
+  surfaceReference.add(datumMarker)
+
+  // Subtle Prime Meridian tick / crosshair
+  const crossGeo = new THREE.BufferGeometry()
+  crossGeo.setAttribute('position', new THREE.Float32BufferAttribute([
+    -0.12, 0, graticuleRadius + 0.001,  0.12, 0, graticuleRadius + 0.001,
+    0, -0.12, graticuleRadius + 0.001,  0, 0.12, graticuleRadius + 0.001,
+  ], 3))
+  const crossMat = new THREE.LineBasicMaterial({ color: '#73ffd3', transparent: true, opacity: 0.70, depthWrite: false })
+  const crossMesh = new THREE.LineSegments(crossGeo, crossMat)
+  surfaceReference.add(crossMesh)
+
+  // 3. Polar Axis Indicator Points (North & South Poles at (0, +/- graticuleRadius, 0))
+  const poleGeo = new THREE.BufferGeometry()
+  poleGeo.setAttribute('position', new THREE.Float32BufferAttribute([
+    0, graticuleRadius + 0.01, 0,
+    0, -graticuleRadius - 0.01, 0,
+  ], 3))
+  const poleMat = new THREE.PointsMaterial({ color: '#ffffff', size: 5, transparent: true, opacity: 0.85 })
+  const polePoints = new THREE.Points(poleGeo, poleMat)
+  surfaceReference.add(polePoints)
 
   // Planetary axial tilt group: preserves axial tilt while rotating around local polar axis
   const planetTiltGroup = new THREE.Group()
@@ -216,8 +426,12 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     currentPlanetData = p
     surfaceAcceleration = p.surfaceGravityMs2
 
-    // Update 3D appearance
+    // Update 3D appearance & procedural surface map
+    if (currentTexture) currentTexture.dispose()
+    currentTexture = createPlanetTexture(p)
+    planetMaterial.map = currentTexture
     planetMaterial.color.set(p.surfaceColorHex || p.color)
+    planetMaterial.needsUpdate = true
     planetTiltGroup.rotation.z = (p.axialTiltDeg * Math.PI) / 180
 
     atmosphereUniforms.uInnerColor.value.set(p.color)
@@ -273,7 +487,11 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     atmosphereUniforms.uTime.value = elapsed
     atmosphereUniforms.uPointer.value.copy(pointer)
 
-    planetMesh.rotation.y += 0.00125 * rotationSpeed
+    // Calibrated continuous angular velocity around local polar axis:
+    // 0.2x = visibly slow (~3.8 deg/s)
+    // 1.0x = clear baseline rotation (~18.9 deg/s)
+    // 3.0x = visibly fastest (~56.7 deg/s)
+    planetMesh.rotation.y += 0.0055 * rotationSpeed
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 0.45, 0.02)
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.35 - pointer.y * 0.28, 0.02)
     camera.lookAt(0.5, 0, 0)
@@ -334,8 +552,17 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     cancelAnimationFrame(frameId)
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('resize', resize)
+    if (currentTexture) currentTexture.dispose()
     planetGeometry.dispose()
     planetMaterial.dispose()
+    graticuleGeo.dispose()
+    graticuleMat.dispose()
+    markerGeo.dispose()
+    markerMat.dispose()
+    crossGeo.dispose()
+    crossMat.dispose()
+    poleGeo.dispose()
+    poleMat.dispose()
     atmosphere.geometry.dispose()
     atmosphere.material.dispose()
     scaleBaseGeo.dispose()
@@ -361,6 +588,14 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
       const s = Math.min(1.4, Math.max(0.6, Math.cbrt(m / 70)))
       testObjectMesh.scale.setScalar(s)
     },
+    getRotationState: () => ({
+      rotationSpeed,
+      planetRotationY: planetMesh.rotation.y,
+      axialTiltDeg: currentPlanetData.axialTiltDeg,
+      worldPosY: world.position.y,
+      hasSurfaceReference: Boolean(surfaceReference),
+      referenceChildCount: surfaceReference.children.length,
+    }),
   }
 
   return {
@@ -370,5 +605,6 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     selectPlanet: setPlanet,
     triggerDrop,
     setObjectMass: sceneApi.setObjectMass,
+    getRotationState: sceneApi.getRotationState,
   }
 }

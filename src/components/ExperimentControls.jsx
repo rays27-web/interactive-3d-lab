@@ -83,11 +83,17 @@ function ExperimentControls({
               <div className="controls-guidance-card">
                 <div className="guidance-item">
                   <span className="guidance-lbl">YOU ARE CHANGING:</span>
-                  <strong className="guidance-val">{controls[0]?.label || 'Physical Parameter'}</strong>
+                  <strong className="guidance-val">
+                    {experiment.id === 'planet' ? 'Rotational velocity (ω)' : controls[0]?.label || 'Physical Parameter'}
+                  </strong>
                 </div>
                 <div className="guidance-item">
                   <span className="guidance-lbl">YOU ARE WATCHING:</span>
-                  <span className="guidance-text">{expMissions.observablesSummary || 'Dynamic 3D response & equilibrium'}</span>
+                  <span className="guidance-text">
+                    {experiment.id === 'planet'
+                      ? "How quickly the planet's surface turns around its axis."
+                      : expMissions.observablesSummary || 'Dynamic 3D response & equilibrium'}
+                  </span>
                 </div>
               </div>
 
