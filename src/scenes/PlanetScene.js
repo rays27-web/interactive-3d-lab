@@ -91,8 +91,12 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
 
   const planetGeometry = new THREE.SphereGeometry(2.15, 64, 48)
   const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial)
-  planetMesh.rotation.z = (currentPlanetData.axialTiltDeg * Math.PI) / 180
-  world.add(planetMesh)
+
+  // Planetary axial tilt group: preserves axial tilt while rotating around local polar axis
+  const planetTiltGroup = new THREE.Group()
+  planetTiltGroup.rotation.z = (currentPlanetData.axialTiltDeg * Math.PI) / 180
+  planetTiltGroup.add(planetMesh)
+  world.add(planetTiltGroup)
 
   // Atmospheric Fresnel Rim
   const atmosphereUniforms = {
@@ -195,7 +199,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
 
     // Update 3D appearance
     planetMaterial.color.set(p.surfaceColorHex || p.color)
-    planetMesh.rotation.z = (p.axialTiltDeg * Math.PI) / 180
+    planetTiltGroup.rotation.z = (p.axialTiltDeg * Math.PI) / 180
 
     atmosphereUniforms.uInnerColor.value.set(p.color)
     atmosphere.visible = p.id !== 'mercury' // Mercury has no significant atmosphere
@@ -254,7 +258,6 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     atmosphereUniforms.uPointer.value.copy(pointer)
 
     planetMesh.rotation.y += 0.00125 * rotationSpeed
-    world.position.y = Math.sin(elapsed * 0.52 * rotationSpeed) * 0.08
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 0.45, 0.02)
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.35 - pointer.y * 0.28, 0.02)
     camera.lookAt(0.5, 0, 0)
