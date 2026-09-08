@@ -29,18 +29,28 @@ pnpm preview
 
 ```text
 src/
-  components/SceneCanvas.jsx  React lifecycle wrapper for the active Three.js scene
-  components/ExperimentNavigator.jsx  Minimal experiment index control
-  components/ExperimentControls.jsx   Contextual laboratory parameter controls
-  experiments/registry.js     Single source of truth for available and future experiments
-  scenes/PlanetScene.js       Experiment 01: scene, lights, stars, interaction, animation
-  scenes/GalaxyScene.js       Experiment 02: 4-arm spiral, 3D bulge, stellar drift
-  scenes/BlackHoleScene.js    Experiment 03: gravitational lensing, accretion disk, photon ring
-  scenes/FluidScene.js        Experiment 04: curl-noise advection, kinetic impeller, thermal plume
-  scenes/PulsarScene.js       Experiment 05: oblique dipole, relativistic polar beams, synchrotron plasma
-  styles/global.css           Visual layout and responsive styling
-  App.jsx                     Page content around the canvas
-  main.jsx                    React entry point
+  components/
+    SceneCanvas.jsx             React lifecycle wrapper for the active Three.js scene
+    ExperimentNavigator.jsx     Accessible experiment index control
+    ExperimentControls.jsx      Contextual parameter controls & preset integration
+    PresetManager.jsx           Safe localStorage parameter preset manager
+    LaboratoryTelemetry.jsx     Throttled, non-allocating FPS & WebGL telemetry HUD
+    ExperimentInfoPanel.jsx     Collapsible scientific dossier & physical equations
+    LabModeToggle.jsx           Lab Mode vs Clean Mode presentation toggle
+  utils/
+    presetStorage.js            Schema-validated localStorage with bounds clamping
+  experiments/
+    registry.js                 Single source of truth for experiment configurations & dossier
+  scenes/
+    PlanetScene.js              Experiment 01: scene, lights, stars, interaction, animation
+    GalaxyScene.js              Experiment 02: 4-arm spiral, 3D bulge, stellar drift
+    BlackHoleScene.js           Experiment 03: gravitational lensing, accretion disk, photon ring
+    FluidScene.js               Experiment 04: curl-noise advection, kinetic impeller, thermal plume
+    PulsarScene.js              Experiment 05: oblique dipole, relativistic polar beams, synchrotron plasma
+  styles/
+    global.css                  Command Center visual layout, telemetry HUD, and responsive styling
+  App.jsx                       Command Center shell & keyboard orchestration
+  main.jsx                      React entry point
 ```
 
 ## Experiment architecture
@@ -223,6 +233,41 @@ Experiment 05 exposes 4 parameters through `ExperimentControls.jsx`:
 - **Beam Collimation** ($0.3\times - 2.5\times$): Adjusts polar beam cone tightness and observer pulse sharpness.
 - **Plasma Density** ($20\% - 200\%$): Tunes magnetospheric particle density, opacity, and polar cap hotspot intensity.
 
+## Phase 10: Laboratory Command Center
+
+Phase 10 transforms the Interactive 3D Lab into a unified scientific **Laboratory Command Center** while preserving existing WebGL scene lifecycle and rendering performance:
+
+### 1. Throttled Telemetry Layer (`LaboratoryTelemetry.jsx`)
+- Displays live system status (`WebGL 2.0 · ACTIVE`), real-time FPS and frame time, active simulation entity count, viewport dimensions, and device pixel ratio (DPR).
+- **Performance Discipline**: Utilizes an internal `requestAnimationFrame` delta accumulator that flushes to React state strictly once every 500ms. Eliminates per-frame garbage generation and prevents unnecessary React component re-renders.
+
+### 2. Scientific Dossier & Physical Formulations (`ExperimentInfoPanel.jsx`)
+- An accessible, collapsible scientific dossier detailing:
+  - Scientific field and sub-discipline.
+  - Core mathematical models and governing equations.
+  - Physical phenomenon observation guide.
+  - Parameter operational guides explaining what each slider physically modulates.
+- Dismissible via on-screen close button, backdrop click, or keyboard `Escape`.
+
+### 3. Lab Mode vs. Clean Mode (`LabModeToggle.jsx`)
+- **Lab Mode**: Full telemetry HUD, active parameter controls, and scientific dossier access.
+- **Clean Mode**: Uncluttered, minimalist presentation focusing entirely on the 3D visualization.
+- **Scene Preservation**: Mode switching is implemented purely through React UI state and CSS transitions. The underlying WebGL canvas, Three.js scene, geometry, and shader programs are **never** recreated or unmounted when switching modes.
+
+### 4. Local Storage Preset Management (`presetStorage.js` & `PresetManager.jsx`)
+- Allows users to save up to 6 custom parameter presets per experiment to `localStorage` (`i3d_lab_presets_v1`).
+- **Defense-in-Depth Validation**:
+  - Validates JSON parse and handles corrupted storage safely without runtime crashes.
+  - Sanitizes all stored parameters by clamping numerical values strictly to `[min, max]` matching experiment control bounds.
+  - Protects against prototype pollution by discarding disallowed keys (`__proto__`, `constructor`, `prototype`).
+  - Gracefully recovers from storage quota limits or disabled `localStorage` (e.g. strict private browsing modes).
+  - Enables one-click preset loading, individual preset deletion, and restoration to baseline laboratory defaults.
+
+### 5. Accessibility & Keyboard Navigation
+- Enhanced semantic HTML controls (`button`, `role="region"`, `role="dialog"`, `role="tablist"`).
+- Visible focus rings (`*:focus-visible`) for keyboard navigation.
+- Global `Escape` key shortcut closes all open drawers, parameter panels, and dossiers.
+
 ## Security & Deployment
 
 The Interactive 3D Lab applies a **defense-in-depth, security-hardened** design tailored for static single-page application (SPA) architectures and WebGL graphics runtimes.
@@ -311,7 +356,7 @@ git ls-files | grep -E "(\.env|key|secret|token|credential)"
 pnpm build
 
 # 4. Verify test suite, WebGL lifecycle, and responsive UI
-node scratch/test_phase9.cjs
+node scratch/test_phase10.cjs
 ```
 
 
