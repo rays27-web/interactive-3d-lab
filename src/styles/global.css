@@ -54,10 +54,12 @@ body {
 }
 
 .topbar {
+  position: relative;
+  z-index: 20;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 30px clamp(24px, 5vw, 74px);
+  padding: 16px clamp(24px, 5vw, 74px);
   font-family: 'DM Mono', monospace;
   font-size: 10px;
   letter-spacing: .15em;
@@ -4994,12 +4996,12 @@ h1 em {
 /* 1. ExperimentHeader — Compact Banner */
 .experiment-header-banner {
   position: absolute;
-  top: 52px;
+  top: 72px;
   left: 50%;
   transform: translateX(-50%);
   width: auto;
   max-width: calc(100vw - 48px);
-  z-index: 25;
+  z-index: 15;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -5721,21 +5723,1357 @@ h1 em {
     width: auto;
   }
 }
+/* ==========================================================================
+   PHASE 55: SOLAR SYSTEM EDUCATIONAL REDESIGN & READABILITY OVERHAUL
+   ========================================================================== */
 
-@media (max-width: 420px) {
-  .experiment-header-banner {
-    top: 48px;
-    padding: 6px 10px;
+/* --- 1. SOLAR SYSTEM PHYSICS TOOLBAR --- */
+.sol-physics-toolbar {
+  position: fixed;
+  top: 124px;
+  left: clamp(16px, 3vw, 48px);
+  z-index: 25;
+  max-width: min(580px, calc(100vw - 32px));
+  background: rgba(7, 12, 30, 0.96);
+  border: 1px solid rgba(133, 189, 255, 0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 18px rgba(115, 255, 211, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: solToolbarFade 220ms ease-out;
+}
+
+@keyframes solToolbarFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.sol-scale-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(255, 170, 0, 0.12);
+  border: 1px solid rgba(255, 170, 0, 0.35);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.sol-scale-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffca28;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.sol-scale-text {
+  font-size: 12.5px;
+  color: #f0f5ff;
+  line-height: 1.35;
+  flex: 1;
+}
+
+.sol-scale-explain-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #73ffd3;
+  background: transparent;
+  border: 1px solid rgba(115, 255, 211, 0.4);
+  border-radius: 3px;
+  padding: 3px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.sol-scale-explain-btn:hover {
+  background: rgba(115, 255, 211, 0.15);
+  color: #ffffff;
+}
+
+.sol-scale-drawer {
+  background: rgba(10, 18, 44, 0.92);
+  border-left: 3px solid #ffca28;
+  padding: 8px 12px;
+  border-radius: 4px;
+}
+
+.sol-scale-drawer-text {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #e1edff;
+  margin: 0;
+}
+
+.sol-toolbar-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.sol-toolbar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sol-group-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9bb7e0;
+  letter-spacing: 0.1em;
+}
+
+.sol-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.sol-tool-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #d4e4ff;
+  background: rgba(18, 30, 68, 0.7);
+  border: 1px solid rgba(133, 189, 255, 0.3);
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.sol-tool-btn:hover:not(:disabled) {
+  color: #ffffff;
+  border-color: #73ffd3;
+  background: rgba(83, 149, 255, 0.25);
+}
+
+.sol-tool-btn.is-active {
+  color: #050816;
+  background: #73ffd3;
+  border-color: #73ffd3;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(115, 255, 211, 0.4);
+}
+
+.sol-tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sol-pause-btn.is-paused {
+  background: #ffaa00;
+  color: #050816;
+  font-weight: 700;
+  border-color: #ffaa00;
+}
+
+.sol-reset-btn {
+  color: #ffb4a2;
+  border-color: rgba(255, 120, 90, 0.4);
+  background: rgba(255, 80, 40, 0.1);
+}
+
+.sol-reset-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 80, 40, 0.25);
+  border-color: #ff8566;
+}
+
+.sol-toggle-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: #c4d7f5;
+  background: rgba(18, 30, 68, 0.6);
+  border: 1px solid rgba(133, 189, 255, 0.25);
+  border-radius: 4px;
+  padding: 5px 8px;
+  cursor: pointer;
+  min-height: 34px;
+  transition: all 150ms ease;
+}
+
+.sol-toggle-chip input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #73ffd3;
+  cursor: pointer;
+}
+
+.sol-toggle-chip.is-checked {
+  border-color: rgba(115, 255, 211, 0.5);
+  background: rgba(115, 255, 211, 0.12);
+  color: #ffffff;
+}
+
+/* --- 2. PLANET DETAIL PANEL (INSPECTOR) --- */
+.planet-detail-panel {
+  position: fixed;
+  top: 76px;
+  right: clamp(16px, 3vw, 48px);
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  max-height: min(600px, calc(100vh - 160px));
+  overflow-y: auto;
+  z-index: 20;
+  background: rgba(7, 12, 30, 0.98);
+  border: 1px solid rgba(115, 255, 211, 0.35);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(115, 255, 211, 0.1);
+  padding: 18px 20px;
+  font-family: Outfit, sans-serif;
+  animation: panelSlideIn 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes panelSlideIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.planet-panel-header, .planet-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(133, 189, 255, 0.2);
+}
+
+.planet-badge-group, .header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.planet-color-dot, .planet-header-pip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.planet-name-title, .planet-detail-title {
+  font-size: 21px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.planet-type-badge, .planet-detail-type {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #73ffd3;
+  background: rgba(115, 255, 211, 0.14);
+  border: 1px solid rgba(115, 255, 211, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.planet-detail-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: #9bb7e0;
+  letter-spacing: 0.1em;
+}
+
+.panel-close-btn, .planet-detail-close-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  color: #c4d7f5;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(133, 189, 255, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+}
+
+.panel-close-btn:hover, .planet-detail-close-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: #73ffd3;
+}
+
+.inspector-tabs-nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+  background: rgba(14, 24, 56, 0.7);
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.inspector-tab-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #a4c2ed;
+  background: transparent;
+  border: none;
+  padding: 8px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 150ms ease;
+}
+
+.inspector-tab-btn:hover {
+  color: #ffffff;
+  background: rgba(83, 149, 255, 0.15);
+}
+
+.inspector-tab-btn.is-active {
+  background: #73ffd3;
+  color: #050816;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(115, 255, 211, 0.3);
+}
+
+.metrics-primary-grid, .primary-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.primary-metric-card, .metric-box {
+  background: rgba(14, 24, 56, 0.85);
+  border: 1px solid rgba(133, 189, 255, 0.25);
+  border-radius: 6px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.primary-metric-label, .metric-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #9bb7e0;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.primary-metric-val, .metric-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.primary-metric-sub, .metric-sub {
+  font-size: 11.5px;
+  color: #73ffd3;
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.why-it-matters-card {
+  background: rgba(115, 255, 211, 0.08);
+  border-left: 3px solid #73ffd3;
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+.why-badge, .card-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #73ffd3;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.why-text, .why-it-matters-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #f0f5ff;
+  margin: 0;
+}
+
+.watch-motion-action-card {
+  background: rgba(83, 149, 255, 0.12);
+  border: 1px solid rgba(83, 149, 255, 0.35);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.watch-motion-btn {
+  width: 100%;
+  min-height: 42px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #050816;
+  background: #73ffd3;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(115, 255, 211, 0.35);
+  transition: all 180ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.watch-motion-btn:hover {
+  background: #8effdc;
+  transform: translateY(-1px);
+}
+
+.watch-motion-btn.is-active {
+  background: #85bdff;
+  color: #050816;
+}
+
+.watch-motion-hint {
+  font-size: 12px;
+  color: #c4d7f5;
+  margin: 6px 0 0;
+  text-align: center;
+}
+
+.sim-playback-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(133, 189, 255, 0.2);
+}
+
+.sim-playback-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9bb7e0;
+}
+
+.sim-speed-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.sim-speed-pill {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #c4d7f5;
+  background: rgba(18, 30, 68, 0.8);
+  border: 1px solid rgba(133, 189, 255, 0.3);
+  border-radius: 3px;
+  padding: 3px 6px;
+  cursor: pointer;
+}
+
+.sim-speed-pill.is-active {
+  background: #73ffd3;
+  color: #050816;
+  font-weight: 700;
+  border-color: #73ffd3;
+}
+
+.educational-question-card {
+  background: rgba(16, 26, 60, 0.85);
+  border: 1px solid rgba(133, 189, 255, 0.3);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.question-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #90d0ff;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.question-prompt, .question-main-heading {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.45;
+  margin: 0 0 10px;
+}
+
+.question-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-row, .question-substep {
+  background: rgba(8, 14, 34, 0.6);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-left: 2px solid #73ffd3;
+}
+
+.step-badge, .substep-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #73ffd3;
+  margin-right: 6px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.step-text, .substep-text {
+  font-size: 13px;
+  color: #f0f5ff;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.equation-toggle-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #73ffd3;
+  background: transparent;
+  border: 1px dashed rgba(115, 255, 211, 0.4);
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  margin-top: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 150ms ease;
+}
+
+.equation-toggle-btn:hover {
+  background: rgba(115, 255, 211, 0.12);
+  color: #ffffff;
+}
+
+.equation-drawer, .equation-drawer-content {
+  background: rgba(5, 10, 24, 0.95);
+  border: 1px solid rgba(115, 255, 211, 0.25);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+
+.formula-display, .equation-math-box code {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: #73ffd3;
+  margin-bottom: 6px;
+  display: block;
+  text-align: center;
+}
+
+.variable-explanation, .equation-math-desc {
+  font-size: 12px;
+  color: #b8cbef;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* --- Comparison Tab Styles --- */
+.comparison-target-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.target-select-dropdown {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #0c1638;
+  border: 1px solid rgba(133, 189, 255, 0.4);
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.comparison-metrics-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.comp-metric-row {
+  background: rgba(14, 24, 56, 0.85);
+  border: 1px solid rgba(133, 189, 255, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.comp-row-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #9bb7e0;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.comp-values-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.comp-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.comp-body-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.comp-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.comp-divider {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #73ffd3;
+  font-weight: 700;
+}
+
+.comparison-conclusion-card {
+  background: rgba(83, 149, 255, 0.12);
+  border-left: 3px solid #85bdff;
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.conclusion-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #85bdff;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.conclusion-text {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #f0f5ff;
+  margin: 0;
+}
+
+/* --- Experiments Tab Styles --- */
+.experiment-module-card {
+  background: rgba(16, 26, 60, 0.85);
+  border: 1px solid rgba(133, 189, 255, 0.3);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.module-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #73ffd3;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.module-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 6px;
+}
+
+.module-question {
+  font-size: 13px;
+  font-style: italic;
+  color: #90d0ff;
+  margin: 0 0 10px;
+}
+
+.experiment-buttons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.exp-preset-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #d4e4ff;
+  background: rgba(18, 30, 68, 0.7);
+  border: 1px solid rgba(133, 189, 255, 0.3);
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+  min-height: 34px;
+  transition: all 150ms ease;
+}
+
+.exp-preset-btn:hover {
+  background: rgba(83, 149, 255, 0.25);
+  color: #ffffff;
+  border-color: #73ffd3;
+}
+
+.exp-preset-btn.is-active {
+  background: #73ffd3;
+  color: #050816;
+  font-weight: 700;
+  border-color: #73ffd3;
+  box-shadow: 0 0 10px rgba(115, 255, 211, 0.3);
+}
+
+.exp-result-feedback, .experiment-feedback-box {
+  background: rgba(7, 14, 36, 0.95);
+  border-left: 3px solid #73ffd3;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+
+.exp-result-title, .feedback-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #73ffd3;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.exp-result-text, .feedback-text {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #e1edff;
+  margin: 0 0 6px;
+}
+
+.exp-reset-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #ffb4a2;
+  background: rgba(255, 80, 40, 0.15);
+  border: 1px solid rgba(255, 80, 40, 0.3);
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* --- Advanced Astronomical Data Accordion --- */
+.advanced-data-accordion {
+  border: 1px solid rgba(133, 189, 255, 0.2);
+  border-radius: 6px;
+  margin-top: 10px;
+  background: rgba(10, 16, 40, 0.6);
+}
+
+.advanced-accordion-trigger, .advanced-toggle-btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9bb7e0;
+  cursor: pointer;
+}
+
+.advanced-data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(133, 189, 255, 0.15);
+}
+
+.adv-data-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.adv-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  color: #8da2c4;
+}
+
+.adv-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* --- 3. PLANET SELECTOR BAR --- */
+.planet-selector-bar {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  background: rgba(7, 12, 30, 0.96);
+  border: 1px solid rgba(133, 189, 255, 0.35);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65), 0 0 16px rgba(115, 255, 211, 0.08);
+  max-width: calc(100vw - 32px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.planet-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.planet-selector-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #9bb7e0;
+  letter-spacing: 0.1em;
+}
+
+.planet-selector-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.planet-selector-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d8e5fa;
+  background: rgba(18, 30, 68, 0.7);
+  border: 1px solid rgba(133, 189, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.planet-selector-btn:hover {
+  background: rgba(83, 149, 255, 0.25);
+  color: #ffffff;
+  border-color: #73ffd3;
+}
+
+.planet-selector-btn.is-selected {
+  background: rgba(115, 255, 211, 0.18);
+  border-color: #73ffd3;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(115, 255, 211, 0.3);
+}
+
+.planet-selector-btn.is-sun {
+  border-color: rgba(255, 200, 0, 0.4);
+}
+
+.planet-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* --- 4. SOLAR MINI-MAP --- */
+.sol-minimap {
+  position: fixed;
+  bottom: 85px;
+  right: clamp(16px, 3vw, 48px);
+  width: 170px;
+  z-index: 14;
+  background: rgba(7, 12, 30, 0.94);
+  border: 1px solid rgba(133, 189, 255, 0.35);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.minimap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.minimap-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #73ffd3;
+  letter-spacing: 0.1em;
+}
+
+.minimap-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  color: #8da2c4;
+}
+
+.minimap-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.minimap-orbit {
+  fill: none;
+  stroke: rgba(133, 189, 255, 0.25);
+  stroke-width: 0.9;
+  cursor: pointer;
+}
+
+.minimap-orbit:hover {
+  stroke: rgba(115, 255, 211, 0.6);
+}
+
+.minimap-orbit.is-selected {
+  stroke: #73ffd3;
+  stroke-width: 1.8;
+}
+
+.minimap-sun {
+  fill: #ffcc00;
+  cursor: pointer;
+  filter: drop-shadow(0 0 3px #ffaa00);
+}
+
+.minimap-planet {
+  cursor: pointer;
+  transition: r 150ms ease;
+}
+
+.minimap-planet.is-selected {
+  stroke: #ffffff;
+  stroke-width: 1.2;
+}
+
+.minimap-ping {
+  fill: none;
+  stroke: #73ffd3;
+  stroke-width: 0.8;
+  opacity: 0.8;
+}
+
+/* ==========================================================================
+   APPLICATION-WIDE READABILITY ELEVATION OVERRIDES
+   ========================================================================== */
+
+/* Top Navigation Bar */
+.topbar {
+  font-size: 12.5px !important;
+}
+
+.topbar-index-btn {
+  font-size: 12px !important;
+  padding: 8px 14px !important;
+  font-weight: 600 !important;
+  color: #e1edff !important;
+  border-color: rgba(133, 189, 255, 0.4) !important;
+  background: rgba(8, 14, 34, 0.9) !important;
+}
+
+.topbar-index-btn .index-btn-icon {
+  font-size: 13px !important;
+}
+
+.lab-mode-toggle, .dossier-trigger {
+  font-size: 12px !important;
+  padding: 7px 13px !important;
+  font-weight: 500 !important;
+  color: #e1edff !important;
+  background: rgba(8, 14, 34, 0.85) !important;
+  border-color: rgba(133, 189, 255, 0.35) !important;
+}
+
+/* Telemetry HUD */
+.lab-telemetry {
+  font-size: 12px !important;
+  padding: 8px 16px !important;
+  background: rgba(7, 12, 30, 0.96) !important;
+  border: 1px solid rgba(133, 189, 255, 0.35) !important;
+}
+
+.telemetry-label {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: #9bb7e0 !important;
+}
+
+.telemetry-val {
+  font-size: 13px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.telemetry-val small {
+  font-size: 11px !important;
+  color: #b8cbef !important;
+}
+
+.telemetry-params-list {
+  font-size: 11.5px !important;
+  color: #c4d7f5 !important;
+}
+
+/* Controls & Sliders */
+.controls-trigger {
+  font-size: 12.5px !important;
+  padding: 8px 14px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+  background: rgba(8, 14, 34, 0.9) !important;
+  border-color: rgba(133, 189, 255, 0.4) !important;
+}
+
+.controls-panel {
+  width: 320px !important;
+  padding: 20px !important;
+  background: rgba(7, 12, 30, 0.98) !important;
+  border: 1px solid rgba(133, 189, 255, 0.35) !important;
+}
+
+.controls-header {
+  font-size: 12px !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+.controls-title {
+  color: #c4d7f5 !important;
+}
+
+.controls-tab {
+  font-size: 12px !important;
+  padding: 7px 0 !important;
+  font-weight: 600 !important;
+  color: #b8cbef !important;
+}
+
+.controls-tab.is-active {
+  color: #ffffff !important;
+}
+
+.control-label {
+  font-size: 13px !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+.control-value {
+  font-size: 13.5px !important;
+  color: #73ffd3 !important;
+  font-weight: 700 !important;
+}
+
+.control-slider {
+  height: 6px !important;
+  background: rgba(40, 60, 110, 0.75) !important;
+  border: 1px solid rgba(133, 189, 255, 0.35) !important;
+}
+
+.control-slider::-webkit-slider-thumb {
+  width: 18px !important;
+  height: 18px !important;
+  background: #9dd0ff !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 10px #4e93ff !important;
+}
+
+.control-slider::-moz-range-thumb {
+  width: 18px !important;
+  height: 18px !important;
+  background: #9dd0ff !important;
+  border: 2px solid #ffffff !important;
+}
+
+.control-toggle-btn {
+  font-size: 12px !important;
+  padding: 9px 0 !important;
+  min-height: 38px !important;
+  font-weight: 600 !important;
+}
+
+/* What Am I Doing? HUD */
+.what-am-i-doing-panel {
+  font-size: 13px !important;
+  background: rgba(7, 12, 30, 0.98) !important;
+  border-color: rgba(115, 255, 211, 0.35) !important;
+}
+
+.hud-tag {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #73ffd3 !important;
+}
+
+.hud-experiment {
+  font-size: 12px !important;
+  color: #c4d7f5 !important;
+}
+
+.hud-question-text {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+}
+
+.hud-block-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #9bb7e0 !important;
+}
+
+.hud-text-desc {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: #f0f5ff !important;
+}
+
+.hud-pill {
+  font-size: 12px !important;
+  padding: 4px 8px !important;
+  color: #ffffff !important;
+}
+
+.hud-learn-btn {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #73ffd3 !important;
+}
+
+/* Tooltips */
+.info-tooltip-trigger {
+  width: 20px !important;
+  height: 20px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.info-tooltip-popover {
+  width: 290px !important;
+  padding: 14px 16px !important;
+  background: rgba(7, 12, 30, 0.98) !important;
+  border-color: rgba(115, 255, 211, 0.4) !important;
+}
+
+.info-tooltip-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+}
+
+.info-tooltip-text {
+  font: 13px/1.5 Outfit, sans-serif !important;
+  color: #f0f5ff !important;
+}
+
+.info-tooltip-tag {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #73ffd3 !important;
+}
+
+.info-tooltip-learn-btn {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+/* Mission Drawer */
+.mission-drawer {
+  background: rgba(7, 12, 30, 0.98) !important;
+  border-color: rgba(115, 255, 211, 0.35) !important;
+}
+
+.mission-drawer-heading {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.mission-step-pill {
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+  min-height: 36px !important;
+}
+
+.step-label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.step-prompt {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #ffffff !important;
+}
+
+.prediction-opt-btn {
+  font-size: 13.5px !important;
+  padding: 12px 14px !important;
+  min-height: 44px !important;
+  color: #ffffff !important;
+  background: rgba(16, 26, 60, 0.85) !important;
+}
+
+/* Physics Inspector & Ask The Lab */
+.physics-inspector-drawer {
+  background: rgba(7, 12, 30, 0.98) !important;
+  font-size: 13px !important;
+}
+
+.physics-drawer-heading {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.inspector-section-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #73ffd3 !important;
+}
+
+.ask-lab-modal {
+  background: rgba(7, 12, 30, 0.98) !important;
+  border-color: rgba(115, 255, 211, 0.35) !important;
+}
+
+.ask-lab-header h2 {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.ask-lab-answer {
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  color: #f0f5ff !important;
+}
+
+.ask-lab-track-btn {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 14px !important;
+  min-height: 38px !important;
+}
+
+/* Footer & Index Hint */
+.footer-note {
+  font-size: 12px !important;
+  color: #b8cbef !important;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 768px) {
+  .sol-physics-toolbar {
+    top: 68px;
+    left: 12px;
+    right: 12px;
+    max-width: calc(100vw - 24px);
+    padding: 8px 10px;
   }
-  .planet-stats-grid {
-    grid-template-columns: 1fr;
+  .planet-detail-panel {
+    top: auto;
+    bottom: 85px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: 65vh;
   }
-  .planet-stats-grid .highlight-box {
-    grid-column: span 1;
+  .sol-minimap {
+    display: none; /* Hide minimap on small screens to prevent clutter */
   }
-  .curriculum-grid {
+  .planet-selector-bar {
+    bottom: 10px;
+    max-width: calc(100vw - 20px);
+  }
+}
+
+@media (max-width: 480px) {
+  .sol-scale-text {
+    font-size: 11.5px;
+  }
+  .sol-tool-btn, .sol-toggle-chip {
+    font-size: 11px;
+    padding: 4px 6px;
+    min-height: 30px;
+  }
+  .metrics-primary-grid {
     grid-template-columns: 1fr;
   }
 }
+
 
 

@@ -3,14 +3,18 @@ import { CELESTIAL_BODIES } from '../scenes/SolarSystemScene'
 function PlanetSelector({ selectedPlanetId, onSelectPlanet }) {
   return (
     <nav aria-label="Solar System planetary selector" className="planet-selector-bar">
+      <div className="planet-selector-header">
+        <span className="planet-selector-title">SELECT PLANET TO INSPECT:</span>
+      </div>
       <div className="planet-selector-scroll">
         {CELESTIAL_BODIES.map((body) => {
           const isSelected = selectedPlanetId === body.id
+          const isSun = body.id === 'sun'
           return (
             <button
-              aria-label={`Select ${body.name}`}
+              aria-label={`Select ${body.name} ${isSun ? '(Central Star)' : '(Planet)'}`}
               aria-pressed={isSelected}
-              className={`planet-selector-btn ${isSelected ? 'is-selected' : ''}`}
+              className={`planet-selector-btn ${isSelected ? 'is-selected' : ''} ${isSun ? 'is-sun' : ''}`}
               key={body.id}
               onClick={() => onSelectPlanet(body.id)}
               type="button"
@@ -20,7 +24,7 @@ function PlanetSelector({ selectedPlanetId, onSelectPlanet }) {
                 className="planet-pip"
                 style={{
                   backgroundColor: body.color,
-                  boxShadow: isSelected ? `0 0 10px ${body.color}` : 'none',
+                  boxShadow: isSelected ? `0 0 12px ${body.color}` : 'none',
                 }}
               />
               <span className="planet-name">{body.name}</span>

@@ -8,6 +8,7 @@ import PlanetDetailPanel from './components/PlanetDetailPanel'
 import PlanetSelector from './components/PlanetSelector'
 import SceneCanvas from './components/SceneCanvas'
 import SolarSystemMiniMap from './components/SolarSystemMiniMap'
+import SolarSystemToolbar from './components/SolarSystemToolbar'
 import PhysicsInspector from './components/PhysicsInspector'
 import MeasurementOverlay from './components/MeasurementOverlay'
 import ExperimentHistory from './components/ExperimentHistory'
@@ -72,6 +73,15 @@ function App() {
   const [selectedPlanet, setSelectedPlanet] = useState(null)
   const [planetStates, setPlanetStates] = useState([])
   const [sceneApi, setSceneApi] = useState(null)
+  const [solCameraView, setSolCameraView] = useState('system')
+  const [solVisualToggles, setSolVisualToggles] = useState({
+    showOrbits: true,
+    showVelocityVectors: false,
+    showGravityVectors: false,
+    showDistance: false,
+  })
+  const [solIsPaused, setSolIsPaused] = useState(false)
+  const [solSimSpeed, setSolSimSpeed] = useState(1.0)
 
   const [paramsByExperiment, setParamsByExperiment] = useState(() => {
     const initial = {}
@@ -151,6 +161,65 @@ function App() {
       }
     })
   }, [])
+
+  const handleSelectCameraView = useCallback((view) => {
+    setSolCameraView(view)
+    sceneApi?.setCameraView?.(view)
+  }, [sceneApi])
+
+  const handleToggleVisual = useCallback((key) => {
+    setSolVisualToggles((prev) => {
+      const next = { ...prev, [key]: !prev[key] }
+      sceneApi?.setVisualToggles?.(next)
+      return next
+    })
+  }, [sceneApi])
+
+  const handleToggleSolPause = useCallback(() => {
+    setSolIsPaused((prev) => {
+      const next = !prev
+      sceneApi?.setPaused?.(next)
+      return next
+    })
+  }, [sceneApi])
+
+  const handleSetSolSpeed = useCallback((speed) => {
+    setSolSimSpeed(speed)
+    sceneApi?.setSimulationSpeed?.(speed)
+    if (solIsPaused) {
+      setSolIsPaused(false)
+      sceneApi?.setPaused?.(false)
+    }
+  }, [sceneApi, solIsPaused])
+
+  const handleWatchPlanet = useCallback((planetId) => {
+    const body = CELESTIAL_BODIES.find((b) => b.id === planetId)
+    if (body) {
+      setSelectedPlanet(body)
+    }
+    setSolCameraView('follow')
+    setSolVisualToggles((prev) => {
+      const next = {
+        ...prev,
+        showVelocityVectors: true,
+        showGravityVectors: true,
+        showDistance: true,
+      }
+      sceneApi?.setVisualToggles?.(next)
+      return next
+    })
+    sceneApi?.watchPlanet?.(planetId)
+  }, [sceneApi])
+
+  const handleResetOrbits = useCallback(() => {
+    CELESTIAL_BODIES.forEach((b) => {
+      if (b.id !== 'sun') {
+        sceneApi?.setBodyVelocity?.(b.id, 1.0)
+        sceneApi?.setBodyDistance?.(b.id, 1.0)
+      }
+    })
+    sceneApi?.setCameraView?.(solCameraView)
+  }, [sceneApi, solCameraView])
 
   const handleSelectPlanetComparison = useCallback((planetId) => {
     setSelectedPlanetComparisonId(planetId)
@@ -506,6 +575,22 @@ function App() {
         />
       )}
 
+      {/* Solar System Specific HUD: Physics Toolbar */}
+      {isSolarSystem && labMode && (
+        <SolarSystemToolbar
+          cameraView={solCameraView}
+          isPaused={solIsPaused}
+          onResetOrbits={handleResetOrbits}
+          onSelectCameraView={handleSelectCameraView}
+          onSetSpeed={handleSetSolSpeed}
+          onTogglePause={handleToggleSolPause}
+          onToggleVisual={handleToggleVisual}
+          selectedPlanet={selectedPlanet}
+          simSpeed={solSimSpeed}
+          toggles={solVisualToggles}
+        />
+      )}
+
       {/* Solar System Specific HUD: Mini-Map */}
       {isSolarSystem && labMode && (
         <SolarSystemMiniMap
@@ -518,14 +603,23 @@ function App() {
       {/* Solar System Specific HUD: Planet Details */}
       {isSolarSystem && labMode && selectedPlanet && (
         <PlanetDetailPanel
-          isFollowing={Boolean(currentParams.followPlanet)}
+          isFollowing={solCameraView === 'follow'}
+          isPaused={solIsPaused}
           onClose={() => {
             setSelectedPlanet(null)
             sceneApi?.selectPlanet?.(null)
+            if (solCameraView === 'follow') {
+              handleSelectCameraView('system')
+            }
           }}
           onFocus={handleFocusPlanet}
+          onSetSpeed={handleSetSolSpeed}
           onToggleFollow={handleToggleFollow}
+          onTogglePause={handleToggleSolPause}
+          onWatchPlanet={handleWatchPlanet}
           planet={selectedPlanet}
+          sceneApi={sceneApi}
+          simulationSpeed={solSimSpeed}
         />
       )}
 

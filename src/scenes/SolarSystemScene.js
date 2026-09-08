@@ -223,10 +223,12 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
   const trailsGroup = new THREE.Group()
   const gravityVectorsGroup = new THREE.Group()
   const velocityVectorsGroup = new THREE.Group()
+  const distanceMarkerGroup = new THREE.Group()
   world.add(orbitLinesGroup)
   world.add(trailsGroup)
   world.add(gravityVectorsGroup)
   world.add(velocityVectorsGroup)
+  world.add(distanceMarkerGroup)
 
   // Parameters with defense-in-depth clamping
   let simulationSpeed = Math.min(50, Math.max(0.1, initialParams.simulationSpeed ?? 1.0))
@@ -238,15 +240,16 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
   let showTrails = initialParams.showTrails ?? true
   let showGravityVectors = initialParams.showGravityVectors ?? false
   let showVelocityVectors = initialParams.showVelocityVectors ?? false
+  let showDistance = initialParams.showDistance ?? false
   let followPlanet = initialParams.followPlanet ?? false
   let isPaused = initialParams.isPaused ?? false
   let selectedPlanetId = initialParams.selectedPlanetId ?? null
 
-  // 1. DISTANT STARFIELD
-  const starCount = 1200
+  // 1. SCIENTIFIC STARFIELD (Subtle background to keep focus on celestial physics)
+  const starCount = 600
   const starPositions = new Float32Array(starCount * 3)
   const starColors = new Float32Array(starCount * 3)
-  const palette = [new THREE.Color('#dce8ff'), new THREE.Color('#9ec5ff'), new THREE.Color('#ffffff'), new THREE.Color('#fed8a6')]
+  const palette = [new THREE.Color('#9bbcd8'), new THREE.Color('#7899be'), new THREE.Color('#b4c8e0')]
   for (let i = 0; i < starCount; i++) {
     const r = 160 + Math.random() * 80
     const theta = Math.random() * Math.PI * 2
@@ -260,10 +263,10 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3))
   starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3))
   const starMat = new THREE.PointsMaterial({
-    size: 1.1,
+    size: 0.8,
     vertexColors: true,
     transparent: true,
-    opacity: 0.75,
+    opacity: 0.35,
     sizeAttenuation: false,
   })
   const starField = new THREE.Points(starGeo, starMat)
@@ -542,6 +545,21 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
   const selectHaloMesh = new THREE.Mesh(selectHaloGeo, selectHaloMat)
   selectHaloMesh.visible = false
   world.add(selectHaloMesh)
+
+  // Radial Distance Marker Line (Sun to selected planet)
+  const distPositions = new Float32Array(6)
+  const distMarkerGeo = new THREE.BufferGeometry()
+  distMarkerGeo.setAttribute('position', new THREE.BufferAttribute(distPositions, 3))
+  const distMarkerMat = new THREE.LineDashedMaterial({
+    color: '#70b8ff',
+    dashSize: 0.8,
+    gapSize: 0.5,
+    transparent: true,
+    opacity: 0.85,
+  })
+  const distMarkerLine = new THREE.Line(distMarkerGeo, distMarkerMat)
+  distanceMarkerGroup.add(distMarkerLine)
+  distanceMarkerGroup.visible = showDistance
 
   // 4. PREALLOCATED SCRATCHPADS FOR ZERO ALLOCATION PER FRAME
   const scratchPos = new THREE.Vector3()
@@ -837,6 +855,26 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
       velVectorsGeo.attributes.position.needsUpdate = true
     }
 
+    // Update radial distance marker if enabled
+    if (showDistance && selectedPlanetId) {
+      const selectedIndex = CELESTIAL_BODIES.findIndex((b) => b.id === selectedPlanetId)
+      if (selectedIndex > 0) {
+        distPositions[0] = 0
+        distPositions[1] = 0
+        distPositions[2] = 0
+        distPositions[3] = posArray[selectedIndex * 3]
+        distPositions[4] = posArray[selectedIndex * 3 + 1]
+        distPositions[5] = posArray[selectedIndex * 3 + 2]
+        distMarkerGeo.attributes.position.needsUpdate = true
+        distMarkerLine.computeLineDistances()
+        distanceMarkerGroup.visible = true
+      } else {
+        distanceMarkerGroup.visible = false
+      }
+    } else {
+      distanceMarkerGroup.visible = false
+    }
+
     // Update selection halo position
     if (selectedPlanetId) {
       const selectedIndex = CELESTIAL_BODIES.findIndex((b) => b.id === selectedPlanetId)
@@ -933,6 +971,9 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
     if (params.showVelocityVectors !== undefined) {
       showVelocityVectors = params.showVelocityVectors
       velocityVectorsGroup.visible = showVelocityVectors
+    }
+    if (params.showDistance !== undefined) {
+      showDistance = Boolean(params.showDistance)
     }
     if (params.followPlanet !== undefined) {
       followPlanet = params.followPlanet
@@ -1190,11 +1231,94 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
     }
   }
 
+  // 12. EDUCATIONAL CAMERA & VIEW API (Part J)
+  function setCameraView(viewType) {
+    if (viewType === 'top') {
+      followPlanet = false
+      camPhi = 0.04
+      camTheta = 0
+      camRadius = 86
+      cameraTarget.set(0, 0, 0)
+    } else if (viewType === 'orbit') {
+      followPlanet = false
+      camPhi = 0.82
+      camTheta = 0.5
+      camRadius = 64
+      cameraTarget.set(0, 0, 0)
+    } else if (viewType === 'system') {
+      followPlanet = false
+      camPhi = 0.65
+      camTheta = 0.45
+      camRadius = 96
+      cameraTarget.set(0, 0, 0)
+    } else if (viewType === 'follow') {
+      followPlanet = true
+      if (selectedPlanetId) {
+        const body = CELESTIAL_BODIES.find((b) => b.id === selectedPlanetId)
+        if (body) {
+          camRadius = Math.max(6, body.visRadius * 8.5)
+          camPhi = 0.5
+        }
+      }
+    }
+  }
+
+  // 13. EDUCATIONAL PLAYBACK & "WATCH MOTION" CONTROLS (Part D & E)
+  function setSimulationSpeed(speed) {
+    simulationSpeed = Math.min(50, Math.max(0.05, speed))
+  }
+
+  function setPaused(paused) {
+    isPaused = Boolean(paused)
+  }
+
+  function togglePause() {
+    isPaused = !isPaused
+    return isPaused
+  }
+
+  function watchPlanet(planetId) {
+    selectPlanet(planetId)
+    focusPlanet(planetId)
+    followPlanet = true
+    showOrbits = true
+    orbitLinesGroup.visible = true
+    showVelocityVectors = true
+    velocityVectorsGroup.visible = true
+    showGravityVectors = true
+    gravityVectorsGroup.visible = true
+    showDistance = true
+  }
+
+  function setVisualToggles(toggles = {}) {
+    if (toggles.showOrbits !== undefined) {
+      showOrbits = Boolean(toggles.showOrbits)
+      orbitLinesGroup.visible = showOrbits
+    }
+    if (toggles.showVelocityVectors !== undefined) {
+      showVelocityVectors = Boolean(toggles.showVelocityVectors)
+      velocityVectorsGroup.visible = showVelocityVectors
+    }
+    if (toggles.showGravityVectors !== undefined) {
+      showGravityVectors = Boolean(toggles.showGravityVectors)
+      gravityVectorsGroup.visible = showGravityVectors
+    }
+    if (toggles.showDistance !== undefined) {
+      showDistance = Boolean(toggles.showDistance)
+    }
+  }
+
   return {
     dispose,
     updateParams,
     selectPlanet,
     focusPlanet,
+    setCameraView,
+    setSimulationSpeed,
+    setPaused,
+    togglePause,
+    watchPlanet,
+    setVisualToggles,
     setBodyDistance,
     setBodyVelocity,
     resetBody,
