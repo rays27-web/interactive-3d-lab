@@ -468,6 +468,8 @@ export function createPulsarScene(container, initialParams = {}) {
   // Vector scratchpads to avoid per-frame GC
   const magneticAxisWorld = new THREE.Vector3()
   const viewVector = new THREE.Vector3()
+  const corePosWorld = new THREE.Vector3()
+  const tempQuat = new THREE.Quaternion()
 
   function animate() {
     const elapsed = (performance.now() - startedAt) / 1000
@@ -481,9 +483,9 @@ export function createPulsarScene(container, initialParams = {}) {
     // Compute magnetic axis alignment with camera for authentic lighthouse flash
     magneticAssembly.getWorldDirection(magneticAxisWorld)
     // The beams are aligned with the local Y-axis of magneticAssembly
-    magneticAxisWorld.set(0, 1, 0).applyQuaternion(magneticAssembly.getWorldQuaternion(new THREE.Quaternion()))
+    magneticAxisWorld.set(0, 1, 0).applyQuaternion(magneticAssembly.getWorldQuaternion(tempQuat))
 
-    viewVector.subVectors(camera.position, coreMesh.getWorldPosition(new THREE.Vector3())).normalize()
+    viewVector.subVectors(camera.position, coreMesh.getWorldPosition(corePosWorld)).normalize()
     const alignment = Math.abs(magneticAxisWorld.dot(viewVector))
 
     // Sharp non-linear peak when beam sweeps across line of sight

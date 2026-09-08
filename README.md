@@ -239,8 +239,9 @@ The Interactive 3D Lab applies a **defense-in-depth, security-hardened** design 
      - `img-src 'self' data:`
      - `connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com`
      - `object-src 'none'` (disables legacy plugins like Flash or Java)
+     - `media-src 'none'` (blocks audio/video media execution since all audio/video is excluded)
      - `base-uri 'self'` (prevents `<base>` tag injection attacks)
-     - `frame-ancestors 'none'` (mitigates clickjacking attacks)
+     - `frame-ancestors 'none'` (mitigates clickjacking attacks in HTTP headers)
      - `form-action 'self'`
 2. **MIME Sniffing & Referrer Defense**:
    - `X-Content-Type-Options: nosniff` prevents browsers from MIME-sniffing responses away from declared content types.
@@ -249,15 +250,16 @@ The Interactive 3D Lab applies a **defense-in-depth, security-hardened** design 
    - React manages all UI state and text nodes declaratively.
    - The codebase contains zero calls to `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `document.write`, or `eval()`.
 4. **Hardened Git Ignore Rules**:
-   - `.gitignore` strictly blocks all environment files (`.env`, `.env.local`, `.env.*.local`, `*.env`), keys/certificates (`*.pem`, `*.key`), editor configurations, temporary test files, and build outputs (`dist/`).
-5. **Optimized Code Splitting**:
+   - `.gitignore` strictly blocks all environment files (`.env`, `.env.local`, `.env.*.local`, `*.env`), certificates and keys (`*.pem`, `*.key`, `*.p12`, `*.pfx`), editor configurations, temporary test files, and build outputs (`dist/`).
+5. **Optimized Code Splitting & WebGL Memory Pooling**:
    - `vite.config.js` separates `three` (~533 kB) and `react`/`react-dom` (~189 kB) into dedicated, long-term cacheable vendor chunks.
    - The main application entry bundle is reduced to **~56 kB** (gzip ~15 kB).
+   - In `PulsarScene.js`, scratchpad math instances (`THREE.Quaternion`, `THREE.Vector3`) are pooled in module scope rather than allocated per frame inside the `animate()` loop, eliminating ~120 heap allocations per second and preventing garbage collector stutter.
 
 ### What Must NEVER Be Committed
 
 - API keys, service tokens, personal access tokens (PATs), or passwords.
-- Private encryption keys (`.pem`, `.key`, `.pfx`).
+- Private encryption keys and certificates (`.pem`, `.key`, `.p12`, `.pfx`).
 - Local `.env` or `.env.*` configuration files containing credentials.
 - Test artifacts or debugging session dumps.
 
@@ -279,6 +281,20 @@ When hosting the production build on a CDN or static hosting platform (e.g., Clo
 
 > Note: The included `public/_headers` file automatically applies these response headers for platforms supporting `_headers` syntax (Cloudflare Pages, Netlify).
 
+### GitHub Repository Security Recommendations
+
+For repository governance and automated supply-chain security on GitHub:
+
+1. **Branch Protection Rules** (for `main` branch):
+   - Require pull request reviews before merging.
+   - Require status checks (build & automated tests) to pass before merging.
+   - Restrict force pushes and branch deletions.
+2. **Secret Scanning & Push Protection**:
+   - Enable GitHub Secret Scanning to detect accidentally committed tokens or credentials.
+   - Enable Push Protection to block commits that contain detected credentials before they reach the remote repository.
+3. **Dependabot Alerts & Updates**:
+   - Enable Dependabot alerts and automated security updates to receive notices when security advisories affect project dependencies.
+
 ### Pre-Release Security Checklist
 
 Before releasing updates or deploying to production, execute the following audit routine:
@@ -294,8 +310,8 @@ git ls-files | grep -E "(\.env|key|secret|token|credential)"
 # 3. Verify clean production build and chunk sizes
 pnpm build
 
-# 4. Verify test suite and WebGL lifecycle
-node scratch/test_phase8.cjs
+# 4. Verify test suite, WebGL lifecycle, and responsive UI
+node scratch/test_phase9.cjs
 ```
 
 
