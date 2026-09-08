@@ -145,8 +145,8 @@ function ExperimentControls({
                         <span className="control-value">{displayValue}</span>
                       </div>
                       <div className="slider-direction-hints" aria-hidden="true">
-                        <span>Min ←</span>
-                        <span>→ Max</span>
+                        <span>{control.id === 'distance' ? 'Closer ←' : 'Min ←'}</span>
+                        <span>{control.id === 'distance' ? '→ Farther' : '→ Max'}</span>
                       </div>
                       <input
                         aria-label={control.label}

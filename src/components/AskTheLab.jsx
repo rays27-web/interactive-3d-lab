@@ -6,30 +6,30 @@ export const CONCEPT_INQUIRIES = PHYSICS_CONCEPTS
 export const EXPERIMENT_INQUIRIES = [
   {
     id: 'exp-distance',
-    title: 'Change distance: What happens if you double orbital distance (2.0 AU)?',
+    title: 'Change distance: How does distance change gravitational pull?',
     curriculum: 'Class 11 Physics, Chapter 8: Gravitation — Inverse-Square Law',
-    experimentId: 'solar-system',
-    experimentName: '06 / SOLAR SYSTEM',
-    controlVariable: 'Orbital Distance: 1.00 AU ⟶ 2.00 AU',
+    experimentId: 'planet',
+    experimentName: '01 / PLANET',
+    controlVariable: 'Distance: 1.00× (Baseline) ⟶ 2.00× (Farther)',
     hypothesis:
-      'Doubling orbit radius will drastically dilute gravitational attraction and lower the orbital speed required for circular balance.',
+      'Doubling distance will spread gravity over 4× the area, diluting the pull to exactly 25% of baseline (1/r²).',
     actionLabel: 'SIMULATE 2.0× DISTANCE (RUN)',
     action: (helpers) => {
-      helpers.setActiveExperiment('solar-system')
-      helpers.sceneApi?.setBodyDistance?.('earth', 2.0)
+      helpers.setActiveExperiment('planet')
+      helpers.sceneApi?.setParams?.({ distance: 2.0 })
     },
     measurement: {
       metricTitle: 'Gravitational Force Ratio (F / F₀)',
-      baseline: '1.00 F₀ (100%) at 1.0 AU',
-      measuredValue: '0.25 F₀ (25%) at 2.0 AU',
+      baseline: '1.00 F₀ (100%) at 1.0× distance',
+      measuredValue: '0.25 F₀ (25%) at 2.0× distance',
       delta: '-75.0%',
-      velocityChange: 'Speed drops from 29.8 km/s to 21.1 km/s (-29.2%)',
+      velocityChange: 'Acceleration drops from 9.81 m/s² to 2.45 m/s² (-75%)',
     },
-    why: "Newton's Inverse-Square Law states F ∝ 1/r². Doubling distance spreads the gravitational flux over 4× the spherical surface area (2² = 4), diluting the pull to exactly 25%. Because gravitational pull is weaker, less centripetal acceleration (v²/r) is needed to balance the orbit, so the planet moves slower.",
+    why: "Newton's Inverse-Square Law states F ∝ 1/r². Doubling distance spreads the gravitational flux over 4× the spherical surface area (2² = 4), diluting the pull to exactly 25%. Moving farther away weakens gravity dramatically.",
     understanding:
-      'Distance has a geometric square-decay effect on gravity: doubling distance reduces gravitational pull by 75%, requiring outer planets to move significantly slower.',
+      'Distance has an inverse-square relationship with gravity: doubling the distance makes gravitational attraction four times weaker.',
     linkedConceptId: 'concept-gravity',
-    keywords: ['distance', 'double', '2 au', 'inverse square', 'orbit', 'solar-system'],
+    keywords: ['distance', 'double', 'gravity', 'inverse square', 'planet', 'weaker'],
   },
   {
     id: 'exp-slow-down',
@@ -416,6 +416,7 @@ function AskTheLab({
               <p className="block-content">{activeConcept.simpleExplanation}</p>
             </div>
 
+            {/* Block 2: Everyday Example & Space Example */}
             {/* Block 2: Everyday Example & Analogy */}
             <div className="card-block analogy-block">
               <div className="block-label">
@@ -423,16 +424,28 @@ function AskTheLab({
                 <span>EVERYDAY EXAMPLE & ANALOGY</span>
               </div>
               {activeConcept.everydayExample && (
-                <p className="block-content" style={{ marginBottom: '6px' }}>
-                  <strong>Real world:</strong> {activeConcept.everydayExample}
+                <p className="block-content">
+                  <strong>Real world: </strong>
+                  {activeConcept.everydayExample}
                 </p>
               )}
               {activeConcept.analogy && (
                 <p className="block-content">
-                  <strong>Mental model:</strong> {activeConcept.analogy}
+                  <strong>Mental model: </strong>
+                  {activeConcept.analogy}
                 </p>
               )}
             </div>
+
+            {activeConcept.spaceExample && (
+              <div className="card-block space-example-block">
+                <div className="block-label">
+                  <span className="block-icon" aria-hidden="true">🪐</span>
+                  <span>SPACE EXAMPLE</span>
+                </div>
+                <p className="block-content">{activeConcept.spaceExample}</p>
+              </div>
+            )}
 
             {/* Block 3: Equation (Optional / Expandable) */}
             {activeConcept.formula && (
@@ -444,7 +457,7 @@ function AskTheLab({
                 >
                   <div className="block-label">
                     <span className="block-icon" aria-hidden="true">📐</span>
-                    <span>OPTIONAL EQUATION {isEquationExpanded ? '(COLLAPSE)' : '(EXPAND)'}</span>
+                    <span>{isEquationExpanded ? 'COLLAPSE THE PHYSICS' : 'SHOW THE PHYSICS'}</span>
                   </div>
                   <code className="equation-preview">{activeConcept.formula}</code>
                 </button>
@@ -476,12 +489,21 @@ function AskTheLab({
             {/* Bridge Action to Experiment */}
             {activeConcept.linkedExperimentId && (
               <div className="card-bridge-row">
+                <span className="bridge-prompt" style={{ fontSize: '11.5px', color: '#9bb7e0', fontWeight: 600, marginRight: '8px' }}>
+                  READY TO SEE IT?
+                </span>
                 <button
                   className="bridge-action-btn"
-                  onClick={() => handleJumpToExperiment(activeConcept.linkedExperimentId)}
+                  onClick={() => {
+                    handleJumpToExperiment(activeConcept.linkedExperimentId)
+                  }}
                   type="button"
                 >
-                  <span>SEE THIS IN SIMULATION</span>
+                  <span>
+                    {activeConcept.id === 'concept-gravity'
+                      ? 'TRY THE GRAVITY EXPERIMENT'
+                      : 'SEE THIS IN SIMULATION'}
+                  </span>
                   <span className="btn-icon" aria-hidden="true">→</span>
                 </button>
               </div>

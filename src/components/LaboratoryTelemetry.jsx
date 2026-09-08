@@ -87,15 +87,35 @@ function LaboratoryTelemetry({ experiment, values = {}, onOpenExplanation }) {
     const spin = values.spinVelocity ?? 1.0
 
     if (expId === 'planet') {
-      const g = 9.81
-      const weight = (mass * g).toFixed(1)
+      const d = values.distance ?? 1.0
+      const forceRatio = 1 / (d * d)
+      const accel = (9.81 / (d * d)).toFixed(2)
+      const percent = Math.round(forceRatio * 100)
+      const changePct = d !== 1.0 ? `${Math.round((forceRatio - 1) * 100)}%` : '0%'
+      const deltaText =
+        Math.abs(d - 2.0) < 0.05
+          ? 'Doubling the distance makes the gravitational force four times weaker.'
+          : Math.abs(d - 0.5) < 0.05
+          ? 'Halving the distance makes the gravitational force four times stronger.'
+          : d > 1.05
+          ? `Moving ${d.toFixed(1)}× farther reduces gravity to ${percent}% of baseline.`
+          : d < 0.95
+          ? `Moving ${d.toFixed(1)}× closer increases gravity to ${percent}% of baseline.`
+          : 'Baseline distance: gravitational attraction is at 100%.'
+
       return {
-        name: 'Gravitational Pull (Weight)',
-        value: `${weight} N`,
-        unit: 'Newtons',
-        explanation: 'How strongly Earth pulls on the object.',
-        before: '490.5 N',
-        change: rot !== 1.0 ? `${((rot - 1) * 25).toFixed(0)}%` : '0%',
+        name: 'Gravitational Force',
+        value: `${forceRatio.toFixed(2)}× baseline`,
+        unit: 'Force Ratio',
+        explanation: 'How strongly the planet pulls the object.',
+        before: '1.00× (100%)',
+        change: changePct,
+        subMetrics: [
+          { label: 'DISTANCE', val: `${d.toFixed(2)}× baseline`, note: 'Distance between planet and object' },
+          { label: 'GRAVITATIONAL FORCE', val: `${forceRatio.toFixed(2)}× baseline (${percent}%)`, note: 'How strongly the planet pulls the object' },
+          { label: 'ACCELERATION', val: `${accel} m/s²`, note: 'Rate object accelerates toward planet' },
+        ],
+        plainTakeaway: deltaText,
       }
     }
     if (expId === 'solar-system') {
@@ -182,7 +202,25 @@ function LaboratoryTelemetry({ experiment, values = {}, onOpenExplanation }) {
             Change: {readout.change}
           </span>
         </div>
+        {readout.plainTakeaway && (
+          <p className="telemetry-plain-takeaway">{readout.plainTakeaway}</p>
+        )}
       </div>
+
+      {readout.subMetrics && (
+        <div className="telemetry-item telemetry-submetrics-card">
+          <span className="telemetry-label">KEY MEASUREMENTS</span>
+          <div className="telemetry-submetrics-list">
+            {readout.subMetrics.map((sm) => (
+              <div className="submetric-row" key={sm.label}>
+                <span className="submetric-label">{sm.label}:</span>
+                <strong className="submetric-val">{sm.val}</strong>
+                <small className="submetric-note">{sm.note}</small>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Subdued Technical & Diagnostics */}
       <div className="telemetry-item telemetry-fps telemetry-subtle">

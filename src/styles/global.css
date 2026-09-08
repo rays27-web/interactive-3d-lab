@@ -7413,3 +7413,63 @@ h1 em {
   background: rgba(115, 255, 211, 0.12);
   color: #ffffff;
 }
+
+/* ==========================================================================
+   PHASE 57 — GRAVITY & DISTANCE EDUCATIONAL STYLES
+   ========================================================================== */
+.telemetry-plain-takeaway {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #73ffd3;
+  font-weight: 500;
+  background: rgba(115, 255, 211, 0.08);
+  border-left: 2px solid #73ffd3;
+  padding: 6px 10px;
+  border-radius: 0 4px 4px 0;
+}
+
+.telemetry-submetrics-card {
+  margin-top: 8px;
+}
+
+.telemetry-submetrics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.submetric-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #c4d7f5;
+}
+
+.submetric-label {
+  font-weight: 600;
+  color: #9bb7e0;
+  min-width: 130px;
+}
+
+.submetric-val {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.submetric-note {
+  font-size: 10.5px;
+  color: #8aa0c2;
+}
+
+.card-block.space-example-block,
+.card-block.mental-model-block {
+  margin-top: 8px;
+}
+
+.bridge-prompt {
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}

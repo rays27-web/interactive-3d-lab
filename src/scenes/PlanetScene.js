@@ -1,74 +1,107 @@
 import * as THREE from 'three'
 import { PLANETS_DATA } from '../data/planets'
 
-const STAR_COLORS = ['#d8e9ff', '#87baff', '#ffffff', '#bca6ff']
+// Simple, high-contrast canvas sprite generator for in-scene educational typography
+function createLabelSprite(initialText, options = {}) {
+  const {
+    fontSize = 24,
+    textColor = '#ffffff',
+    bgColor = 'rgba(7, 12, 30, 0.88)',
+    borderColor = 'rgba(115, 255, 211, 0.45)',
+    padding = 14,
+    scale = 1.0,
+  } = options
 
-function createStarLayer({ count, minRadius, maxRadius, size, opacity }) {
-  const positions = new Float32Array(count * 3)
-  const colors = new Float32Array(count * 3)
-  const sizes = new Float32Array(count)
-  const phases = new Float32Array(count)
-  const palette = STAR_COLORS.map((color) => new THREE.Color(color))
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  canvas.width = 512
+  canvas.height = 128
 
-  for (let index = 0; index < count; index += 1) {
-    const radius = minRadius + Math.random() * (maxRadius - minRadius)
-    const theta = Math.random() * Math.PI * 2
-    const phi = Math.acos(2 * Math.random() - 1)
-    positions[index * 3] = radius * Math.sin(phi) * Math.cos(theta)
-    positions[index * 3 + 1] = radius * Math.cos(phi)
-    positions[index * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta)
-    palette[Math.floor(Math.random() * palette.length)].toArray(colors, index * 3)
-    sizes[index] = size * (0.55 + Math.random() * 0.9)
-    phases[index] = Math.random() * Math.PI * 2
+  function draw(text, customTextColor = textColor, customBorderColor = borderColor) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Pill container
+    ctx.font = `bold ${fontSize}px "DM Mono", monospace`
+    const metrics = ctx.measureText(text)
+    const boxWidth = Math.min(canvas.width - 16, metrics.width + padding * 2)
+    const boxHeight = fontSize + padding * 1.5
+    const boxX = (canvas.width - boxWidth) / 2
+    const boxY = (canvas.height - boxHeight) / 2
+    const radius = 8
+
+    ctx.fillStyle = bgColor
+    ctx.beginPath()
+    ctx.roundRect(boxX, boxY, boxWidth, boxHeight, radius)
+    ctx.fill()
+
+    ctx.strokeStyle = customBorderColor
+    ctx.lineWidth = 2
+    ctx.stroke()
+
+    ctx.fillStyle = customTextColor
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2)
   }
 
-  const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-  geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1))
-  geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1))
+  draw(initialText)
 
-  const material = new THREE.ShaderMaterial({
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.minFilter = THREE.LinearFilter
+  texture.generateMipmaps = false
+
+  const spriteMaterial = new THREE.SpriteMaterial({
+    map: texture,
     transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    uniforms: { uTime: { value: 0 }, uOpacity: { value: opacity } },
-    vertexShader: `
-      attribute float aSize;
-      attribute float aPhase;
-      attribute vec3 color;
-      varying vec3 vColor;
-      varying float vTwinkle;
-      uniform float uTime;
-      void main() {
-        vColor = color;
-        vTwinkle = 0.72 + sin(uTime * 0.8 + aPhase) * 0.28;
-        vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = min(14.0, aSize * vTwinkle * (150.0 / -viewPosition.z));
-        gl_Position = projectionMatrix * viewPosition;
-      }
-    `,
-    fragmentShader: `
-      varying vec3 vColor;
-      varying float vTwinkle;
-      uniform float uOpacity;
-      void main() {
-        float distanceFromCenter = length(gl_PointCoord - 0.5);
-        float softPoint = 1.0 - smoothstep(0.22, 0.5, distanceFromCenter);
-        gl_FragColor = vec4(vColor, softPoint * vTwinkle * uOpacity);
-      }
-    `,
+    depthTest: false,
   })
+  const sprite = new THREE.Sprite(spriteMaterial)
+  sprite.scale.set(3.2 * scale, 0.8 * scale, 1)
 
-  return new THREE.Points(geometry, material)
+  return {
+    sprite,
+    update: (newText, newColor, newBorder) => {
+      draw(newText, newColor, newBorder)
+      texture.needsUpdate = true
+    },
+    dispose: () => {
+      texture.dispose()
+      spriteMaterial.dispose()
+    },
+  }
+}
+
+// Subtle, non-distracting distant stars
+function createCalmStarfield(count = 500) {
+  const positions = new Float32Array(count * 3)
+  for (let i = 0; i < count; i += 1) {
+    const r = 35 + Math.random() * 45
+    const theta = Math.random() * Math.PI * 2
+    const phi = Math.acos(2 * Math.random() - 1)
+    positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+    positions[i * 3 + 1] = r * Math.cos(phi)
+    positions[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta)
+  }
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  const mat = new THREE.PointsMaterial({
+    color: '#8bb4e6',
+    size: 1.4,
+    transparent: true,
+    opacity: 0.35,
+    depthWrite: false,
+  })
+  return new THREE.Points(geo, mat)
 }
 
 export function createPlanetScene(container, initialParams = {}, callbacks = {}) {
   const scene = new THREE.Scene()
-  scene.fog = new THREE.FogExp2('#050614', 0.014)
+  scene.fog = new THREE.FogExp2('#050614', 0.012)
 
+  // Stable, calm camera — Part 15: No cinematic or mouse-induced wobble
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200)
-  camera.position.set(0, 0.35, 10)
+  camera.position.set(0, 0, 10)
+  camera.lookAt(0, 0, 0)
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -76,162 +109,224 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   renderer.outputColorSpace = THREE.SRGBColorSpace
   container.appendChild(renderer.domElement)
 
-  const world = new THREE.Group()
-  scene.add(world)
+  // Starfield
+  const starfield = createCalmStarfield()
+  scene.add(starfield)
 
-  let rotationSpeed = initialParams.rotationSpeed ?? 1.0
+  // Stable balanced lighting
+  const keyLight = new THREE.DirectionalLight('#f0f7ff', 3.5)
+  keyLight.position.set(-4, 3, 5)
+  const fillLight = new THREE.DirectionalLight('#6ba1e6', 1.2)
+  fillLight.position.set(4, -1, 3)
+  const ambientLight = new THREE.AmbientLight('#15233c', 1.0)
+  scene.add(keyLight, fillLight, ambientLight)
+
+  // ----------------------------------------------------
+  // PART 3: Clear Educational Visual (PLANET + OBJECT)
+  // ----------------------------------------------------
+  const planetX = -2.8
   let currentPlanetData = PLANETS_DATA.find((p) => p.id === 'earth') || PLANETS_DATA[2]
 
-  // Planet Sphere Mesh
-  const planetMaterial = new THREE.MeshStandardMaterial({
-    color: currentPlanetData.surfaceColorHex || '#286ea3',
+  // PLANET (Left Body, Mass M)
+  const planetGroup = new THREE.Group()
+  planetGroup.position.set(planetX, 0, 0)
+  scene.add(planetGroup)
+
+  const planetRadius = 1.35
+  const planetGeo = new THREE.SphereGeometry(planetRadius, 48, 36)
+  const planetMat = new THREE.MeshStandardMaterial({
+    color: currentPlanetData.surfaceColorHex || '#2b6ea3',
     roughness: 0.55,
     metalness: 0.1,
   })
+  const planetMesh = new THREE.Mesh(planetGeo, planetMat)
+  planetGroup.add(planetMesh)
 
-  const planetGeometry = new THREE.SphereGeometry(2.15, 64, 48)
-  const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial)
-  planetMesh.rotation.z = (currentPlanetData.axialTiltDeg * Math.PI) / 180
-  world.add(planetMesh)
+  // Subtle atmospheric rim
+  const atmoGeo = new THREE.SphereGeometry(planetRadius * 1.05, 48, 36)
+  const atmoMat = new THREE.MeshBasicMaterial({
+    color: '#73b9ff',
+    transparent: true,
+    opacity: 0.18,
+    side: THREE.BackSide,
+  })
+  const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat)
+  planetGroup.add(atmoMesh)
 
-  // Atmospheric Fresnel Rim
-  const atmosphereUniforms = {
-    uTime: { value: 0 },
-    uPointer: { value: new THREE.Vector2() },
-    uInnerColor: { value: new THREE.Color(currentPlanetData.color || '#4ab7ff') },
-    uOuterColor: { value: new THREE.Color('#7c72ff') },
-    uAtmosphereIntensity: { value: initialParams.atmosphereIntensity ?? 1.0 },
-  }
-  const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(2.31, 64, 64),
-    new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      side: THREE.BackSide,
-      blending: THREE.AdditiveBlending,
-      uniforms: atmosphereUniforms,
-      vertexShader: `
-        varying vec3 vNormalDirection;
-        varying vec3 vViewDirection;
-        void main() {
-          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-          vNormalDirection = normalize(mat3(modelMatrix) * normal);
-          vViewDirection = normalize(cameraPosition - worldPosition.xyz);
-          gl_Position = projectionMatrix * viewMatrix * worldPosition;
-        }
-      `,
-      fragmentShader: `
-        uniform float uTime;
-        uniform vec2 uPointer;
-        uniform vec3 uInnerColor;
-        uniform vec3 uOuterColor;
-        uniform float uAtmosphereIntensity;
-        varying vec3 vNormalDirection;
-        varying vec3 vViewDirection;
-        void main() {
-          float facing = max(dot(vNormalDirection, vViewDirection), 0.0);
-          float fresnel = pow(1.0 - facing, 2.65);
-          float breathing = 0.94 + sin(uTime * 0.55 + uPointer.x) * 0.06;
-          vec3 atmosphereColor = mix(uInnerColor, uOuterColor, fresnel);
-          gl_FragColor = vec4(atmosphereColor, fresnel * 0.82 * breathing * uAtmosphereIntensity);
-        }
-      `,
-    }),
-  )
-  world.add(atmosphere)
+  // Planet In-Scene Label
+  const planetLabel = createLabelSprite('PLANET (Mass M)', {
+    fontSize: 22,
+    textColor: '#9fc7f8',
+    borderColor: 'rgba(159, 199, 248, 0.4)',
+    scale: 0.9,
+  })
+  planetLabel.sprite.position.set(planetX, 1.85, 0)
+  scene.add(planetLabel.sprite)
 
-  // Phase 29: Interactive Free-Fall & Spring Scale Apparatus
-  const apparatusGroup = new THREE.Group()
-  apparatusGroup.position.set(3.2, -0.4, 0)
-  scene.add(apparatusGroup)
+  // OBJECT (Right Body, Test Mass m)
+  let distanceParam = initialParams.distance ?? 1.0
+  const objectGroup = new THREE.Group()
+  scene.add(objectGroup)
 
-  // Spring Scale Base Pad
-  const scaleBaseGeo = new THREE.CylinderGeometry(0.75, 0.85, 0.15, 32)
-  const scaleBaseMat = new THREE.MeshStandardMaterial({ color: '#16284e', roughness: 0.4, metalness: 0.8 })
-  const scaleBase = new THREE.Mesh(scaleBaseGeo, scaleBaseMat)
-  scaleBase.position.y = -1.2
-  apparatusGroup.add(scaleBase)
+  const objectRadius = 0.28
+  const objectGeo = new THREE.SphereGeometry(objectRadius, 32, 24)
+  const objectMat = new THREE.MeshStandardMaterial({
+    color: '#ffbe3b',
+    emissive: '#ff7700',
+    emissiveIntensity: 0.45,
+    roughness: 0.3,
+    metalness: 0.7,
+  })
+  const objectMesh = new THREE.Mesh(objectGeo, objectMat)
+  objectGroup.add(objectMesh)
 
-  // Spring Cylinder
-  const springGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.45, 16)
-  const springMat = new THREE.MeshStandardMaterial({ color: '#73ffd3', roughness: 0.3, metalness: 0.6 })
-  const springMesh = new THREE.Mesh(springGeo, springMat)
-  springMesh.position.y = -0.95
-  apparatusGroup.add(springMesh)
+  // Locator ring around object for immediate high visibility
+  const ringGeo = new THREE.RingGeometry(0.38, 0.44, 32)
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: '#ffffff',
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.75,
+  })
+  const ringMesh = new THREE.Mesh(ringGeo, ringMat)
+  objectGroup.add(ringMesh)
 
-  // Falling Test Mass Cube
-  let objectMass = 70.0
-  const testObjectGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45)
-  const testObjectMat = new THREE.MeshStandardMaterial({ color: '#ffb450', roughness: 0.3, metalness: 0.7 })
-  const testObjectMesh = new THREE.Mesh(testObjectGeo, testObjectMat)
-  testObjectMesh.position.y = 1.6
-  apparatusGroup.add(testObjectMesh)
+  // Object In-Scene Label
+  const objectLabel = createLabelSprite('OBJECT (m)', {
+    fontSize: 20,
+    textColor: '#ffd175',
+    borderColor: 'rgba(255, 209, 117, 0.5)',
+    scale: 0.8,
+  })
+  scene.add(objectLabel.sprite)
 
-  // Downward Gravitational Force Vector Arrow (W = mg)
-  const arrowDir = new THREE.Vector3(0, -1, 0)
+  // ----------------------------------------------------
+  // PART 4: Visual Distance Indicator Line & Badge
+  // ----------------------------------------------------
+  const dimLineMat = new THREE.LineBasicMaterial({
+    color: '#73ffd3',
+    linewidth: 2,
+    transparent: true,
+    opacity: 0.85,
+  })
+  const dimLineGeo = new THREE.BufferGeometry()
+  const dimLinePositions = new Float32Array(6 * 3)
+  dimLineGeo.setAttribute('position', new THREE.BufferAttribute(dimLinePositions, 3))
+  const dimLine = new THREE.LineSegments(dimLineGeo, dimLineMat)
+  scene.add(dimLine)
+
+  const distanceLabel = createLabelSprite('DISTANCE: 1.0× baseline', {
+    fontSize: 21,
+    textColor: '#73ffd3',
+    borderColor: 'rgba(115, 255, 211, 0.6)',
+    scale: 0.95,
+  })
+  scene.add(distanceLabel.sprite)
+
+  // ----------------------------------------------------
+  // PART 5: Visual Gravity Force Vector Arrow
+  // ----------------------------------------------------
+  const arrowDir = new THREE.Vector3(-1, 0, 0)
   const arrowOrigin = new THREE.Vector3(0, 0, 0)
-  const weightArrow = new THREE.ArrowHelper(arrowDir, arrowOrigin, 1.2, 0xff5533, 0.25, 0.15)
-  testObjectMesh.add(weightArrow)
+  const forceArrow = new THREE.ArrowHelper(arrowDir, arrowOrigin, 1.4, 0xff4d36, 0.35, 0.22)
+  scene.add(forceArrow)
 
-  // Free fall physics state
-  let isDropping = false
-  let dropVelocityY = 0
-  let dropPosY = 1.6
-  let surfaceAcceleration = currentPlanetData.surfaceGravityMs2 // e.g. 9.81
-  const restingHeight = -0.65
+  const forceLabel = createLabelSprite('GRAVITATIONAL PULL', {
+    fontSize: 18,
+    textColor: '#ff8a7a',
+    borderColor: 'rgba(255, 77, 54, 0.4)',
+    scale: 0.85,
+  })
+  scene.add(forceLabel.sprite)
 
-  function triggerDrop(g = currentPlanetData.surfaceGravityMs2) {
-    surfaceAcceleration = g
-    dropPosY = 1.6
-    dropVelocityY = 0
-    isDropping = true
+  // ----------------------------------------------------
+  // PART 7: Three Understandable Physical States Banner
+  // ----------------------------------------------------
+  const stateBanner = createLabelSprite('BASELINE: Distance 1.0× · Gravity 1.0×', {
+    fontSize: 22,
+    textColor: '#ffffff',
+    borderColor: 'rgba(133, 189, 255, 0.5)',
+    scale: 1.15,
+  })
+  stateBanner.sprite.position.set(0, 2.7, 0)
+  scene.add(stateBanner.sprite)
+
+  function getVisualPos(d) {
+    const rVisual = 1.6 + 2.6 * d
+    return planetX + rVisual
   }
 
-  function setPlanet(planetId) {
-    const p = PLANETS_DATA.find((item) => item.id === planetId)
-    if (!p) return
-    currentPlanetData = p
-    surfaceAcceleration = p.surfaceGravityMs2
+  function applyDistance(d) {
+    distanceParam = Math.max(0.5, Math.min(2.5, d))
+    const objX = getVisualPos(distanceParam)
+    objectGroup.position.set(objX, 0, 0)
+    objectLabel.sprite.position.set(objX, 0.72, 0)
 
-    // Update 3D appearance
-    planetMaterial.color.set(p.surfaceColorHex || p.color)
-    planetMesh.rotation.z = (p.axialTiltDeg * Math.PI) / 180
+    // Update Distance Indicator Line
+    const lineY = -0.85
+    const tickH = 0.18
+    const posArr = dimLineGeo.attributes.position.array
+    posArr[0] = planetX; posArr[1] = lineY - tickH; posArr[2] = 0
+    posArr[3] = planetX; posArr[4] = lineY + tickH; posArr[5] = 0
+    posArr[6] = objX; posArr[7] = lineY - tickH; posArr[8] = 0
+    posArr[9] = objX; posArr[10] = lineY + tickH; posArr[11] = 0
+    posArr[12] = planetX; posArr[13] = lineY; posArr[14] = 0
+    posArr[15] = objX; posArr[16] = lineY; posArr[17] = 0
+    dimLineGeo.attributes.position.needsUpdate = true
 
-    atmosphereUniforms.uInnerColor.value.set(p.color)
-    atmosphere.visible = p.id !== 'mercury' // Mercury has no significant atmosphere
+    // Distance Label Sprite at midpoint
+    const midX = (planetX + objX) / 2
+    distanceLabel.sprite.position.set(midX, -1.35, 0)
+    distanceLabel.update(`DISTANCE: ${distanceParam.toFixed(1)}× baseline`)
 
-    // Scale weight vector arrow proportionally to local surface gravity
-    const lengthNorm = Math.min(2.5, Math.max(0.4, (p.surfaceGravityMs2 / 9.81) * 1.2))
-    weightArrow.setLength(lengthNorm, 0.25, 0.15)
+    // Inverse-Square Gravity Calculation: F / F0 = 1 / (d^2)
+    const forceRatio = 1 / (distanceParam * distanceParam)
+    const arrowLen = Math.max(0.45, Math.min(2.5, 1.4 / Math.pow(distanceParam, 1.35)))
+    const headLen = Math.min(0.38, arrowLen * 0.32)
+    const headW = Math.min(0.25, arrowLen * 0.22)
 
-    // Trigger visual drop on planet change to demonstrate local gravity
-    triggerDrop(p.surfaceGravityMs2)
+    forceArrow.position.set(objX, 0, 0)
+    forceArrow.setLength(arrowLen, headLen, headW)
+
+    let arrowColor = 0xff5533
+    if (distanceParam < 0.95) arrowColor = 0xff2a2a
+    else if (distanceParam > 1.05) arrowColor = 0xffaa33
+    forceArrow.setColor(arrowColor)
+
+    forceLabel.sprite.position.set(objX - arrowLen / 2, 0.42, 0)
+    forceLabel.update(
+      `PULL: ${forceRatio >= 1.0 ? forceRatio.toFixed(1) : forceRatio.toFixed(2)}×`,
+      distanceParam < 0.95 ? '#ff7777' : distanceParam > 1.05 ? '#ffcc66' : '#ff9988'
+    )
+
+    // Three Understandable States (Part 7)
+    if (distanceParam < 0.95) {
+      stateBanner.update(
+        'CLOSER: Gravity is stronger',
+        '#73ffd3',
+        'rgba(115, 255, 211, 0.7)'
+      )
+    } else if (distanceParam > 1.05) {
+      stateBanner.update(
+        'FARTHER: Gravity is weaker',
+        '#ffb866',
+        'rgba(255, 184, 102, 0.7)'
+      )
+    } else {
+      stateBanner.update(
+        'BASELINE: 1.0× Distance · 1.0× Gravity',
+        '#ffffff',
+        'rgba(133, 189, 255, 0.5)'
+      )
+    }
   }
 
-  // Lighting
-  const keyLight = new THREE.DirectionalLight('#d9edff', 4.4)
-  keyLight.position.set(-4, 4, 5)
-  const rimLight = new THREE.PointLight('#4388ff', 24, 18, 2)
-  rimLight.position.set(4, -1, -3)
-  const fillLight = new THREE.PointLight('#b54dff', 12, 14, 2)
-  fillLight.position.set(-5, -3, 2)
-  scene.add(keyLight, rimLight, fillLight)
-
-  const farStars = createStarLayer({ count: 1050, minRadius: 30, maxRadius: 78, size: 3.2, opacity: 0.56 })
-  const middleStars = createStarLayer({ count: 420, minRadius: 13, maxRadius: 38, size: 5.5, opacity: 0.7 })
-  const nearStars = createStarLayer({ count: 70, minRadius: 5.5, maxRadius: 18, size: 8.5, opacity: 0.32 })
-  scene.add(farStars, middleStars, nearStars)
-
-  const pointer = new THREE.Vector2()
-  const target = new THREE.Vector2()
-  function onPointerMove(event) {
-    target.x = (event.clientX / window.innerWidth - 0.5) * 2
-    target.y = (event.clientY / window.innerHeight - 0.5) * 2
-  }
-  window.addEventListener('pointermove', onPointerMove, { passive: true })
+  // Initial synchronization
+  applyDistance(distanceParam)
 
   function resize() {
     const { clientWidth: width, clientHeight: height } = container
+    if (width === 0 || height === 0) return
     camera.aspect = width / height
     camera.updateProjectionMatrix()
     renderer.setSize(width, height, false)
@@ -239,43 +334,17 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   window.addEventListener('resize', resize)
   resize()
 
-  const startedAt = performance.now()
-  let lastTime = performance.now()
   let frameId
+  let lastTime = performance.now()
 
   function animate() {
     const now = performance.now()
     const dt = Math.min(0.05, (now - lastTime) / 1000)
     lastTime = now
-    const elapsed = (now - startedAt) / 1000
 
-    pointer.lerp(target, 0.028)
-    atmosphereUniforms.uTime.value = elapsed
-    atmosphereUniforms.uPointer.value.copy(pointer)
-
-    planetMesh.rotation.y += 0.00125 * rotationSpeed
-    world.position.y = Math.sin(elapsed * 0.52 * rotationSpeed) * 0.08
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 0.45, 0.02)
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.35 - pointer.y * 0.28, 0.02)
-    camera.lookAt(0.5, 0, 0)
-
-    // Free fall physics simulation
-    if (isDropping) {
-      // Normalized educational acceleration: dt * g * scaleFactor
-      dropVelocityY -= surfaceAcceleration * dt * 0.42
-      dropPosY += dropVelocityY * dt
-      if (dropPosY <= restingHeight) {
-        dropPosY = restingHeight
-        // Small inelastic rebound
-        if (Math.abs(dropVelocityY) > 0.4) {
-          dropVelocityY = -dropVelocityY * 0.25
-        } else {
-          dropVelocityY = 0
-          isDropping = false
-        }
-      }
-    }
-    testObjectMesh.position.y = dropPosY
+    // Calm planetary axial rotation only
+    planetMesh.rotation.y += 0.0015
+    ringMesh.rotation.z += 0.005
 
     renderer.render(scene, camera)
     frameId = requestAnimationFrame(animate)
@@ -284,61 +353,80 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
 
   function updateParams(params) {
     if (!params) return
-    if (params.rotationSpeed !== undefined) {
-      rotationSpeed = params.rotationSpeed
-    }
-    if (params.atmosphereIntensity !== undefined) {
-      atmosphereUniforms.uAtmosphereIntensity.value = params.atmosphereIntensity
+    if (params.distance !== undefined) {
+      applyDistance(params.distance)
     }
     if (params.selectedPlanetId !== undefined) {
-      setPlanet(params.selectedPlanetId)
+      const p = PLANETS_DATA.find((item) => item.id === params.selectedPlanetId)
+      if (p) {
+        currentPlanetData = p
+        planetMat.color.set(p.surfaceColorHex || p.color)
+      }
     }
-    if (params.objectMass !== undefined) {
-      objectMass = params.objectMass
-      const s = Math.min(1.4, Math.max(0.6, Math.cbrt(objectMass / 70)))
-      testObjectMesh.scale.setScalar(s)
-    }
+  }
+
+  function resetView() {
+    camera.position.set(0, 0, 10)
+    camera.lookAt(0, 0, 0)
   }
 
   const dispose = () => {
     cancelAnimationFrame(frameId)
-    window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('resize', resize)
-    planetGeometry.dispose()
-    planetMaterial.dispose()
-    atmosphere.geometry.dispose()
-    atmosphere.material.dispose()
-    scaleBaseGeo.dispose()
-    scaleBaseMat.dispose()
-    springGeo.dispose()
-    springMat.dispose()
-    testObjectGeo.dispose()
-    testObjectMat.dispose()
-    ;[farStars, middleStars, nearStars].forEach((layer) => {
-      layer.geometry.dispose()
-      layer.material.dispose()
-    })
+    planetGeo.dispose()
+    planetMat.dispose()
+    atmoGeo.dispose()
+    atmoMat.dispose()
+    objectGeo.dispose()
+    objectMat.dispose()
+    ringGeo.dispose()
+    ringMat.dispose()
+    dimLineGeo.dispose()
+    dimLineMat.dispose()
+    starfield.geometry.dispose()
+    starfield.material.dispose()
+    planetLabel.dispose()
+    objectLabel.dispose()
+    distanceLabel.dispose()
+    forceLabel.dispose()
+    stateBanner.dispose()
     renderer.dispose()
     renderer.domElement.remove()
   }
 
-  // Expose API for React components
   const sceneApi = {
-    selectPlanet: setPlanet,
-    triggerDrop,
-    setObjectMass: (m) => {
-      objectMass = m
-      const s = Math.min(1.4, Math.max(0.6, Math.cbrt(m / 70)))
-      testObjectMesh.scale.setScalar(s)
+    setDistance: applyDistance,
+    resetView,
+    getPhysicsState: () => ({
+      distance: distanceParam,
+      forceRatio: 1 / (distanceParam * distanceParam),
+      accelerationMs2: 9.81 / (distanceParam * distanceParam),
+      stateLabel:
+        distanceParam < 0.95
+          ? 'Gravity is stronger'
+          : distanceParam > 1.05
+          ? 'Gravity is weaker'
+          : 'Baseline',
+    }),
+    selectPlanet: (planetId) => {
+      const p = PLANETS_DATA.find((item) => item.id === planetId)
+      if (p) {
+        currentPlanetData = p
+        planetMat.color.set(p.surfaceColorHex || p.color)
+      }
     },
+    triggerDrop: () => {},
+    setObjectMass: () => {},
   }
 
   return {
     dispose,
     updateParams,
     sceneApi,
-    selectPlanet: setPlanet,
-    triggerDrop,
+    resetView,
+    setDistance: applyDistance,
+    selectPlanet: sceneApi.selectPlanet,
+    triggerDrop: sceneApi.triggerDrop,
     setObjectMass: sceneApi.setObjectMass,
   }
 }
