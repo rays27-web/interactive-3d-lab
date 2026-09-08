@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import InfoTooltip from './InfoTooltip'
 
-function LaboratoryTelemetry({ experiment, values = {} }) {
+function LaboratoryTelemetry({ experiment, values = {}, onOpenExplanation }) {
   const [metrics, setMetrics] = useState({
     fps: 60,
     frameTime: 16.6,
@@ -67,13 +68,27 @@ function LaboratoryTelemetry({ experiment, values = {} }) {
     ? experiment?.entityBudget?.mobile || 'MOBILE BUDGET'
     : experiment?.entityBudget?.desktop || 'GPU STREAM'
 
-  // Format compact parameter readout
+  // Map controls to baseline defaults for delta calculation
+  const controls = experiment?.controls || []
+  const defaultMap = {}
+  controls.forEach((ctrl) => {
+    defaultMap[ctrl.id] = ctrl.default
+  })
+
+  // Format parameter readouts with deltas
   const paramEntries = Object.entries(values).slice(0, 3)
 
   return (
     <aside aria-label="Laboratory telemetry" className="lab-telemetry">
       <div className="telemetry-item telemetry-status">
-        <span className="telemetry-label">SYSTEM</span>
+        <span className="telemetry-label">
+          SYSTEM
+          <InfoTooltip
+            definition="Hardware-accelerated WebGL 2.0 rendering pipeline with 32-bit floating point buffers."
+            significance="Executes GPU shader calculations and numerical symplectic integration."
+            title="SYSTEM / WEBGL 2.0"
+          />
+        </span>
         <span className="telemetry-val">
           <i className="telemetry-dot" aria-hidden="true" />
           WEBGL 2.0
@@ -81,21 +96,42 @@ function LaboratoryTelemetry({ experiment, values = {} }) {
       </div>
 
       <div className="telemetry-item telemetry-fps">
-        <span className="telemetry-label">PERFORMANCE</span>
+        <span className="telemetry-label">
+          PERFORMANCE
+          <InfoTooltip
+            definition="Instantaneous animation refresh rate and frame delivery latency in milliseconds."
+            significance="Guarantees real-time physics integration stability and continuous simulation flow."
+            title="PERFORMANCE / FPS"
+          />
+        </span>
         <span className="telemetry-val telemetry-val-highlight">
           {metrics.fps} FPS <small>({metrics.frameTime}ms)</small>
         </span>
       </div>
 
       <div className="telemetry-item telemetry-entities">
-        <span className="telemetry-label">SIMULATION FLUX</span>
+        <span className="telemetry-label">
+          SIMULATION FLUX
+          <InfoTooltip
+            definition="Count of active physical bodies, particles, and geometry vertices simulated."
+            significance="Defines spatial resolution and particle density in the active field study."
+            title="SIMULATION FLUX"
+          />
+        </span>
         <span className="telemetry-val" title={entityText}>
           {entityText}
         </span>
       </div>
 
       <div className="telemetry-item telemetry-viewport">
-        <span className="telemetry-label">VIEWPORT</span>
+        <span className="telemetry-label">
+          VIEWPORT
+          <InfoTooltip
+            definition="Display resolution and device pixel ratio (DPR) of the rendering viewport."
+            significance="Calibrates camera projection aspect ratios and particle point sizes."
+            title="VIEWPORT CALIBRATION"
+          />
+        </span>
         <span className="telemetry-val">
           {viewport.width}×{viewport.height} <small>DPR {viewport.dpr}</small>
         </span>
@@ -103,11 +139,29 @@ function LaboratoryTelemetry({ experiment, values = {} }) {
 
       {paramEntries.length > 0 && (
         <div className="telemetry-item telemetry-params">
-          <span className="telemetry-label">CALIBRATION</span>
+          <span className="telemetry-label">
+            CALIBRATION DELTA
+            <InfoTooltip
+              definition="Comparison of active parameters against baseline reference calibration."
+              onLearnMore={onOpenExplanation}
+              significance="Reveals how perturbations from baseline drive physical responses."
+              title="CALIBRATION DELTA"
+            />
+          </span>
           <span className="telemetry-val telemetry-params-list">
             {paramEntries.map(([k, v]) => {
-              const display = typeof v === 'boolean' ? (v ? 'HALTED' : 'RUN') : typeof v === 'number' ? v.toFixed(1) : v
-              return `${k.slice(0, 4).toUpperCase()}:${display}`
+              const base = defaultMap[k]
+              let deltaStr = ''
+              if (typeof v === 'number' && typeof base === 'number' && base !== 0 && v !== base) {
+                const pct = ((v - base) / base) * 100
+                deltaStr = ` (${pct > 0 ? '+' : ''}${Math.round(pct)}%)`
+              }
+              const display = typeof v === 'boolean'
+                ? (v ? 'HALTED' : 'RUN')
+                : typeof v === 'number'
+                ? v.toFixed(1)
+                : v
+              return `${k.slice(0, 3).toUpperCase()}:${display}${deltaStr}`
             }).join(' · ')}
           </span>
         </div>

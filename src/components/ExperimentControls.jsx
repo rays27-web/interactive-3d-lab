@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import PresetManager from './PresetManager'
+import InfoTooltip from './InfoTooltip'
+import { EXPERIMENT_MISSIONS_DATA } from '../physics/experimentMissions'
 
 function ExperimentControls({
   experiment,
@@ -9,9 +11,11 @@ function ExperimentControls({
   onApplyPreset,
   isOpen,
   onToggleOpen,
+  onLearnMore,
 }) {
   const [activeTab, setActiveTab] = useState('parameters') // 'parameters' | 'presets'
   const controls = experiment.controls || []
+  const expMissions = EXPERIMENT_MISSIONS_DATA[experiment.id] || {}
 
   if (controls.length === 0) return null
 
@@ -68,13 +72,24 @@ function ExperimentControls({
                 {controls.map((control) => {
                   const currentValue = values[control.id] ?? control.default
                   const displayValue = control.format ? control.format(currentValue) : currentValue
+                  const guide = expMissions.parameterGuides?.[control.id]
+                  const definition = guide?.definition || experiment.parameterGuides?.[control.id] || 'Primary simulation calibration parameter.'
+                  const significance = guide?.significance || 'Modulates physical integration variables in real-time.'
 
                   if (control.type === 'toggle') {
                     const isActive = Boolean(currentValue)
                     return (
                       <div className="control-item control-item-toggle" key={control.id}>
                         <div className="control-label-row">
-                          <span className="control-label">{control.label}</span>
+                          <span className="control-label-wrapper">
+                            <span className="control-label">{control.label}</span>
+                            <InfoTooltip
+                              definition={definition}
+                              onLearnMore={onLearnMore ? () => onLearnMore(control.id) : undefined}
+                              significance={significance}
+                              title={control.label}
+                            />
+                          </span>
                           <span className={`control-value ${isActive ? 'is-alert' : ''}`}>
                             {displayValue}
                           </span>
@@ -93,9 +108,17 @@ function ExperimentControls({
                   return (
                     <div className="control-item" key={control.id}>
                       <div className="control-label-row">
-                        <label className="control-label" htmlFor={`control-${control.id}`}>
-                          {control.label}
-                        </label>
+                        <span className="control-label-wrapper">
+                          <label className="control-label" htmlFor={`control-${control.id}`}>
+                            {control.label}
+                          </label>
+                          <InfoTooltip
+                            definition={definition}
+                            onLearnMore={onLearnMore ? () => onLearnMore(control.id) : undefined}
+                            significance={significance}
+                            title={control.label}
+                          />
+                        </span>
                         <span className="control-value">{displayValue}</span>
                       </div>
                       <input

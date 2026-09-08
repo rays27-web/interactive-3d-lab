@@ -29,6 +29,11 @@ pnpm preview
 
 ```text
 src/
+  physics/
+    gravity.js                  Pure Newtonian gravity, g, orbital velocity, escape velocity calculations
+    orbitalMechanics.js         Pure orbital period, centripetal acceleration, Keplerian harmonic ratio
+    formatPhysicsValue.js       Standardized scientific notation, SI prefixes, and astronomical formatting
+    celestialConstants.js       Shared astronomical constants & numerical reference data for solar system bodies
   components/
     SceneCanvas.jsx             React lifecycle wrapper for the active Three.js scene
     ExperimentNavigator.jsx     Accessible experiment index control
@@ -40,6 +45,10 @@ src/
     PlanetSelector.jsx          Docked celestial selector bar with real-time status pips
     SolarSystemMiniMap.jsx      High-DPI 2D SVG radar overview & direct target selector
     PlanetDetailPanel.jsx       Floating celestial telemetry dossier & kinematics HUD
+    PhysicsInspector.jsx        Reusable technical inspector with Reference vs Calculated physical values
+    MeasurementOverlay.jsx      Multi-tiered measurement HUD (Reference vs Simulation vs Visualization scale)
+    ExperimentHistory.jsx       In-memory structured observation log (timestamp, parameter, measured outcome)
+    ExperimentChallenge.jsx     Interactive physics challenge card (target conditions, progress, success state)
   utils/
     presetStorage.js            Schema-validated localStorage with bounds clamping
   experiments/
@@ -399,6 +408,103 @@ For repository governance and automated supply-chain security on GitHub:
 3. **Dependabot Alerts & Updates**:
    - Enable Dependabot alerts and automated security updates to receive notices when security advisories affect project dependencies.
 
+## Phase 12 — Milestone 1: Physics Infrastructure + Measurement Foundation
+
+Milestone 1 establishes a reusable virtual physics laboratory layer across the Interactive 3D Lab:
+
+### 1. Pure Physics Utilities (`src/physics/`)
+- **Newtonian Gravitation (`gravity.js`)**: Pure functions for gravitational force ($F = G \frac{m_1 m_2}{r^2}$), surface gravity ($g = \frac{G M}{R^2}$), orbital speed ($v = \sqrt{\frac{G M}{r}}$), and escape velocity ($v_e = \sqrt{\frac{2 G M}{R}}$). Input validation prevents `NaN` or `Infinity` propagation with safe handling of $r \le 0$ and negative mass.
+- **Orbital Mechanics (`orbitalMechanics.js`)**: Circular & Keplerian orbital period ($T = 2\pi\sqrt{\frac{r^3}{G M}}$), centripetal acceleration ($a = \frac{v^2}{r}$), and Keplerian harmonic ratio ($K = \frac{T^2}{r^3}$).
+- **Scientific Formatting (`formatPhysicsValue.js`)**: Standardized SI units (kg, m/s, m/s², N, AU, yr) and Unicode superscript scientific notation ($5.972 \times 10^{24}\text{ kg}$).
+- **Celestial Dataset (`celestialConstants.js`)**: Exact SI numerical ground truth for the Sun and all 8 major planets.
+
+### 2. Reusable Measurement & Telemetry Components (`src/components/`)
+- **Physics Inspector (`PhysicsInspector.jsx`)**: Technical telemetry drawer displaying side-by-side **Reference Values** (astronomical truth) and dynamically calculated **Derived Values** ($g, v_e, v, F, T, a$).
+- **Measurement Laboratory Overlay (`MeasurementOverlay.jsx`)**: 3-tier measurement framework clearly distinguishing:
+  1. *Tier 1 — Astronomical Ground Truth* (Reference values in AU, km, km/s)
+  2. *Tier 2 — Numerical Integration State* (Simulation vector distance and velocity)
+  3. *Tier 3 — Visual Projection Scale* (Calibrated $r_{\text{vis}} \propto a^{0.58}$ power-law rendering)
+- **Experiment History (`ExperimentHistory.jsx`)**: In-memory client-side observation log recording parameter changes, measured results, and physical principles with clipboard export.
+- **Physics Challenges (`ExperimentChallenge.jsx`)**: Interactive challenge framework connecting parameter modifications (e.g. Inverse-Square Law, Kepler ratio, escape velocity) to real-time condition verification and physical explanations.
+
+### 3. Security & Performance Philosophy
+- **Zero DOM Injections**: Strictly avoids `dangerouslySetInnerHTML`, `innerHTML`, and `eval()`.
+- **Single Canvas Invariant**: Maintains exactly 1 WebGL canvas across all experiments and UI states.
+- **Memory Discipline**: Pure calculations with zero per-frame garbage collector allocations.
+- **Future Integration**: Designed as a decoupled, modular foundation to connect directly with Experiments 01–06 in subsequent Phase 12 milestones.
+
+## Phase 12 — Milestone 2: Interactive Physics Visualization & Scientific Learning UX
+
+Milestone 2 transitions the laboratory from "read and slide" to an active empirical scientific loop:
+$$\text{OBSERVE} \longrightarrow \text{CHANGE A PHYSICAL PARAMETER} \longrightarrow \text{SEE 3D CONSEQUENCE} \longrightarrow \text{MEASURE} \longrightarrow \text{UNDERSTAND WHY}$$
+
+### 1. Real 3D Physical Demos with Live Visual Consequences
+- **Demo 01: Inverse-Square Gravitation ($F \propto 1/r^2$)**:
+  - Manipulates orbital radius $r$ ($0.5\times$, $1.0\times$, $2.0\times$, $3.0\times$) in real time.
+  - Live 3D result: Doubling distance ($2r_0$) quarters the gravitational attraction ($0.25 F_0$) and dynamically adjusts the vector force lines in WebGL space.
+- **Demo 02: Orbital Velocity & Stability ($v_0 = \sqrt{GM/r}$)**:
+  - 3 interactive regimes via symplectic Velocity Verlet integration:
+    1. *Too Slow ($0.50\times v_0$)*: Centripetal acceleration $v^2/r$ falls below gravity $g$; planet spirals inward toward the Sun.
+    2. *Suitable ($1.00\times v_0$)*: Stable circular Keplerian orbit ($F_{\text{grav}} = m v^2 / r$).
+    3. *Super-Circular ($1.30\times v_0$)*: Kinetic energy stretches orbit into a high-eccentricity ellipse with aphelion in the outer solar system.
+- **Demo 03: Escape Velocity Threshold ($v_e = \sqrt{2GM/R} \approx 1.414 v_0$)**:
+  - Direct visualization of mechanical energy conservation ($E = K + U$).
+  - At $v \ge \sqrt{2} v_0$, total mechanical energy $E \ge 0$; the body breaks free from the gravitational well and follows an open hyperbolic escape trajectory.
+- **Demo 04: Gravitational Acceleration Comparison ($g = GM/R^2$)**:
+  - Direct planetary comparison across Mercury ($3.70\text{ m/s}^2$), Earth ($9.81\text{ m/s}^2$), Mars ($3.72\text{ m/s}^2$), and Jupiter ($24.79\text{ m/s}^2$).
+- **Demo 05: Kepler's Harmonic Law ($T^2 \propto a^3$)**:
+  - Real-time verification that $T^2 / a^3 = 4\pi^2 / (G M_\odot) \equiv 1.000\text{ yr}^2/\text{AU}^3$ for all planets.
+
+### 2. "Why Did This Happen?" Scientific Explanations (`PhysicsExplanation.jsx`)
+- Contextual card displaying:
+  1. *What Changed* (e.g., "Orbital speed set to 0.50x baseline").
+  2. *What Happened* (e.g., "Centripetal acceleration v²/r dropped below solar gravity; orbit collapsed into inward spiral").
+  3. *Governing Equation* ($v = \sqrt{GM/r}$, $F = G M m / r^2$, etc.).
+  4. *Curriculum Connection* (NCERT Class 11 Physics, Chapter 8: Gravitation).
+  5. *Expandable Mathematical Derivation* (Complete analytical proofs).
+
+### 3. Two-Body Relative Measurement Mode (`MeasurementOverlay.jsx`)
+- Multi-body mutual gravitation inspection:
+  - Relative distance $\Delta r = \|\vec{r}_B - \vec{r}_A\|$ in AU and km.
+  - Newton's Third Law mutual force: $F_{AB} = -F_{BA} = G \frac{m_A m_B}{r^2 + \epsilon^2}$.
+  - Asymmetric acceleration ratio: $a_A / a_B = m_B / m_A$, demonstrating why lighter bodies experience dramatic orbital curvature while massive anchors barely wobble.
+
+### 4. Empirical Observation Recorder (`ExperimentHistory.jsx`)
+- Structured logging with Before, After, Observed, Principle, and Result fields.
+- One-click clipboard export for lab reports.
+
+### 5. "Ask the Lab" Inquiry System (`AskTheLab.jsx`)
+- Search-indexed question-to-visualization mapper answering fundamental physics inquiries with a direct `[VISUALIZE THIS IN 3D]` action.
+
+### 6. Landing Page Mission Control Explorer Cards
+- Quick-access scientific entry points ("EXPLORE GRAVITY", "EXPLORE ORBITS", "EXPLORE ESCAPE") to instantly jump into 3D physical parameter experiments.
+
+## Phase 54 — UX Stabilization + Educational Clarity + Interaction Flow
+
+Phase 54 stabilizes and refines the interaction flow across all experiments:
+
+### 1. Strict Zero-Auto-Open Architecture
+- **Clean Initial State**: No panel, modal, drawer, or instrument auto-opens on page load or experiment switch.
+- **Explicit Triggers Only**: Every instrument (`SCIENTIFIC INQUIRY`, `MISSIONS`, `LOG`, `PHYSICS`, `MEASURE`, `DEMOS`, `ASK LAB`, `APPARATUS`, `OSCILLOSCOPE`, `DOSSIER`, `PARAMETERS`) opens only upon direct user interaction.
+- **Collapsible Scientific Inquiry**: `ExperimentHeader` defaults to a clean single-line badge with an `[ 🔬 SCIENTIFIC INQUIRY · ▾ EXPAND ]` trigger answering the 4 foundational pedagogical questions:
+  1. *What am I exploring?*
+  2. *What can I change?*
+  3. *What should I watch?*
+  4. *Why does it matter?*
+
+### 2. Non-Obstructive Mission Drawer
+- **Collapsible / Minimizable Drawer**: Includes `[ ▾ MINIMIZE ]` and `[ ▴ EXPAND ]` controls.
+- **Unobstructed 3D Observation**: Minimized state docks as an unobtrusive bottom status strip with pointer-events pass-through, ensuring continuous live 3D visual observation during experiments.
+
+### 3. Comprehensive Beginner-Friendly Knowledge Base (`physicsConcepts.js`)
+- **20 Foundational Physics Concepts**: Covers Gravity, Mass, Weight, Force, Acceleration, Velocity, Distance, Orbit, Pressure, Fluid flow, Density, Rotation, Revolution, Orbital period, Escape velocity, Centripetal force, Black holes, Galaxy, Pulsar, and Solar system.
+- **Everyday Analogies & Plain Explanations First**: Every concept presents a simple 1–2 sentence intuition and concrete real-world analogy before introducing optional mathematical formulas.
+- **Dual-Track "Ask the Lab" Flow**: Clear separation between `BASIC CONCEPT` (conceptual mental models) and `EXPERIMENT` (live parameter manipulation & measurement) bridging directly into understanding.
+
+### 4. Stability & Quality Invariants
+- **Strict Single WebGL Canvas Invariant**: Exactly 1 `<canvas>` rendered across all operations.
+- **Zero Browser Errors**: Clean console and network hygiene across desktop and mobile viewports.
+
 ### Pre-Release Security Checklist
 
 Before releasing updates or deploying to production, execute the following audit routine:
@@ -414,8 +520,8 @@ git ls-files | grep -E "(\.env|key|secret|token|credential)"
 # 3. Verify clean production build and chunk sizes
 pnpm build
 
-# 4. Verify test suite, WebGL lifecycle, and responsive UI
-node scratch/test_phase11.cjs
+# 4. Verify automated physics laboratory suite
+node C:\Users\Admin\.gemini\antigravity\brain\f2445aab-c095-4045-83bd-b723184ccbd4\scratch\test_phase12_milestone2.cjs
 ```
 
 

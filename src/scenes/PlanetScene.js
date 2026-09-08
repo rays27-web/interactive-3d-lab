@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { PLANETS_DATA } from '../data/planets'
 
 const STAR_COLORS = ['#d8e9ff', '#87baff', '#ffffff', '#bca6ff']
 
@@ -43,7 +44,6 @@ function createStarLayer({ count, minRadius, maxRadius, size, opacity }) {
         vColor = color;
         vTwinkle = 0.72 + sin(uTime * 0.8 + aPhase) * 0.28;
         vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
-        // Cap close particles so foreground depth never becomes visual noise.
         gl_PointSize = min(14.0, aSize * vTwinkle * (150.0 / -viewPosition.z));
         gl_Position = projectionMatrix * viewPosition;
       }
@@ -63,7 +63,7 @@ function createStarLayer({ count, minRadius, maxRadius, size, opacity }) {
   return new THREE.Points(geometry, material)
 }
 
-export function createPlanetScene(container, initialParams = {}) {
+export function createPlanetScene(container, initialParams = {}, callbacks = {}) {
   const scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2('#050614', 0.014)
 
@@ -80,55 +80,35 @@ export function createPlanetScene(container, initialParams = {}) {
   scene.add(world)
 
   let rotationSpeed = initialParams.rotationSpeed ?? 1.0
+  let currentPlanetData = PLANETS_DATA.find((p) => p.id === 'earth') || PLANETS_DATA[2]
 
-  // Keep physical lighting, then add a small procedural color/displacement layer.
-  const surfaceUniforms = {
-    uTime: { value: 0 },
-    uDeformationIntensity: { value: initialParams.surfaceDeformation ?? 1.0 },
-  }
-  const planetMaterial = new THREE.MeshPhysicalMaterial({
-    color: '#4389ce', roughness: 0.42, metalness: 0.12,
-    clearcoat: 0.48, clearcoatRoughness: 0.34,
+  // Planet Sphere Mesh
+  const planetMaterial = new THREE.MeshStandardMaterial({
+    color: currentPlanetData.surfaceColorHex || '#286ea3',
+    roughness: 0.55,
+    metalness: 0.1,
   })
-  planetMaterial.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = surfaceUniforms.uTime
-    shader.uniforms.uDeformationIntensity = surfaceUniforms.uDeformationIntensity
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uTime;\nuniform float uDeformationIntensity;\nvarying float vSurfacePattern;')
-      .replace('#include <begin_vertex>', `
-        #include <begin_vertex>
-        float broadWave = sin(position.x * 2.1 + uTime * 0.16) * sin(position.y * 2.7 - uTime * 0.11);
-        float fineWave = sin(position.z * 7.0 + position.x * 3.0);
-        vSurfacePattern = (broadWave * 0.7 + fineWave * 0.3) * uDeformationIntensity;
-        transformed += normal * vSurfacePattern * 0.026;
-      `)
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying float vSurfacePattern;')
-      .replace('#include <color_fragment>', `
-        #include <color_fragment>
-        vec3 deepBlue = vec3(0.025, 0.12, 0.30);
-        vec3 electricBlue = vec3(0.12, 0.56, 0.94);
-        float colorBand = smoothstep(-0.7, 0.72, vSurfacePattern);
-        diffuseColor.rgb = mix(deepBlue, electricBlue, colorBand);
-      `)
-  }
-  planetMaterial.customProgramCacheKey = () => 'interactive-3d-lab-procedural-planet'
 
-  const planet = new THREE.Mesh(new THREE.IcosahedronGeometry(2.15, 6), planetMaterial)
-  planet.rotation.z = 0.28
-  world.add(planet)
+  const planetGeometry = new THREE.SphereGeometry(2.15, 64, 48)
+  const planetMesh = new THREE.Mesh(planetGeometry, planetMaterial)
+  planetMesh.rotation.z = (currentPlanetData.axialTiltDeg * Math.PI) / 180
+  world.add(planetMesh)
 
+  // Atmospheric Fresnel Rim
   const atmosphereUniforms = {
     uTime: { value: 0 },
     uPointer: { value: new THREE.Vector2() },
-    uInnerColor: { value: new THREE.Color('#4ab7ff') },
+    uInnerColor: { value: new THREE.Color(currentPlanetData.color || '#4ab7ff') },
     uOuterColor: { value: new THREE.Color('#7c72ff') },
     uAtmosphereIntensity: { value: initialParams.atmosphereIntensity ?? 1.0 },
   }
   const atmosphere = new THREE.Mesh(
-    new THREE.SphereGeometry(2.31, 96, 96),
+    new THREE.SphereGeometry(2.31, 64, 64),
     new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.BackSide,
+      blending: THREE.AdditiveBlending,
       uniforms: atmosphereUniforms,
       vertexShader: `
         varying vec3 vNormalDirection;
@@ -149,7 +129,6 @@ export function createPlanetScene(container, initialParams = {}) {
         varying vec3 vNormalDirection;
         varying vec3 vViewDirection;
         void main() {
-          // Fresnel: edge-on surfaces receive a stronger rim than front-facing surfaces.
           float facing = max(dot(vNormalDirection, vViewDirection), 0.0);
           float fresnel = pow(1.0 - facing, 2.65);
           float breathing = 0.94 + sin(uTime * 0.55 + uPointer.x) * 0.06;
@@ -161,6 +140,75 @@ export function createPlanetScene(container, initialParams = {}) {
   )
   world.add(atmosphere)
 
+  // Phase 29: Interactive Free-Fall & Spring Scale Apparatus
+  const apparatusGroup = new THREE.Group()
+  apparatusGroup.position.set(3.2, -0.4, 0)
+  scene.add(apparatusGroup)
+
+  // Spring Scale Base Pad
+  const scaleBaseGeo = new THREE.CylinderGeometry(0.75, 0.85, 0.15, 32)
+  const scaleBaseMat = new THREE.MeshStandardMaterial({ color: '#16284e', roughness: 0.4, metalness: 0.8 })
+  const scaleBase = new THREE.Mesh(scaleBaseGeo, scaleBaseMat)
+  scaleBase.position.y = -1.2
+  apparatusGroup.add(scaleBase)
+
+  // Spring Cylinder
+  const springGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.45, 16)
+  const springMat = new THREE.MeshStandardMaterial({ color: '#73ffd3', roughness: 0.3, metalness: 0.6 })
+  const springMesh = new THREE.Mesh(springGeo, springMat)
+  springMesh.position.y = -0.95
+  apparatusGroup.add(springMesh)
+
+  // Falling Test Mass Cube
+  let objectMass = 70.0
+  const testObjectGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45)
+  const testObjectMat = new THREE.MeshStandardMaterial({ color: '#ffb450', roughness: 0.3, metalness: 0.7 })
+  const testObjectMesh = new THREE.Mesh(testObjectGeo, testObjectMat)
+  testObjectMesh.position.y = 1.6
+  apparatusGroup.add(testObjectMesh)
+
+  // Downward Gravitational Force Vector Arrow (W = mg)
+  const arrowDir = new THREE.Vector3(0, -1, 0)
+  const arrowOrigin = new THREE.Vector3(0, 0, 0)
+  const weightArrow = new THREE.ArrowHelper(arrowDir, arrowOrigin, 1.2, 0xff5533, 0.25, 0.15)
+  testObjectMesh.add(weightArrow)
+
+  // Free fall physics state
+  let isDropping = false
+  let dropVelocityY = 0
+  let dropPosY = 1.6
+  let surfaceAcceleration = currentPlanetData.surfaceGravityMs2 // e.g. 9.81
+  const restingHeight = -0.65
+
+  function triggerDrop(g = currentPlanetData.surfaceGravityMs2) {
+    surfaceAcceleration = g
+    dropPosY = 1.6
+    dropVelocityY = 0
+    isDropping = true
+  }
+
+  function setPlanet(planetId) {
+    const p = PLANETS_DATA.find((item) => item.id === planetId)
+    if (!p) return
+    currentPlanetData = p
+    surfaceAcceleration = p.surfaceGravityMs2
+
+    // Update 3D appearance
+    planetMaterial.color.set(p.surfaceColorHex || p.color)
+    planetMesh.rotation.z = (p.axialTiltDeg * Math.PI) / 180
+
+    atmosphereUniforms.uInnerColor.value.set(p.color)
+    atmosphere.visible = p.id !== 'mercury' // Mercury has no significant atmosphere
+
+    // Scale weight vector arrow proportionally to local surface gravity
+    const lengthNorm = Math.min(2.5, Math.max(0.4, (p.surfaceGravityMs2 / 9.81) * 1.2))
+    weightArrow.setLength(lengthNorm, 0.25, 0.15)
+
+    // Trigger visual drop on planet change to demonstrate local gravity
+    triggerDrop(p.surfaceGravityMs2)
+  }
+
+  // Lighting
   const keyLight = new THREE.DirectionalLight('#d9edff', 4.4)
   keyLight.position.set(-4, 4, 5)
   const rimLight = new THREE.PointLight('#4388ff', 24, 18, 2)
@@ -192,29 +240,42 @@ export function createPlanetScene(container, initialParams = {}) {
   resize()
 
   const startedAt = performance.now()
+  let lastTime = performance.now()
   let frameId
+
   function animate() {
-    const elapsed = (performance.now() - startedAt) / 1000
+    const now = performance.now()
+    const dt = Math.min(0.05, (now - lastTime) / 1000)
+    lastTime = now
+    const elapsed = (now - startedAt) / 1000
+
     pointer.lerp(target, 0.028)
-    surfaceUniforms.uTime.value = elapsed * rotationSpeed
     atmosphereUniforms.uTime.value = elapsed
     atmosphereUniforms.uPointer.value.copy(pointer)
 
-    world.rotation.y += 0.00125 * rotationSpeed
-    world.rotation.x = THREE.MathUtils.lerp(world.rotation.x, pointer.y * 0.09, 0.018)
-    world.rotation.z = THREE.MathUtils.lerp(world.rotation.z, 0.28 - pointer.x * 0.09, 0.018)
-    world.position.y = Math.sin(elapsed * 0.52 * rotationSpeed) * 0.12
-    camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 0.56, 0.02)
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.35 - pointer.y * 0.34, 0.02)
-    camera.lookAt(0, 0, 0)
+    planetMesh.rotation.y += 0.00125 * rotationSpeed
+    world.position.y = Math.sin(elapsed * 0.52 * rotationSpeed) * 0.08
+    camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 0.45, 0.02)
+    camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.35 - pointer.y * 0.28, 0.02)
+    camera.lookAt(0.5, 0, 0)
 
-    farStars.rotation.y = elapsed * 0.004 + pointer.x * 0.012
-    farStars.rotation.x = pointer.y * 0.008
-    middleStars.rotation.y = -elapsed * 0.009 + pointer.x * 0.028
-    middleStars.rotation.x = pointer.y * 0.018
-    nearStars.rotation.y = elapsed * 0.017 + pointer.x * 0.05
-    nearStars.rotation.x = pointer.y * 0.032
-    ;[farStars, middleStars, nearStars].forEach((layer) => { layer.material.uniforms.uTime.value = elapsed })
+    // Free fall physics simulation
+    if (isDropping) {
+      // Normalized educational acceleration: dt * g * scaleFactor
+      dropVelocityY -= surfaceAcceleration * dt * 0.42
+      dropPosY += dropVelocityY * dt
+      if (dropPosY <= restingHeight) {
+        dropPosY = restingHeight
+        // Small inelastic rebound
+        if (Math.abs(dropVelocityY) > 0.4) {
+          dropVelocityY = -dropVelocityY * 0.25
+        } else {
+          dropVelocityY = 0
+          isDropping = false
+        }
+      }
+    }
+    testObjectMesh.position.y = dropPosY
 
     renderer.render(scene, camera)
     frameId = requestAnimationFrame(animate)
@@ -229,8 +290,13 @@ export function createPlanetScene(container, initialParams = {}) {
     if (params.atmosphereIntensity !== undefined) {
       atmosphereUniforms.uAtmosphereIntensity.value = params.atmosphereIntensity
     }
-    if (params.surfaceDeformation !== undefined) {
-      surfaceUniforms.uDeformationIntensity.value = params.surfaceDeformation
+    if (params.selectedPlanetId !== undefined) {
+      setPlanet(params.selectedPlanetId)
+    }
+    if (params.objectMass !== undefined) {
+      objectMass = params.objectMass
+      const s = Math.min(1.4, Math.max(0.6, Math.cbrt(objectMass / 70)))
+      testObjectMesh.scale.setScalar(s)
     }
   }
 
@@ -238,10 +304,16 @@ export function createPlanetScene(container, initialParams = {}) {
     cancelAnimationFrame(frameId)
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('resize', resize)
-    planet.geometry.dispose()
+    planetGeometry.dispose()
     planetMaterial.dispose()
     atmosphere.geometry.dispose()
     atmosphere.material.dispose()
+    scaleBaseGeo.dispose()
+    scaleBaseMat.dispose()
+    springGeo.dispose()
+    springMat.dispose()
+    testObjectGeo.dispose()
+    testObjectMat.dispose()
     ;[farStars, middleStars, nearStars].forEach((layer) => {
       layer.geometry.dispose()
       layer.material.dispose()
@@ -250,5 +322,23 @@ export function createPlanetScene(container, initialParams = {}) {
     renderer.domElement.remove()
   }
 
-  return { dispose, updateParams }
+  // Expose API for React components
+  const sceneApi = {
+    selectPlanet: setPlanet,
+    triggerDrop,
+    setObjectMass: (m) => {
+      objectMass = m
+      const s = Math.min(1.4, Math.max(0.6, Math.cbrt(m / 70)))
+      testObjectMesh.scale.setScalar(s)
+    },
+  }
+
+  return {
+    dispose,
+    updateParams,
+    sceneApi,
+    selectPlanet: setPlanet,
+    triggerDrop,
+    setObjectMass: sceneApi.setObjectMass,
+  }
 }

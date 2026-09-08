@@ -185,6 +185,22 @@ export const CELESTIAL_BODIES = [
   },
 ]
 
+export const ORBIT_VELOCITY_PRESETS = [
+  { mult: 0.50, label: '0.50× (Sub-Orbital Fall)' },
+  { mult: 0.75, label: '0.75× (Inward Decay)' },
+  { mult: 1.00, label: '1.00× (Stable Circular)' },
+  { mult: 1.20, label: '1.20× (Eccentric Ellipse)' },
+  { mult: 1.414, label: '√2× ~1.414× (Parabolic Escape)' },
+  { mult: 1.60, label: '1.60× (Hyperbolic Ejection)' },
+]
+
+export const ORBIT_DISTANCE_PRESETS = [
+  { mult: 0.5, label: '0.50 AU (Closer - Higher Force)' },
+  { mult: 1.0, label: '1.00 AU (Standard Baseline)' },
+  { mult: 2.0, label: '2.00 AU (2× Distance - 1/4 Force)' },
+  { mult: 3.0, label: '3.00 AU (3× Distance - 1/9 Force)' },
+]
+
 export function createSolarSystemScene(container, initialParams = {}, callbacks = {}) {
   const scene = new THREE.Scene()
   scene.fog = new THREE.FogExp2('#040510', 0.007)
@@ -206,9 +222,11 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
   const orbitLinesGroup = new THREE.Group()
   const trailsGroup = new THREE.Group()
   const gravityVectorsGroup = new THREE.Group()
+  const velocityVectorsGroup = new THREE.Group()
   world.add(orbitLinesGroup)
   world.add(trailsGroup)
   world.add(gravityVectorsGroup)
+  world.add(velocityVectorsGroup)
 
   // Parameters with defense-in-depth clamping
   let simulationSpeed = Math.min(50, Math.max(0.1, initialParams.simulationSpeed ?? 1.0))
@@ -219,6 +237,7 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
   let showLabels = initialParams.showLabels ?? true
   let showTrails = initialParams.showTrails ?? true
   let showGravityVectors = initialParams.showGravityVectors ?? false
+  let showVelocityVectors = initialParams.showVelocityVectors ?? false
   let followPlanet = initialParams.followPlanet ?? false
   let isPaused = initialParams.isPaused ?? false
   let selectedPlanetId = initialParams.selectedPlanetId ?? null
@@ -485,16 +504,31 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
     trailBuffers.push(trailPositions)
   }
 
-  // Preallocated Gravity Vector Lines
+  // Snapshot baseline positions & velocities for zero-drift interactive reset
+  const initPosArray = new Float64Array(posArray)
+  const initVelArray = new Float64Array(velArray)
+
+  // Preallocated Gravity Vector Lines (Amber: points towards Sun/barycenter)
   const gravVectorsGeo = new THREE.BufferGeometry()
   const gravVectorsPositions = new Float32Array(numBodies * 2 * 3)
   gravVectorsGeo.setAttribute('position', new THREE.BufferAttribute(gravVectorsPositions, 3))
   const gravVectorsMat = new THREE.LineSegments(
     gravVectorsGeo,
-    new THREE.LineBasicMaterial({ color: '#ff6644', transparent: true, opacity: 0.6 })
+    new THREE.LineBasicMaterial({ color: '#f59e0b', transparent: true, opacity: 0.85 })
   )
   gravityVectorsGroup.add(gravVectorsMat)
   gravityVectorsGroup.visible = showGravityVectors
+
+  // Preallocated Velocity Vector Lines (Cyan: tangential orbital direction)
+  const velVectorsGeo = new THREE.BufferGeometry()
+  const velVectorsPositions = new Float32Array(numBodies * 2 * 3)
+  velVectorsGeo.setAttribute('position', new THREE.BufferAttribute(velVectorsPositions, 3))
+  const velVectorsMat = new THREE.LineSegments(
+    velVectorsGeo,
+    new THREE.LineBasicMaterial({ color: '#38bdf8', transparent: true, opacity: 0.85 })
+  )
+  velocityVectorsGroup.add(velVectorsMat)
+  velocityVectorsGroup.visible = showVelocityVectors
 
   // Selection Marker Halo
   const selectHaloGeo = new THREE.RingGeometry(1.2, 1.35, 32)
@@ -771,7 +805,7 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
       }
     }
 
-    // Update gravity vectors if enabled
+    // Update gravity vectors if enabled (Amber)
     if (showGravityVectors) {
       for (let i = 1; i < numBodies; i++) {
         const base = i * 2 * 3
@@ -785,6 +819,22 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
         gravVectorsPositions[base + 5] = posArray[i * 3 + 2] + accArray[i * 3 + 2] * 0.4
       }
       gravVectorsGeo.attributes.position.needsUpdate = true
+    }
+
+    // Update velocity vectors if enabled (Cyan)
+    if (showVelocityVectors) {
+      for (let i = 1; i < numBodies; i++) {
+        const base = i * 2 * 3
+        velVectorsPositions[base] = posArray[i * 3]
+        velVectorsPositions[base + 1] = posArray[i * 3 + 1]
+        velVectorsPositions[base + 2] = posArray[i * 3 + 2]
+
+        // Vector length scaled to velocity
+        velVectorsPositions[base + 3] = posArray[i * 3] + velArray[i * 3] * 0.45
+        velVectorsPositions[base + 4] = posArray[i * 3 + 1] + velArray[i * 3 + 1] * 0.45
+        velVectorsPositions[base + 5] = posArray[i * 3 + 2] + velArray[i * 3 + 2] * 0.45
+      }
+      velVectorsGeo.attributes.position.needsUpdate = true
     }
 
     // Update selection halo position
@@ -880,6 +930,10 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
       showGravityVectors = params.showGravityVectors
       gravityVectorsGroup.visible = showGravityVectors
     }
+    if (params.showVelocityVectors !== undefined) {
+      showVelocityVectors = params.showVelocityVectors
+      velocityVectorsGroup.visible = showVelocityVectors
+    }
     if (params.followPlanet !== undefined) {
       followPlanet = params.followPlanet
     }
@@ -913,6 +967,8 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
     selectHaloMat.dispose()
     gravVectorsGeo.dispose()
     gravVectorsMat.material.dispose()
+    velVectorsGeo.dispose()
+    velVectorsMat.material.dispose()
 
     bodyMeshes.forEach((mesh) => {
       mesh.geometry?.dispose()
@@ -931,10 +987,220 @@ export function createSolarSystemScene(container, initialParams = {}, callbacks 
     renderer.domElement.remove()
   }
 
+  // 11. EDUCATIONAL MANIPULATION & INTERACTIVE EXPERIMENT API
+  function setBodyDistance(bodyId, multiplier) {
+    const idx = CELESTIAL_BODIES.findIndex((b) => b.id === bodyId)
+    if (idx <= 0) return
+    const mult = Math.min(4.0, Math.max(0.25, multiplier))
+    posArray[idx * 3] = initPosArray[idx * 3] * mult
+    posArray[idx * 3 + 1] = initPosArray[idx * 3 + 1] * mult
+    posArray[idx * 3 + 2] = initPosArray[idx * 3 + 2] * mult
+
+    // Reset trail buffer to new position to avoid jump artifact lines
+    trailIndex[idx] = 0
+    trailPointCount[idx] = 0
+    const buffer = trailBuffers[idx - 1]
+    for (let p = 0; p < MAX_TRAIL_POINTS; p++) {
+      buffer[p * 3] = posArray[idx * 3]
+      buffer[p * 3 + 1] = posArray[idx * 3 + 1]
+      buffer[p * 3 + 2] = posArray[idx * 3 + 2]
+    }
+    trailLineMeshes[idx - 1].geometry.attributes.position.needsUpdate = true
+
+    computeAccelerations()
+  }
+
+  function setBodyVelocity(bodyId, multiplier) {
+    const idx = CELESTIAL_BODIES.findIndex((b) => b.id === bodyId)
+    if (idx <= 0) return
+    const mult = Math.min(3.0, Math.max(0.05, multiplier))
+    velArray[idx * 3] = initVelArray[idx * 3] * mult
+    velArray[idx * 3 + 1] = initVelArray[idx * 3 + 1] * mult
+    velArray[idx * 3 + 2] = initVelArray[idx * 3 + 2] * mult
+
+    // Seed trail from current position
+    trailIndex[idx] = 0
+    trailPointCount[idx] = 0
+    const buffer = trailBuffers[idx - 1]
+    for (let p = 0; p < MAX_TRAIL_POINTS; p++) {
+      buffer[p * 3] = posArray[idx * 3]
+      buffer[p * 3 + 1] = posArray[idx * 3 + 1]
+      buffer[p * 3 + 2] = posArray[idx * 3 + 2]
+    }
+    trailLineMeshes[idx - 1].geometry.attributes.position.needsUpdate = true
+
+    computeAccelerations()
+  }
+
+  function resetBody(bodyId) {
+    const idx = CELESTIAL_BODIES.findIndex((b) => b.id === bodyId)
+    if (idx <= 0) return
+    posArray[idx * 3] = initPosArray[idx * 3]
+    posArray[idx * 3 + 1] = initPosArray[idx * 3 + 1]
+    posArray[idx * 3 + 2] = initPosArray[idx * 3 + 2]
+    velArray[idx * 3] = initVelArray[idx * 3]
+    velArray[idx * 3 + 1] = initVelArray[idx * 3 + 1]
+    velArray[idx * 3 + 2] = initVelArray[idx * 3 + 2]
+
+    trailIndex[idx] = 0
+    trailPointCount[idx] = 0
+    const buffer = trailBuffers[idx - 1]
+    for (let p = 0; p < MAX_TRAIL_POINTS; p++) {
+      buffer[p * 3] = posArray[idx * 3]
+      buffer[p * 3 + 1] = posArray[idx * 3 + 1]
+      buffer[p * 3 + 2] = posArray[idx * 3 + 2]
+    }
+    trailLineMeshes[idx - 1].geometry.attributes.position.needsUpdate = true
+
+    computeAccelerations()
+  }
+
+  function resetAllBodies() {
+    for (let i = 0; i < numBodies * 3; i++) {
+      posArray[i] = initPosArray[i]
+      velArray[i] = initVelArray[i]
+    }
+    for (let i = 1; i < numBodies; i++) {
+      trailIndex[i] = 0
+      trailPointCount[i] = 0
+      const buffer = trailBuffers[i - 1]
+      for (let p = 0; p < MAX_TRAIL_POINTS; p++) {
+        buffer[p * 3] = posArray[i * 3]
+        buffer[p * 3 + 1] = posArray[i * 3 + 1]
+        buffer[p * 3 + 2] = posArray[i * 3 + 2]
+      }
+      trailLineMeshes[i - 1].geometry.attributes.position.needsUpdate = true
+    }
+    computeAccelerations()
+  }
+
+  function getBodyMetrics(bodyId) {
+    const idx = CELESTIAL_BODIES.findIndex((b) => b.id === bodyId)
+    if (idx < 0) return null
+    const x = posArray[idx * 3]
+    const y = posArray[idx * 3 + 1]
+    const z = posArray[idx * 3 + 2]
+    const dist = Math.sqrt(x * x + y * y + z * z)
+    const vx = velArray[idx * 3]
+    const vy = velArray[idx * 3 + 1]
+    const vz = velArray[idx * 3 + 2]
+    const speed = Math.sqrt(vx * vx + vy * vy + vz * vz)
+    const ax = accArray[idx * 3]
+    const ay = accArray[idx * 3 + 1]
+    const az = accArray[idx * 3 + 2]
+    const acc = Math.sqrt(ax * ax + ay * ay + az * az)
+
+    const orbSpeed = dist > 0.001 ? Math.sqrt(1000.0 / dist) : 0
+    const escSpeed = orbSpeed * Math.SQRT2
+    return {
+      distance: Number(dist.toFixed(3)),
+      speed: Number(speed.toFixed(3)),
+      acc: Number(acc.toFixed(4)),
+      orbSpeed: Number(orbSpeed.toFixed(3)),
+      escSpeed: Number(escSpeed.toFixed(3)),
+      pos: [x, y, z],
+      vel: [vx, vy, vz],
+    }
+  }
+
+  function getTwoBodyMetrics(bodyIdA, bodyIdB) {
+    const idxA = CELESTIAL_BODIES.findIndex((b) => b.id === bodyIdA)
+    const idxB = CELESTIAL_BODIES.findIndex((b) => b.id === bodyIdB)
+    if (idxA < 0 || idxB < 0 || idxA === idxB) return null
+
+    const dx = posArray[idxB * 3] - posArray[idxA * 3]
+    const dy = posArray[idxB * 3 + 1] - posArray[idxA * 3 + 1]
+    const dz = posArray[idxB * 3 + 2] - posArray[idxA * 3 + 2]
+    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+    const dvx = velArray[idxB * 3] - velArray[idxA * 3]
+    const dvy = velArray[idxB * 3 + 1] - velArray[idxA * 3 + 1]
+    const dvz = velArray[idxB * 3 + 2] - velArray[idxA * 3 + 2]
+    const relSpeed = Math.sqrt(dvx * dvx + dvy * dvy + dvz * dvz)
+
+    const mA = massArray[idxA]
+    const mB = massArray[idxB]
+    const rSqSoft = dist * dist + EPSILON_SQ
+    const mutualForce = (1.0 * mA * mB) / rSqSoft
+    const accA = mutualForce / Math.max(0.0001, mA)
+    const accB = mutualForce / Math.max(0.0001, mB)
+
+    return {
+      dist: Number(dist.toFixed(3)),
+      relSpeed: Number(relSpeed.toFixed(3)),
+      force: Number(mutualForce.toFixed(5)),
+      accA: Number(accA.toFixed(5)),
+      accB: Number(accB.toFixed(5)),
+    }
+  }
+
+  function getOrbitalState(bodyId) {
+    const idx = CELESTIAL_BODIES.findIndex((b) => b.id === bodyId)
+    if (idx <= 0) return null
+    const x = posArray[idx * 3]
+    const y = posArray[idx * 3 + 1]
+    const z = posArray[idx * 3 + 2]
+    const dist = Math.sqrt(x * x + y * y + z * z)
+    const vx = velArray[idx * 3]
+    const vy = velArray[idx * 3 + 1]
+    const vz = velArray[idx * 3 + 2]
+    const speed = Math.sqrt(vx * vx + vy * vy + vz * vz)
+
+    // G*M_sun = 1000.0
+    const mu = 1000.0
+    const vCirc = Math.sqrt(mu / Math.max(0.001, dist))
+    const vEsc = vCirc * Math.SQRT2
+    const vRatio = speed / Math.max(0.0001, vCirc)
+
+    const mass = massArray[idx]
+    const kineticEnergy = 0.5 * mass * speed * speed
+    const potentialEnergy = -(mu * mass) / Math.max(0.001, dist)
+    const totalEnergy = kineticEnergy + potentialEnergy
+    const specificEnergy = 0.5 * speed * speed - mu / Math.max(0.001, dist)
+
+    let trajectoryType = 'Stable Circular Orbit'
+    if (vRatio < 0.60) {
+      trajectoryType = 'Sub-Orbital Inward Fall (Spiral Collapse)'
+    } else if (vRatio < 0.95) {
+      trajectoryType = 'Decaying Elliptical Orbit'
+    } else if (vRatio <= 1.05) {
+      trajectoryType = 'Stable Circular Orbit'
+    } else if (vRatio < 1.38) {
+      trajectoryType = 'Eccentric Elliptical Orbit'
+    } else if (vRatio <= 1.45) {
+      trajectoryType = 'Parabolic Escape (Unbound, E ≈ 0)'
+    } else {
+      trajectoryType = 'Hyperbolic Ejection (Unbound Escape, E > 0)'
+    }
+
+    return {
+      bodyId,
+      name: CELESTIAL_BODIES[idx].name,
+      distanceAU: Number(dist.toFixed(2)),
+      speedKmS: Number(speed.toFixed(2)),
+      vRatio: Number(vRatio.toFixed(3)),
+      circularSpeed: Number(vCirc.toFixed(2)),
+      escapeSpeed: Number(vEsc.toFixed(2)),
+      kineticEnergy: Number(kineticEnergy.toFixed(2)),
+      potentialEnergy: Number(potentialEnergy.toFixed(2)),
+      totalEnergy: Number(totalEnergy.toFixed(2)),
+      specificEnergy: Number(specificEnergy.toFixed(2)),
+      trajectoryType,
+      isBound: totalEnergy < 0,
+    }
+  }
+
   return {
     dispose,
     updateParams,
     selectPlanet,
     focusPlanet,
+    setBodyDistance,
+    setBodyVelocity,
+    resetBody,
+    resetAllBodies,
+    getBodyMetrics,
+    getTwoBodyMetrics,
+    getOrbitalState,
   }
 }
