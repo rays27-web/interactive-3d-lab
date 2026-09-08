@@ -19,16 +19,14 @@ export const PHYSICS_CONCEPTS = [
     id: 'concept-gravity',
     title: 'What is gravity?',
     curriculum: 'Class 11 Physics, Chapter 8: Gravitation — Universal Attraction',
-    experimentId: 'planet',
-    experimentName: '01 / PLANET',
+    experimentId: 'solar-system',
+    experimentName: '06 / SOLAR SYSTEM',
     simpleExplanation:
-      'Gravity is a force that attracts objects with mass toward each other.',
+      'Gravity is an invisible force of attraction that pulls objects with mass toward each other. In simple terms: Earth pulls objects toward its center, which is why objects fall toward the ground and why we stay firmly on the surface.',
     everydayExample:
-      "Earth's gravity pulls you toward the ground, which is why a dropped object falls.",
-    spaceExample:
-      "The Sun's gravity helps keep planets in orbit.",
+      'If you drop an apple, Earth pulls the apple downward. The apple also pulls upward on the Earth, but because Earth is so massive, its movement is completely imperceptible.',
     analogy:
-      'Imagine placing a heavy bowling ball onto a soft mattress: it creates a dip in the fabric, causing any smaller marbles rolled nearby to curve toward it.',
+      'Imagine placing a heavy bowling ball onto a soft mattress or trampoline: it creates a dip in the fabric, causing any smaller marbles rolled nearby to curve toward it.',
     formula: 'F = G · (M · m) / r²',
     variables: [
       { sym: 'F', desc: 'Gravitational force (Newtons, N)' },
