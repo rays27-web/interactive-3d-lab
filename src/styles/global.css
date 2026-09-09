@@ -8104,3 +8104,171 @@ h1 em {
     font-size: 7px;
   }
 }
+
+/* ==========================================================================
+   PHASE 3A — MISSION 01 3D EXECUTION & TELEMETRY MODEL
+   ========================================================================== */
+
+/* Active Run Button */
+.step-primary-btn.run-btn.is-active-calibrating {
+  background: rgba(115, 255, 211, 0.24);
+  border-color: #73ffd3;
+  color: #73ffd3;
+  box-shadow: 0 0 16px rgba(115, 255, 211, 0.35);
+  animation: pulseCalibrating 2s infinite ease-in-out;
+}
+
+@keyframes pulseCalibrating {
+  0%, 100% { box-shadow: 0 0 12px rgba(115, 255, 211, 0.3); }
+  50% { box-shadow: 0 0 22px rgba(115, 255, 211, 0.55); }
+}
+
+.step-reset-btn {
+  background: rgba(255, 95, 87, 0.12);
+  border: 1px solid rgba(255, 95, 87, 0.35);
+  color: #ff9d98;
+  transition: all 160ms ease;
+}
+
+.step-reset-btn:hover {
+  background: rgba(255, 95, 87, 0.22);
+  border-color: #ff5f57;
+  color: #ffffff;
+}
+
+/* Real-Time Simulation Telemetry Model Card */
+.telemetry-model-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: rgba(6, 12, 28, 0.85);
+  border: 1px solid rgba(115, 255, 211, 0.28);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-top: 4px;
+}
+
+.telemetry-model-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.telemetry-badge-sim {
+  font: 700 10.5px 'DM Mono', monospace;
+  color: #73ffd3;
+  letter-spacing: 0.1em;
+  background: rgba(115, 255, 211, 0.12);
+  border: 1px solid rgba(115, 255, 211, 0.3);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.telemetry-model-status {
+  font: 700 11px 'DM Mono', monospace;
+  letter-spacing: 0.08em;
+  color: #768caa;
+}
+
+.telemetry-model-status.is-active {
+  color: #73ffd3;
+  text-shadow: 0 0 8px rgba(115, 255, 211, 0.4);
+}
+
+.telemetry-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .telemetry-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.telemetry-tier {
+  background: rgba(11, 20, 46, 0.5);
+  border: 1px solid rgba(133, 189, 255, 0.16);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.telemetry-tier.calibrated-tier.is-active {
+  background: rgba(14, 30, 68, 0.7);
+  border-color: rgba(115, 255, 211, 0.4);
+  box-shadow: 0 0 14px rgba(115, 255, 211, 0.12);
+}
+
+.tier-tag {
+  font: 700 10px 'DM Mono', monospace;
+  letter-spacing: 0.08em;
+  color: #8da4ca;
+}
+
+.calibrated-tier.is-active .tier-tag {
+  color: #73ffd3;
+}
+
+.tier-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tier-metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.metric-name {
+  font: 700 9.5px 'DM Mono', monospace;
+  color: #6d85aa;
+  letter-spacing: 0.05em;
+}
+
+.metric-num {
+  font: 700 14.5px 'DM Mono', monospace;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: #c4d7f5;
+}
+
+.metric-num.highlight {
+  color: #ffffff;
+  font-size: 15.5px;
+}
+
+.calibrated-tier.is-active .metric-num.highlight {
+  color: #73ffd3;
+}
+
+.metric-delta {
+  font: 600 10.5px 'DM Mono', monospace;
+}
+
+.delta-pos {
+  color: #73ffd3;
+}
+
+.delta-neg {
+  color: #ffd166;
+}
+
+.delta-gravity {
+  color: #a78bfa;
+}
+
+.telemetry-note {
+  margin: 0;
+  font: 11px/1.4 Outfit, sans-serif;
+  color: #8aa0c4;
+  border-top: 1px dashed rgba(133, 189, 255, 0.18);
+  padding-top: 6px;
+}
+

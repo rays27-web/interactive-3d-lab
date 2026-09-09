@@ -397,12 +397,19 @@ function App() {
 
   const isSolarSystem = displayedExperiment.id === 'solar-system'
 
+  const handleSceneReady = (api) => {
+    setSceneApi(api)
+    if (typeof window !== 'undefined') {
+      window.__testSceneApi = api
+    }
+  }
+
   return (
     <main className={`app-shell ${labMode ? 'mode-lab' : 'mode-clean'}`}>
       <SceneCanvas
         callbacks={sceneCallbacks}
         experiment={activeExperiment}
-        onSceneReady={setSceneApi}
+        onSceneReady={handleSceneReady}
         onTransitionChange={handleTransitionChange}
         params={currentParams}
       />

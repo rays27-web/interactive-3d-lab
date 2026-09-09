@@ -31,25 +31,68 @@ function ExperimentMission({
   const [isMinimized, setIsMinimized] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
 
+  // Phase 3A: Scientific Mission Simulation State Pipeline
+  const [isSimulating, setIsSimulating] = useState(false)
+  const [angularVelocity, setAngularVelocity] = useState(2.5)
+  const [targetOblateness, setTargetOblateness] = useState(0.0)
+  const [simulationStatus, setSimulationStatus] = useState('idle') // 'idle' | 'calibrating' | 'running'
+
   const activeMission = missions[selectedMissionIndex] || missions[0]
 
-  // Reset steps if mission changes
+  // Reset steps and calibration if mission changes
   const handleSelectMission = (index) => {
     setSelectedMissionIndex(index)
     setCurrentStepIndex(0)
     setUserPrediction(null)
     setHasRunSimulation(false)
     setRecordedSuccess(false)
+    if (sceneApi?.resetCalibration) {
+      sceneApi.resetCalibration()
+    }
+    setIsSimulating(false)
+    setSimulationStatus('idle')
+    setTargetOblateness(0.0)
   }
 
   const handleSelectPrediction = (option) => {
     setUserPrediction(option)
   }
 
+  const handleResetCalibration = () => {
+    if (sceneApi?.resetCalibration) {
+      sceneApi.resetCalibration()
+    }
+    setIsSimulating(false)
+    setSimulationStatus('idle')
+    setTargetOblateness(0.0)
+    setHasRunSimulation(false)
+  }
+
   const handleRunExperiment = () => {
+    // 1. Set simulationStatus = 'calibrating'
+    setSimulationStatus('calibrating')
+    // 2. Set isSimulating = true
+    setIsSimulating(true)
+
+    // 3. Send angularVelocity = 2.5 to active PlanetScene & calculate targetOblateness
+    const targetOmega = activeMission.targetParams?.rotationSpeed ?? 2.5
+    setAngularVelocity(targetOmega)
+    // Educational visualization factor for oblateness: bulgeFactor = (omega - 1.0) * 0.12
+    const visualOblateness = Math.max(0, (targetOmega - 1.0) * 0.12)
+    setTargetOblateness(visualOblateness)
+
+    if (sceneApi?.setCalibration) {
+      sceneApi.setCalibration({
+        angularVelocity: targetOmega,
+        targetOblateness: visualOblateness,
+        active: true,
+      })
+    }
+
     if (activeMission.targetParams && onApplyParams) {
       onApplyParams(activeMission.targetParams)
     }
+
     // If solar system special API available, trigger it too
     if (experiment.id === 'solar-system' && sceneApi) {
       if (activeMission.id === 'solar-mission-1') {
@@ -58,8 +101,12 @@ function ExperimentMission({
         sceneApi.setBodyVelocity?.('earth', 0.5)
       }
     }
+
+    // 5 & 6. 3D response started, set simulationStatus = 'running'
+    setSimulationStatus('running')
     setHasRunSimulation(true)
-    setCurrentStepIndex(3) // Jump to OBSERVE
+    // NOTE: In accordance with requirement 13, DO NOT automatically jump to OBSERVE.
+    // The student remains in STEP 03 until choosing to advance.
   }
 
   const handleNextStep = () => {
@@ -286,7 +333,7 @@ function ExperimentMission({
             </div>
           )}
 
-          {/* STEP 3: RUN (Phase 14: Apply Variable Calibration) */}
+          {/* STEP 3: RUN (Phase 14 & 3A: Apply Variable Calibration & 3D Execution) */}
           {currentStep.id === 'run' && (
             <div className="mission-step-view">
               <span className="step-view-tag">STEP 03 · EXECUTE VARIABLE CALIBRATION</span>
@@ -302,9 +349,74 @@ function ExperimentMission({
                 </div>
                 <div className="calib-row">
                   <span className="calib-label">TARGET VALUE</span>
-                  <strong className="calib-val highlight">{activeMission.measurement?.calibrated || '2.0×'}</strong>
+                  <strong className="calib-val highlight">{activeMission.measurement?.calibrated || '2.5×'}</strong>
                 </div>
               </div>
+
+              {/* Phase 3A: Real-Time Telemetry Model (Simulation Approximation) */}
+              {activeMission.id === 'planet-mission-1' && (
+                <div className="telemetry-model-card">
+                  <div className="telemetry-model-header">
+                    <span className="telemetry-badge-sim">SIMULATION MODEL · EDUCATIONAL APPROXIMATION</span>
+                    <span className={`telemetry-model-status ${simulationStatus === 'running' ? 'is-active' : ''}`}>
+                      {simulationStatus === 'running' ? '● 3D CALIBRATION ACTIVE' : '○ BASELINE STATE'}
+                    </span>
+                  </div>
+
+                  <div className="telemetry-comparison-grid">
+                    <div className="telemetry-tier baseline-tier">
+                      <span className="tier-tag">BASELINE (1.0× ROTATION)</span>
+                      <div className="tier-metrics">
+                        <div className="tier-metric-item">
+                          <span className="metric-name">POLAR RADIUS (Rp)</span>
+                          <strong className="metric-num">6,371 km</strong>
+                        </div>
+                        <div className="tier-metric-item">
+                          <span className="metric-name">EQUATORIAL RADIUS (Re)</span>
+                          <strong className="metric-num">6,371 km</strong>
+                        </div>
+                        <div className="tier-metric-item">
+                          <span className="metric-name">EQUATORIAL SURFACE GRAVITY (g_eq)</span>
+                          <strong className="metric-num">9.78 m/s²</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`telemetry-tier calibrated-tier ${simulationStatus === 'running' ? 'is-active' : ''}`}>
+                      <span className="tier-tag">
+                        {simulationStatus === 'running' ? 'CALIBRATED (2.5× SPIN · OBLATE)' : 'CALIBRATED (NOT RUN YET)'}
+                      </span>
+                      <div className="tier-metrics">
+                        <div className="tier-metric-item">
+                          <span className="metric-name">POLAR RADIUS (Rp)</span>
+                          <strong className="metric-num highlight">
+                            {simulationStatus === 'running' ? '6,314 km' : '—'}
+                          </strong>
+                          {simulationStatus === 'running' && <span className="metric-delta delta-neg">−57 km (−0.9%)</span>}
+                        </div>
+                        <div className="tier-metric-item">
+                          <span className="metric-name">EQUATORIAL RADIUS (Re)</span>
+                          <strong className="metric-num highlight">
+                            {simulationStatus === 'running' ? '6,486 km' : '—'}
+                          </strong>
+                          {simulationStatus === 'running' && <span className="metric-delta delta-pos">+115 km (+1.8%)</span>}
+                        </div>
+                        <div className="tier-metric-item">
+                          <span className="metric-name">EQUATORIAL SURFACE GRAVITY (g_eq)</span>
+                          <strong className="metric-num highlight">
+                            {simulationStatus === 'running' ? '9.60 m/s²' : '—'}
+                          </strong>
+                          {simulationStatus === 'running' && <span className="metric-delta delta-gravity">−0.18 m/s² centrifugal drop</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="telemetry-note">
+                    * Physical safety note: Displayed 2.5× is a relative experimental multiplier over baseline sidereal rotation rate (ω₀ ≈ 7.292×10⁻⁵ rad/s). Calculated centrifugal acceleration a_c = ω²Re scales to ~6.25× baseline, reducing net downward surface gravity at the bulging equator.
+                  </p>
+                </div>
+              )}
 
               <div className="step-actions">
                 <button
@@ -315,12 +427,30 @@ function ExperimentMission({
                   ← BACK
                 </button>
                 <button
-                  className="step-primary-btn run-btn"
+                  className={`step-primary-btn run-btn ${simulationStatus === 'running' ? 'is-active-calibrating' : ''}`}
                   onClick={handleRunExperiment}
                   type="button"
                 >
-                  <span>⚡</span> EXECUTE 3D SIMULATION CALIBRATION →
+                  <span>⚡</span> {simulationStatus === 'running' ? 'CALIBRATION ACTIVE — 2.5× SPIN' : 'EXECUTE 3D SIMULATION CALIBRATION →'}
                 </button>
+                {simulationStatus === 'running' && (
+                  <>
+                    <button
+                      className="step-secondary-btn step-reset-btn"
+                      onClick={handleResetCalibration}
+                      type="button"
+                    >
+                      ↺ RESET CALIBRATION
+                    </button>
+                    <button
+                      className="step-primary-btn"
+                      onClick={() => setCurrentStepIndex(3)}
+                      type="button"
+                    >
+                      PROCEED TO OBSERVE →
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -338,6 +468,36 @@ function ExperimentMission({
                   The active WebGL physics model has updated its numerical integration state. Watch the canvas in the background to observe the physical transformation.
                 </p>
               </div>
+
+              {activeMission.id === 'planet-mission-1' && (
+                <div className="telemetry-model-card observe-telemetry-card">
+                  <div className="telemetry-model-header">
+                    <span className="telemetry-badge-sim">SIMULATION MODEL · ACTIVE TELEMETRY</span>
+                    <span className="telemetry-model-status is-active">● 2.5× SPIN RECORDED</span>
+                  </div>
+                  <div className="telemetry-comparison-grid">
+                    <div className="telemetry-tier calibrated-tier is-active">
+                      <div className="tier-metrics">
+                        <div className="tier-metric-item">
+                          <span className="metric-name">POLAR RADIUS (Rp)</span>
+                          <strong className="metric-num highlight">6,314 km</strong>
+                          <span className="metric-delta delta-neg">−57 km (−0.9% polar flattening)</span>
+                        </div>
+                        <div className="tier-metric-item">
+                          <span className="metric-name">EQUATORIAL RADIUS (Re)</span>
+                          <strong className="metric-num highlight">6,486 km</strong>
+                          <span className="metric-delta delta-pos">+115 km (+1.8% equatorial bulge)</span>
+                        </div>
+                        <div className="tier-metric-item">
+                          <span className="metric-name">EQUATORIAL SURFACE GRAVITY (g_eq)</span>
+                          <strong className="metric-num highlight">9.60 m/s²</strong>
+                          <span className="metric-delta delta-gravity">−0.18 m/s² (centrifugal drop)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="step-actions">
                 <button

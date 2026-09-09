@@ -247,6 +247,15 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   let rotationSpeed = initialParams.rotationSpeed ?? 1.0
   let currentPlanetData = PLANETS_DATA.find((p) => p.id === 'earth') || PLANETS_DATA[2]
 
+  // Phase 3A: Mission 01 Simulation Calibration State
+  const calibrationState = {
+    active: false,
+    angularVelocity: 1.0,
+    targetOblateness: 0.0,
+  }
+  const targetScale = new THREE.Vector3(1, 1, 1)
+  let focusPulseTimer = 0
+
   // Planet Sphere Mesh with Procedural Surface Geography Map
   // Proportioned as the primary gravitational attractor in the chamber
   let currentTexture = createPlanetTexture(currentPlanetData)
@@ -400,8 +409,8 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
       `,
     }),
   )
-  atmosphere.position.set(-1.9, 0, 0)
-  world.add(atmosphere)
+  atmosphere.position.set(0, 0, 0)
+  planetTiltGroup.add(atmosphere)
 
   // 3D Gravitational Field Chamber Structures
   const fieldGroup = new THREE.Group()
@@ -622,9 +631,33 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     atmosphereUniforms.uPointer.value.copy(pointer)
 
     // Calibrated continuous angular velocity around local polar axis
-    planetMesh.rotation.y += 0.0055 * rotationSpeed
+    // Base speed ~0.33 rad/s produces ~0.0055 rad/frame at 60 FPS (dt ≈ 0.0167s)
+    const baseRotationSpeed = 0.33
+    const activeOmega = calibrationState.active ? calibrationState.angularVelocity : 1.0
+    planetMesh.rotation.y += baseRotationSpeed * activeOmega * rotationSpeed * dt
+
+    // Smooth oblateness deformation: equator expands (X, Z), poles compress (Y)
+    // Educational visualization factor: bulgeFactor = (angularVelocity - 1.0) * 0.12
+    const bulgeFactor = calibrationState.active
+      ? Math.max(0, (calibrationState.angularVelocity - 1.0) * 0.12)
+      : 0.0
+    targetScale.set(1.0 + bulgeFactor, 1.0 - bulgeFactor * 0.5, 1.0 + bulgeFactor)
+
+    const lerpFactor = Math.min(1.0, dt * 3.5)
+    planetMesh.scale.lerp(targetScale, lerpFactor)
+    atmosphere.scale.lerp(targetScale, lerpFactor)
+
+    // Subtle camera focus pulse when calibration begins (subtle -0.15 forward shift decaying over 0.6s)
+    let pulseZ = 0
+    if (focusPulseTimer > 0) {
+      focusPulseTimer = Math.max(0, focusPulseTimer - dt)
+      const progress = focusPulseTimer / 0.6
+      pulseZ = Math.sin((1.0 - progress) * Math.PI) * -0.15
+    }
+
     camera.position.x = THREE.MathUtils.lerp(camera.position.x, pointer.x * 0.45, 0.02)
     camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0.40 - pointer.y * 0.28, 0.02)
+    camera.position.z = 8.8 + pulseZ
     camera.lookAt(0, 0, 0)
 
     // Free fall physics simulation
@@ -733,6 +766,30 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
       hasSurfaceReference: Boolean(surfaceReference),
       referenceChildCount: surfaceReference.children.length,
     }),
+    setCalibration: ({ angularVelocity = 1.0, targetOblateness = 0, active = true } = {}) => {
+      calibrationState.active = Boolean(active)
+      calibrationState.angularVelocity = Number(angularVelocity) || 1.0
+      calibrationState.targetOblateness = Number(targetOblateness) || 0.0
+      if (active) {
+        focusPulseTimer = 0.6
+      }
+    },
+    resetCalibration: () => {
+      calibrationState.active = false
+      calibrationState.angularVelocity = 1.0
+      calibrationState.targetOblateness = 0.0
+      focusPulseTimer = 0
+    },
+    getCalibrationState: () => ({
+      ...calibrationState,
+      currentScale: {
+        x: Number(planetMesh.scale.x.toFixed(4)),
+        y: Number(planetMesh.scale.y.toFixed(4)),
+        z: Number(planetMesh.scale.z.toFixed(4)),
+      },
+      currentAngularVelocity: calibrationState.active ? calibrationState.angularVelocity : 1.0,
+      isOblate: planetMesh.scale.x > 1.01,
+    }),
   }
 
   return {
@@ -743,5 +800,8 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     triggerDrop,
     setObjectMass: sceneApi.setObjectMass,
     getRotationState: sceneApi.getRotationState,
+    setCalibration: sceneApi.setCalibration,
+    resetCalibration: sceneApi.resetCalibration,
+    getCalibrationState: sceneApi.getCalibrationState,
   }
 }
