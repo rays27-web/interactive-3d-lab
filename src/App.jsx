@@ -4,6 +4,7 @@ import ExperimentInfoPanel from './components/ExperimentInfoPanel'
 import ExperimentNavigator from './components/ExperimentNavigator'
 import LaboratoryNavDrawer from './components/LaboratoryNavDrawer'
 import GravitationIndexDrawer from './components/GravitationIndex/GravitationIndexDrawer'
+import PhysicsQuizModal from './components/Quiz/PhysicsQuizModal'
 import LaboratoryTelemetry from './components/LaboratoryTelemetry'
 import LabModeToggle from './components/LabModeToggle'
 import PlanetDetailPanel from './components/PlanetDetailPanel'
@@ -54,6 +55,7 @@ function App() {
   const [isIndexOpen, setIsIndexOpen] = useState(false)
   const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false)
   const [isGravitationIndexOpen, setIsGravitationIndexOpen] = useState(false)
+  const [isQuizOpen, setIsQuizOpen] = useState(false)
 
   // Phase 29 & 38: Planet and Pulsar dedicated laboratory instruments
   const [selectedPlanetComparisonId, setSelectedPlanetComparisonId] = useState('earth')
@@ -337,7 +339,9 @@ function App() {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape') {
-        if (isGravitationIndexOpen) {
+        if (isQuizOpen) {
+          setIsQuizOpen(false)
+        } else if (isGravitationIndexOpen) {
           setIsGravitationIndexOpen(false)
         } else if (isNavDrawerOpen) {
           setIsNavDrawerOpen(false)
@@ -368,6 +372,7 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [
+    isQuizOpen,
     isGravitationIndexOpen,
     isNavDrawerOpen,
     isIndexOpen,
@@ -432,6 +437,19 @@ function App() {
         }}
       />
 
+      {/* Physics Quiz: Upper-Right Trigger Button */}
+      <button
+        aria-expanded={isQuizOpen}
+        aria-label="Physics Quiz"
+        className={`physics-quiz-trigger ${isQuizOpen ? 'is-active' : ''}`}
+        onClick={() => setIsQuizOpen((prev) => !prev)}
+        title="Physics Quiz"
+        type="button"
+      >
+        <span aria-hidden="true" className="quiz-trigger-icon">⚡</span>
+        <span className="quiz-trigger-label">QUIZ</span>
+      </button>
+
       {/* Gravitation Learning Index: Upper-Right Trigger Button */}
       <button
         aria-expanded={isGravitationIndexOpen}
@@ -449,6 +467,12 @@ function App() {
       <GravitationIndexDrawer
         isOpen={isGravitationIndexOpen}
         onClose={() => setIsGravitationIndexOpen(false)}
+      />
+
+      {/* Physics Quiz Modal / Assessment Suite */}
+      <PhysicsQuizModal
+        isOpen={isQuizOpen}
+        onClose={() => setIsQuizOpen(false)}
       />
 
       {/* Phase 4: Topbar navigation hidden for Experiment 01 Planet (clean UI reset) */}
