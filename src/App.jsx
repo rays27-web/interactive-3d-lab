@@ -135,7 +135,11 @@ function App() {
       ...prev,
       [activeExperiment.id]: getDefaultParams(activeExperiment),
     }))
-  }, [activeExperiment])
+    if (activeExperiment.id === 'planet') {
+      setObjectMassKg(70)
+      sceneApi?.setObjectMass?.(70)
+    }
+  }, [activeExperiment, sceneApi])
 
   const handleApplyPreset = useCallback((presetParams) => {
     setParamsByExperiment((prev) => ({
@@ -818,6 +822,7 @@ function App() {
               hasActiveOverlay={hasActiveOverlay}
               isCollapsed={isInspectorCollapsed}
               objectMassKg={objectMassKg}
+              onChangeObjectMass={handleChangeObjectMass}
               onSelectPlanet={handleSelectPlanetComparison}
               onToggleCollapse={handleToggleInspectorCollapse}
               onTriggerDrop={handleTriggerDrop}

@@ -8027,6 +8027,210 @@ h1 em {
   box-shadow: 0 0 10px rgba(115, 255, 211, 0.5);
 }
 
+.collapsed-gravity-value {
+  font: 700 11px 'DM Mono', monospace;
+  color: #73ffd3;
+  background: rgba(115, 255, 211, 0.12);
+  border: 1px solid rgba(115, 255, 211, 0.28);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.collapsed-mass-pill {
+  font: 700 11px 'DM Mono', monospace;
+  color: #ffb866;
+  background: rgba(255, 184, 102, 0.12);
+  border: 1px solid rgba(255, 184, 102, 0.28);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* Interactive Object Mass Slider Control */
+.inspector-mass-control-card {
+  background: rgba(14, 25, 55, 0.82);
+  border: 1px solid rgba(255, 184, 102, 0.3);
+  border-left: 4px solid #ffb866;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inspector-mass-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inspector-mass-input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.inspector-mass-number-input {
+  width: 58px;
+  height: 26px;
+  background: rgba(8, 14, 34, 0.9);
+  border: 1px solid rgba(255, 184, 102, 0.45);
+  border-radius: 4px;
+  color: #ffffff;
+  font: 700 14px 'DM Mono', monospace;
+  text-align: center;
+  padding: 0 4px;
+}
+
+.inspector-mass-number-input:focus {
+  outline: 2px solid #ffb866;
+  border-color: #ffb866;
+}
+
+.inspector-mass-slider {
+  width: 100%;
+  height: 6px;
+  accent-color: #ffb866;
+  cursor: pointer;
+}
+
+.inspector-mass-scale-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: 600 10.5px 'DM Mono', monospace;
+  color: #8ea4c8;
+}
+
+.inspector-mass-presets {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mass-preset-btn {
+  font: 700 10px 'DM Mono', monospace;
+  background: rgba(10, 18, 42, 0.7);
+  border: 1px solid rgba(255, 184, 102, 0.25);
+  color: #c4d7f5;
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.mass-preset-btn:hover {
+  background: rgba(255, 184, 102, 0.2);
+  border-color: #ffb866;
+  color: #ffffff;
+}
+
+.mass-preset-btn.is-active {
+  background: rgba(255, 184, 102, 0.3);
+  border-color: #ffb866;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(255, 184, 102, 0.35);
+}
+
+/* Dynamic Formula Relationship Card */
+.inspector-formula-calc-card {
+  background: rgba(8, 16, 38, 0.88);
+  border: 1px solid rgba(115, 255, 211, 0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calc-card-eyebrow {
+  font: 700 9.5px 'DM Mono', monospace;
+  color: #73ffd3;
+  letter-spacing: 0.1em;
+}
+
+.calc-equation-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  text-align: center;
+}
+
+.calc-term {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.calc-term .term-label {
+  font: 700 8.5px 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+  color: #8ea4c8;
+}
+
+.calc-term .term-val {
+  font: 800 15px 'DM Mono', monospace;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.term-mass .term-val {
+  color: #ffb866;
+}
+
+.term-gravity .term-val {
+  color: #73ffd3;
+}
+
+.term-weight .term-val {
+  color: #ff7777;
+}
+
+.calc-operator {
+  font: 700 16px 'DM Mono', monospace;
+  color: #73ffd3;
+  opacity: 0.85;
+  padding: 0 2px;
+}
+
+/* Educational Distinction Banner */
+.inspector-distinction-banner {
+  background: rgba(28, 22, 12, 0.75);
+  border: 1px solid rgba(255, 184, 102, 0.3);
+  border-left: 4px solid #ffb866;
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inspector-distinction-banner .banner-badge {
+  font: 700 9px 'DM Mono', monospace;
+  color: #ffb866;
+  letter-spacing: 0.1em;
+}
+
+.inspector-distinction-banner .banner-title {
+  font: 700 12px 'Outfit', sans-serif;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.inspector-distinction-banner .banner-text {
+  font: 11.5px/1.35 'Outfit', sans-serif;
+  color: #dbe7f9;
+  margin: 0;
+}
+
+.guidance-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 /* When an overlay is active on desktop, inspector remains bottom-left */
 @media (min-width: 769px) {
   .gravity-field-inspector.has-active-overlay {

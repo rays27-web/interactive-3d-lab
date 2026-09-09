@@ -513,7 +513,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   apparatusGroup.add(springMesh)
 
   // Falling Test Mass Cube
-  let objectMass = 70.0
+  let objectMass = initialParams.objectMass ?? 70.0
   const testObjectGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45)
   const testObjectMat = new THREE.MeshStandardMaterial({ color: '#ffb450', roughness: 0.3, metalness: 0.7 })
   const testObjectMesh = new THREE.Mesh(testObjectGeo, testObjectMat)
@@ -526,26 +526,72 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   const weightArrow = new THREE.ArrowHelper(arrowDir, arrowOrigin, 1.0, 0xff5533, 0.2, 0.12)
   testObjectMesh.add(weightArrow)
 
+  // Real-time 3D Spring Scale Digital Readout Sprite
+  const readoutCanvas = document.createElement('canvas')
+  readoutCanvas.width = 256
+  readoutCanvas.height = 128
+  const readoutCtx = readoutCanvas.getContext('2d')
+  const readoutTexture = new THREE.CanvasTexture(readoutCanvas)
+  readoutTexture.colorSpace = THREE.SRGBColorSpace
+  const readoutMat = new THREE.SpriteMaterial({ map: readoutTexture, transparent: true })
+  const readoutSprite = new THREE.Sprite(readoutMat)
+  readoutSprite.scale.set(1.2, 0.6, 1.0)
+  readoutSprite.position.set(0, -1.45, 0)
+  apparatusGroup.add(readoutSprite)
+
+  function updateForceReadout(mass, g) {
+    if (!readoutCtx) return
+    const forceN = (mass * g).toFixed(1)
+    readoutCtx.clearRect(0, 0, 256, 128)
+    readoutCtx.fillStyle = 'rgba(8, 16, 38, 0.88)'
+    if (readoutCtx.roundRect) {
+      readoutCtx.beginPath()
+      readoutCtx.roundRect(8, 8, 240, 112, 12)
+      readoutCtx.fill()
+    } else {
+      readoutCtx.fillRect(8, 8, 240, 112)
+    }
+    readoutCtx.strokeStyle = 'rgba(115, 255, 211, 0.6)'
+    readoutCtx.lineWidth = 3
+    readoutCtx.stroke()
+
+    readoutCtx.textAlign = 'center'
+    readoutCtx.fillStyle = '#73ffd3'
+    readoutCtx.font = 'bold 20px "DM Mono", monospace'
+    readoutCtx.fillText('SPRING SCALE', 128, 38)
+
+    readoutCtx.fillStyle = '#ffffff'
+    readoutCtx.font = 'bold 36px "DM Mono", monospace'
+    readoutCtx.fillText(`${forceN} N`, 128, 78)
+
+    readoutCtx.fillStyle = '#ffb450'
+    readoutCtx.font = '16px "DM Mono", monospace'
+    readoutCtx.fillText(`m = ${mass} kg · g = ${g.toFixed(2)}`, 128, 105)
+
+    readoutTexture.needsUpdate = true
+  }
+
   // Free fall physics state
   let isDropping = false
   let dropVelocityY = 0
   let dropPosY = 1.6
   let surfaceAcceleration = currentPlanetData.surfaceGravityMs2 // e.g. 9.81
 
-  function updateWeightArrow(g) {
-    // Arrow length is strictly proportional to surface gravity: length = 1.0 at 9.81 m/s² (Earth baseline)
-    const arrowLength = Math.max(0.25, (g / 9.81) * 1.0)
-    const headLength = 0.20 * Math.min(1.4, Math.max(0.6, Math.sqrt(g / 9.81)))
-    const headWidth = 0.12 * Math.min(1.4, Math.max(0.6, Math.sqrt(g / 9.81)))
+  function updateWeightArrow(g, mass = objectMass) {
+    // Arrow length is strictly proportional to gravitational weight force W = m * g
+    // Earth baseline: mass = 70 kg, g = 9.81 m/s² => W = 686.7 N => arrowLength = 1.0
+    const weightRatio = (mass * g) / (70.0 * 9.81)
+    const arrowLength = Math.max(0.20, Math.min(2.5, weightRatio * 1.0))
+    const headLength = 0.20 * Math.min(1.4, Math.max(0.5, Math.sqrt(weightRatio)))
+    const headWidth = 0.12 * Math.min(1.4, Math.max(0.5, Math.sqrt(weightRatio)))
     weightArrow.setLength(arrowLength, headLength, headWidth)
   }
 
-  function getRestingHeight(g) {
-    // Proportional spring compression under gravitational weight:
-    // Mars (3.72 m/s²): light compression (rests higher at -0.63)
-    // Earth (9.81 m/s²): baseline compression (rests at -0.72)
-    // Jupiter (24.79 m/s²): deep compression (rests at -0.93)
-    const compression = 0.08 + 0.14 * (g / 9.81)
+  function getRestingHeight(g, mass = objectMass) {
+    // Proportional spring compression under gravitational weight W = m * g:
+    // Earth baseline: mass = 70 kg, g = 9.81 m/s² => W = 686.7 N
+    const weightRatio = (mass * g) / (70.0 * 9.81)
+    const compression = 0.06 + 0.16 * Math.min(2.5, Math.max(0.15, weightRatio))
     return -0.50 - compression
   }
 
@@ -554,10 +600,15 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     dropPosY = 1.6
     dropVelocityY = 0
     isDropping = true
-    updateWeightArrow(g)
+    updateWeightArrow(g, objectMass)
+    updateForceReadout(objectMass, g)
     springMesh.scale.y = 1.0
     springMesh.position.y = -0.95
   }
+
+  // Initial setup of apparatus visuals & readout
+  updateWeightArrow(surfaceAcceleration, objectMass)
+  updateForceReadout(objectMass, surfaceAcceleration)
 
   function setPlanet(planetId) {
     const p = PLANETS_DATA.find((item) => item.id === planetId)
@@ -581,7 +632,8 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     wellMesh.geometry = createSpacetimeWellGeometry(-1.9, 0, p.surfaceGravityMs2)
 
     // Update weight arrow & trigger visual drop on planet change
-    updateWeightArrow(p.surfaceGravityMs2)
+    updateWeightArrow(p.surfaceGravityMs2, objectMass)
+    updateForceReadout(objectMass, p.surfaceGravityMs2)
     triggerDrop(p.surfaceGravityMs2)
   }
 
@@ -661,7 +713,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     camera.lookAt(0, 0, 0)
 
     // Free fall physics simulation
-    const currentRestingHeight = getRestingHeight(surfaceAcceleration)
+    const currentRestingHeight = getRestingHeight(surfaceAcceleration, objectMass)
     if (isDropping) {
       // Normalized educational acceleration: dt * g * scaleFactor
       dropVelocityY -= surfaceAcceleration * dt * 0.42
@@ -706,9 +758,18 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
       setPlanet(params.selectedPlanetId)
     }
     if (params.objectMass !== undefined) {
-      objectMass = params.objectMass
+      objectMass = Number(params.objectMass) || 70.0
       const s = Math.min(1.4, Math.max(0.6, Math.cbrt(objectMass / 70)))
       testObjectMesh.scale.setScalar(s)
+      updateWeightArrow(surfaceAcceleration, objectMass)
+      updateForceReadout(objectMass, surfaceAcceleration)
+      if (!isDropping) {
+        dropPosY = getRestingHeight(surfaceAcceleration, objectMass)
+        testObjectMesh.position.y = dropPosY
+        const currentSpringH = Math.max(0.08, (dropPosY - 0.225) - (-1.125))
+        springMesh.scale.y = currentSpringH / 0.45
+        springMesh.position.y = -1.125 + currentSpringH / 2
+      }
     }
   }
 
@@ -741,6 +802,8 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     springMat.dispose()
     testObjectGeo.dispose()
     testObjectMat.dispose()
+    readoutTexture.dispose()
+    readoutMat.dispose()
     ;[farStars, middleStars, nearStars].forEach((layer) => {
       layer.geometry.dispose()
       layer.material.dispose()
@@ -754,9 +817,18 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     selectPlanet: setPlanet,
     triggerDrop,
     setObjectMass: (m) => {
-      objectMass = m
-      const s = Math.min(1.4, Math.max(0.6, Math.cbrt(m / 70)))
+      objectMass = Number(m) || 70.0
+      const s = Math.min(1.4, Math.max(0.6, Math.cbrt(objectMass / 70)))
       testObjectMesh.scale.setScalar(s)
+      updateWeightArrow(surfaceAcceleration, objectMass)
+      updateForceReadout(objectMass, surfaceAcceleration)
+      if (!isDropping) {
+        dropPosY = getRestingHeight(surfaceAcceleration, objectMass)
+        testObjectMesh.position.y = dropPosY
+        const currentSpringH = Math.max(0.08, (dropPosY - 0.225) - (-1.125))
+        springMesh.scale.y = currentSpringH / 0.45
+        springMesh.position.y = -1.125 + currentSpringH / 2
+      }
     },
     getRotationState: () => ({
       rotationSpeed,

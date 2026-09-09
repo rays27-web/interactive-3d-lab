@@ -5,6 +5,7 @@ function GravityFieldInspector({
   onSelectPlanet,
   onTriggerDrop,
   objectMassKg = 70,
+  onChangeObjectMass,
   isCollapsed = false,
   onToggleCollapse,
   hasActiveOverlay = false,
@@ -28,10 +29,12 @@ function GravityFieldInspector({
         >
           <span className="collapsed-tab-dot" aria-hidden="true">◉</span>
           <span className="collapsed-tab-text">GRAVITY FIELD</span>
+          <span className="collapsed-gravity-value">g = {g.toFixed(2)} m/s²</span>
           <span className="collapsed-tab-badge">
             <span className="planet-pill-dot" style={{ background: planet.color }} />
             {planet.name.toUpperCase()}
           </span>
+          <span className="collapsed-mass-pill">{objectMassKg} kg</span>
         </div>
         <button
           aria-expanded={false}
@@ -97,6 +100,76 @@ function GravityFieldInspector({
         })}
       </div>
 
+      {/* Interactive Object Mass Slider Control */}
+      <div className="inspector-mass-control-card">
+        <div className="inspector-mass-header">
+          <span className="metric-label">OBJECT MASS (m)</span>
+          <div className="inspector-mass-input-group">
+            <input
+              aria-label="Object mass in kilograms"
+              className="inspector-mass-number-input"
+              max="100"
+              min="1"
+              onChange={(e) => {
+                const val = Math.min(100, Math.max(1, Number(e.target.value) || 1))
+                onChangeObjectMass?.(val)
+              }}
+              step="1"
+              type="number"
+              value={objectMassKg}
+            />
+            <span className="metric-unit">kg</span>
+          </div>
+        </div>
+        <input
+          aria-label="Adjust object mass slider"
+          className="inspector-mass-slider"
+          max="100"
+          min="1"
+          onChange={(e) => onChangeObjectMass?.(Number(e.target.value))}
+          step="1"
+          type="range"
+          value={objectMassKg}
+        />
+        <div className="inspector-mass-scale-labels">
+          <span>1 kg</span>
+          <div className="inspector-mass-presets">
+            {[10, 50, 70, 100].map((preset) => (
+              <button
+                key={preset}
+                className={`mass-preset-btn ${objectMassKg === preset ? 'is-active' : ''}`}
+                onClick={() => onChangeObjectMass?.(preset)}
+                type="button"
+              >
+                {preset}kg
+              </button>
+            ))}
+          </div>
+          <span>100 kg</span>
+        </div>
+      </div>
+
+      {/* Visual Dynamic Formula Relationship: m × g = W */}
+      <div className="inspector-formula-calc-card">
+        <span className="calc-card-eyebrow">EQUATION · W = m × g</span>
+        <div className="calc-equation-display">
+          <div className="calc-term term-mass">
+            <span className="term-label">OBJECT MASS</span>
+            <span className="term-val">{objectMassKg} <small>kg</small></span>
+          </div>
+          <span className="calc-operator">×</span>
+          <div className="calc-term term-gravity">
+            <span className="term-label">SURFACE GRAVITY</span>
+            <span className="term-val">{g.toFixed(2)} <small>m/s²</small></span>
+          </div>
+          <span className="calc-operator">=</span>
+          <div className="calc-term term-weight">
+            <span className="term-label">WEIGHT FORCE</span>
+            <span className="term-val">{weightN} <small>N</small></span>
+          </div>
+        </div>
+      </div>
+
       {/* Essential Physical Measurements with 3-Tier Hierarchy */}
       <div className="inspector-measurements">
         {/* Surface Gravity */}
@@ -140,18 +213,29 @@ function GravityFieldInspector({
         <span>TEST DROP IN 3D (g = {g.toFixed(2)} m/s²)</span>
       </button>
 
+      {/* Educational Distinction Callout */}
+      <div className="inspector-distinction-banner">
+        <span className="banner-badge">CRITICAL DISTINCTION</span>
+        <div className="banner-title">MASS OF OBJECT ≠ PLANETARY MASS</div>
+        <p className="banner-text">
+          Changing object mass changes weight (<strong>W = m × g</strong>), not the planet's surface gravity.
+        </p>
+      </div>
+
       {/* Educational Guidance */}
       <div className="inspector-guidance">
         <div className="guidance-step">
-          <span className="guidance-tag watch-tag">WHAT TO WATCH</span>
-          <p className="guidance-text">
-            Drop the same object on different planets. Compare how quickly it accelerates.
-          </p>
+          <span className="guidance-tag physics-tag">MASS VS WEIGHT</span>
+          <div className="guidance-bullets">
+            <p className="guidance-text"><strong>MASS (kg):</strong> Amount of matter in the object.</p>
+            <p className="guidance-text"><strong>WEIGHT (N):</strong> Gravitational force acting on the object.</p>
+            <p className="guidance-text"><strong>EQUATION:</strong> W = m × g</p>
+          </div>
         </div>
         <div className="guidance-step">
-          <span className="guidance-tag physics-tag">PHYSICS</span>
+          <span className="guidance-tag watch-tag">FREE FALL PHYSICS</span>
           <p className="guidance-text">
-            Surface gravity determines the object's acceleration. Weight changes because: <strong>W = m × g</strong>
+            For ideal free fall, acceleration is <strong>a = g</strong> (identical for all masses). The spring scale measures weight <strong>W</strong> upon landing.
           </p>
         </div>
       </div>
