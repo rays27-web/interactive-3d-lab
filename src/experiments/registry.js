@@ -26,21 +26,10 @@ export const experimentRegistry = [
     },
     observationGuide: 'Observation of a procedurally deformed exoplanet with dynamic atmospheric Rayleigh-Mie rim scattering and multi-tier stellar parallax.',
     parameterGuides: {
-      rotationSpeed: 'Angular velocity of the planet mesh around its rotational axis.',
       atmosphereIntensity: 'Scattering optical thickness of the surrounding atmospheric Fresnel envelope.',
       surfaceDeformation: 'Amplitude of dual-sine procedural harmonic surface displacement.',
     },
     controls: [
-      {
-        id: 'rotationSpeed',
-        label: 'ROTATION VELOCITY',
-        type: 'range',
-        min: 0.1,
-        max: 3.0,
-        step: 0.1,
-        default: 1.0,
-        format: (val) => `${val.toFixed(1)}×`,
-      },
       {
         id: 'atmosphereIntensity',
         label: 'ATMOSPHERE DENSITY',

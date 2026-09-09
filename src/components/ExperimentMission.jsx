@@ -110,7 +110,7 @@ function ExperimentMission({
             <h2 className="mission-drawer-heading">{activeMission.title}</h2>
             {isMinimized && (
               <span className="mission-minimized-step">
-                STEP {currentStepIndex + 1}/7: {currentStep.label}
+                STEP {String(currentStepIndex + 1).padStart(2, '0')}/07: {currentStep.label}
               </span>
             )}
           </div>
@@ -160,6 +160,7 @@ function ExperimentMission({
           {STEPS.map((step, idx) => {
             const isCompleted = idx < currentStepIndex
             const isCurrent = idx === currentStepIndex
+            const stepNumberStr = String(idx + 1).padStart(2, '0')
             return (
               <button
                 aria-current={isCurrent ? 'step' : undefined}
@@ -173,7 +174,7 @@ function ExperimentMission({
                 }}
                 type="button"
               >
-                <span className="step-num">{idx + 1}</span>
+                <span className="step-num">{isCompleted ? `✓ ${stepNumberStr}` : stepNumberStr}</span>
                 <span className="step-label">{step.label}</span>
               </button>
             )
@@ -182,10 +183,10 @@ function ExperimentMission({
 
         {/* Dynamic Body Content according to active step */}
         <div className="mission-content-area">
-          {/* STEP 1: QUESTION */}
+          {/* STEP 01: QUESTION */}
           {currentStep.id === 'question' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 1 · SCIENTIFIC QUESTION</span>
+              <span className="step-view-tag">STEP 01 · SCIENTIFIC QUESTION</span>
               <h3 className="step-view-question">{activeMission.question}</h3>
 
               <div className="mission-classroom-task">
@@ -234,7 +235,7 @@ function ExperimentMission({
           {/* STEP 2: PREDICT (Phase 15: 4 Choices, Non-Punitive Feedback) */}
           {currentStep.id === 'predict' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 2 · FORMULATE YOUR PREDICTION</span>
+              <span className="step-view-tag">STEP 02 · FORMULATE YOUR PREDICTION</span>
               <p className="predict-prompt">{activeMission.hypothesisPrompt}</p>
 
               <div className="prediction-options-grid" role="radiogroup">
@@ -288,7 +289,7 @@ function ExperimentMission({
           {/* STEP 3: RUN (Phase 14: Apply Variable Calibration) */}
           {currentStep.id === 'run' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 3 · EXECUTE VARIABLE CALIBRATION</span>
+              <span className="step-view-tag">STEP 03 · EXECUTE VARIABLE CALIBRATION</span>
               <h3 className="step-view-title">Apply Experimental Parameters</h3>
               <p className="step-view-desc">
                 Execute the target calibration in the live 3D simulation to test your hypothesis:
@@ -327,7 +328,7 @@ function ExperimentMission({
           {/* STEP 4: OBSERVE */}
           {currentStep.id === 'observe' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 4 · LIVE 3D OBSERVATION</span>
+              <span className="step-view-tag">STEP 04 · LIVE 3D OBSERVATION</span>
               <h3 className="step-view-title">Observe Physical Response</h3>
               <p className="step-view-desc">{activeMission.observableText}</p>
 
@@ -360,7 +361,7 @@ function ExperimentMission({
           {/* STEP 5: MEASURE (Phase 18: Baseline vs Current Delta) */}
           {currentStep.id === 'measure' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 5 · QUANTITATIVE MEASUREMENTS</span>
+              <span className="step-view-tag">STEP 05 · QUANTITATIVE MEASUREMENTS</span>
               <h3 className="step-view-title">Empirical Delta Analysis</h3>
 
               <div className="measurement-table-card">
@@ -409,7 +410,7 @@ function ExperimentMission({
           {/* STEP 6: UNDERSTAND (Phases 19 & 20: 4-Level Progressive Disclosure) */}
           {currentStep.id === 'understand' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 6 · CONTEXTUAL PHYSICS EXPLANATION</span>
+              <span className="step-view-tag">STEP 06 · CONTEXTUAL PHYSICS EXPLANATION</span>
               <PhysicsExplanation
                 curriculumRef={`${experiment.name}: ${expData.theme}`}
                 formula={expData.formula}
@@ -442,7 +443,7 @@ function ExperimentMission({
           {/* STEP 7: CONCLUSION (Phase 21: Conclusion Card) */}
           {currentStep.id === 'conclusion' && (
             <div className="mission-step-view">
-              <span className="step-view-tag">STEP 7 · MISSION COMPLETE</span>
+              <span className="step-view-tag">STEP 07 · MISSION COMPLETE</span>
               <div className="conclusion-summary-card">
                 <div className="conclusion-header">
                   <span className="conclusion-icon" aria-hidden="true">✓</span>

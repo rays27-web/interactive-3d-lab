@@ -41,17 +41,17 @@ function ExperimentHeader({ experiment, onOpenMission }) {
         </div>
 
         <div className="exp-header-actions">
-          {/* Phase 54 & 56: Compact toggle entry point for Scientific Inquiry */}
+          {/* Scientific Inquiry toggle */}
           <button
             aria-expanded={!isCollapsed}
-            aria-label={isCollapsed ? 'Expand scientific inquiry panel' : 'Collapse scientific inquiry panel'}
+            aria-label={isCollapsed ? 'Expand scientific inquiry details' : 'Collapse scientific inquiry details'}
             className="exp-header-toggle-btn inquiry-toggle-entry"
             onClick={() => setIsCollapsed((prev) => !prev)}
             type="button"
           >
             <ScientificIcon name="question" size={13} />
             <span>SCIENTIFIC INQUIRY</span>
-            <span className="toggle-state-text">{isCollapsed ? '▾ EXPAND' : '▴ MINIMIZE'}</span>
+            <span className="toggle-state-text">{isCollapsed ? '▾ DETAILS' : '▴ LESS'}</span>
           </button>
 
           {onOpenMission && (
@@ -67,41 +67,38 @@ function ExperimentHeader({ experiment, onOpenMission }) {
         </div>
       </div>
 
+      {/* Primary Inquiry Question — always visible for student discoverability */}
+      <div className="exp-header-inquiry-strip">
+        <span className="inquiry-strip-badge">SCIENTIFIC INQUIRY</span>
+        <p className="exp-header-question">{meta.primaryQuestion}</p>
+      </div>
+
       {!isCollapsed && (
         <div className="exp-header-details">
-          {/* 1. WHAT AM I EXPLORING? */}
-          <div className="exp-header-row inquiry-question-row">
-            <span className="exp-header-label">
-              <ScientificIcon name="question" size={13} />
-              WHAT AM I EXPLORING?
-            </span>
-            <p className="exp-header-question">{meta.primaryQuestion}</p>
-          </div>
-
           <div className="exp-header-triplet exp-header-specs inquiry-quad-specs">
-            {/* 2. WHAT CAN I CHANGE? */}
+            {/* 01 WHAT CAN I CHANGE? */}
             <div className="exp-header-col exp-spec-col">
               <span className="exp-header-label spec-label">
                 <ScientificIcon name="control" size={12} />
-                WHAT CAN I CHANGE?
+                01 WHAT CAN I CHANGE?
               </span>
               <span className="exp-header-val spec-val">{meta.controlsSummary}</span>
             </div>
 
-            {/* 3. WHAT SHOULD I WATCH? */}
+            {/* 02 WHAT SHOULD I WATCH? */}
             <div className="exp-header-col exp-spec-col">
               <span className="exp-header-label spec-label">
                 <ScientificIcon name="observe" size={12} />
-                WHAT SHOULD I WATCH?
+                02 WHAT SHOULD I WATCH?
               </span>
               <span className="exp-header-val spec-val">{meta.observablesSummary}</span>
             </div>
 
-            {/* 4. WHY DOES IT MATTER? */}
+            {/* 03 WHY DOES IT MATTER? */}
             <div className="exp-header-col exp-spec-col law-col">
               <span className="exp-header-label spec-label">
                 <ScientificIcon name="equation" size={12} />
-                WHY DOES IT MATTER?
+                03 WHY DOES IT MATTER?
               </span>
               <span className="exp-header-val spec-val font-mono">{meta.governingPrinciple}</span>
             </div>

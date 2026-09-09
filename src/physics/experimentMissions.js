@@ -15,7 +15,7 @@ export const EXPERIMENT_MISSIONS_DATA = {
     theme: 'Gravity & Surface Physics',
     index: '01',
     name: 'PLANET',
-    primaryQuestion: 'How does gravity affect objects on different planets, and how do mass and weight differ across the Solar System?',
+    primaryQuestion: 'How does planetary mass determine surface gravity and the weight of objects across the Solar System?',
     learningObjective: 'Understand how planetary mass and radius govern surface gravitational acceleration (g = GM/R²), the vital physical distinction between invariant mass (m) and variable weight (W = mg), and atmospheric scale height.',
     governingPrinciple: 'Newton\'s Law of Gravitation & Surface Gravity',
     formula: 'g = \\frac{GM}{R^2}, \\quad W = m g, \\quad t_{\\text{drop}} = \\sqrt{\\frac{2h}{g}}, \\quad a_c = \\omega^2 R',
