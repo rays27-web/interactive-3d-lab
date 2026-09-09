@@ -14,21 +14,34 @@ function GravityFieldInspector({
 
   if (isCollapsed) {
     return (
-      <button
+      <div
         aria-expanded={false}
-        aria-label="Expand Gravity Field Inspector"
         className={`gravity-field-inspector is-collapsed ${hasActiveOverlay ? 'has-active-overlay' : ''}`}
-        onClick={onToggleCollapse}
-        title="Expand Gravity Field Inspector"
-        type="button"
       >
-        <span className="collapsed-tab-symbol" aria-hidden="true">‹</span>
-        <span className="collapsed-tab-text">GRAVITY</span>
-        <span className="collapsed-tab-badge">
-          <span className="planet-pill-dot" style={{ background: planet.color }} />
-          {planet.name.toUpperCase()}
-        </span>
-      </button>
+        <div
+          className="collapsed-tab-content"
+          onClick={onToggleCollapse}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleCollapse?.() }}
+          role="button"
+          tabIndex={0}
+        >
+          <span className="collapsed-tab-text">GRAVITY FIELD INSPECTOR</span>
+          <span className="collapsed-tab-badge">
+            <span className="planet-pill-dot" style={{ background: planet.color }} />
+            {planet.name.toUpperCase()}
+          </span>
+        </div>
+        <button
+          aria-expanded={false}
+          aria-label="Expand Gravity Field Inspector"
+          className="inspector-toggle-btn inspector-expand-btn"
+          onClick={onToggleCollapse}
+          title="Expand Gravity Field Inspector"
+          type="button"
+        >
+          <span aria-hidden="true">[ + ]</span>
+        </button>
+      </div>
     )
   }
 
@@ -50,13 +63,13 @@ function GravityFieldInspector({
           </span>
           <button
             aria-expanded={true}
-            aria-label="Collapse Gravity Field Inspector"
-            className="inspector-collapse-btn"
+            aria-label="Minimize Gravity Field Inspector"
+            className="inspector-toggle-btn inspector-collapse-btn"
             onClick={onToggleCollapse}
-            title="Collapse panel"
+            title="Minimize Gravity Field Inspector"
             type="button"
           >
-            <span aria-hidden="true">−</span>
+            <span aria-hidden="true">[ − ]</span>
           </button>
         </div>
       </div>

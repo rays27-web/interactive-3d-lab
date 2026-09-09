@@ -56,10 +56,8 @@ function App() {
   const [isPlanetCardOpen, setIsPlanetCardOpen] = useState(false)
   const [isOscilloscopeOpen, setIsOscilloscopeOpen] = useState(false)
 
-  // Phase 1.1: Gravity Field Inspector panel state & auto-collapse
-  const [isInspectorUserCollapsed, setIsInspectorUserCollapsed] = useState(false)
-  const [isAutoCollapsedByOverlay, setIsAutoCollapsedByOverlay] = useState(false)
-  const prevHasActiveOverlayRef = useRef(false)
+  // Phase 3: Persistent inspector collapse state (no auto-reopen)
+  const [isInspectorCollapsed, setIsInspectorCollapsed] = useState(false)
 
   const hasActiveOverlay = Boolean(
     isHistoryOpen ||
@@ -74,36 +72,9 @@ function App() {
     isIndexOpen
   )
 
-  useEffect(() => {
-    const wasActive = prevHasActiveOverlayRef.current
-    prevHasActiveOverlayRef.current = hasActiveOverlay
-
-    if (!wasActive && hasActiveOverlay) {
-      // Major overlay opened: auto-collapse if currently open
-      if (!isInspectorUserCollapsed) {
-        setIsAutoCollapsedByOverlay(true)
-      }
-    } else if (wasActive && !hasActiveOverlay) {
-      // Overlays closed: restore if it was auto-collapsed
-      if (isAutoCollapsedByOverlay) {
-        setIsAutoCollapsedByOverlay(false)
-      }
-    }
-  }, [hasActiveOverlay, isInspectorUserCollapsed, isAutoCollapsedByOverlay])
-
-  const isInspectorCollapsed = isInspectorUserCollapsed || isAutoCollapsedByOverlay
-
   const handleToggleInspectorCollapse = useCallback(() => {
-    if (isInspectorCollapsed) {
-      // Student manually expanded it: override any overlay collapse and remember preference
-      setIsInspectorUserCollapsed(false)
-      setIsAutoCollapsedByOverlay(false)
-    } else {
-      // Student manually collapsed it
-      setIsInspectorUserCollapsed(true)
-      setIsAutoCollapsedByOverlay(false)
-    }
-  }, [isInspectorCollapsed])
+    setIsInspectorCollapsed((prev) => !prev)
+  }, [])
 
   const [selectedPhysicsTarget, setSelectedPhysicsTarget] = useState(CELESTIAL_PHYSICS_DATA[3]) // Earth default
   const [experimentHistory, setExperimentHistory] = useState(() => [
@@ -820,85 +791,88 @@ function App() {
         </>
       )}
 
-      {/* Phase 41: Compact Educational Experiment Header */}
-      {labMode && (
+      {/* Phase 41 & Phase 3: Compact Educational Experiment Header (hidden for Experiment 01 Planet) */}
+      {labMode && displayedExperiment.id !== 'planet' && (
         <ExperimentHeader
           experiment={displayedExperiment}
           onOpenMission={() => setIsMissionOpen(true)}
         />
       )}
 
-      <section
-        aria-labelledby="hero-title"
-        className={`hero ${transition ? 'is-transitioning' : ''} ${labMode ? '' : 'is-clean-hero'}`}
-        id="top"
-      >
-        <p className="eyebrow">{displayedExperiment.eyebrow}</p>
-        <h1 id="hero-title">
-          {displayedExperiment.titleLead}<br />
-          <em>{displayedExperiment.titleAccent}</em>
-        </h1>
-        <p className="intro">{displayedExperiment.description}</p>
-        <div className="instruction">
-          <span className="cursor-icon">⌁</span> MOVE TO EXPLORE
-        </div>
-
-        {/* Phase 12 Milestone 2: Mission Control Quick Physics Explorers */}
-        {labMode && (
-          <div aria-label="Interactive Physics Explorers" className="hero-mission-control">
-            <button
-              className="mission-card"
-              onClick={() => {
-                setIsMissionOpen(true)
-              }}
-              type="button"
-            >
-              <div className="mission-card-top">
-                <span className="mission-tag">INQUIRY</span>
-                <span className="mission-formula">START MISSION</span>
-              </div>
-              <strong className="mission-title">SCIENTIFIC MISSION</strong>
-              <span className="mission-desc">Formulate hypothesis & calibrate variables</span>
-            </button>
-
-            <button
-              className="mission-card"
-              onClick={() => {
-                const solarExp = availableExperiments.find((e) => e.id === 'solar-system')
-                if (solarExp) setActiveExperiment(solarExp)
-                sceneApi?.setBodyVelocity?.('earth', 0.5)
-                setIsChallengeOpen(true)
-              }}
-              type="button"
-            >
-              <div className="mission-card-top">
-                <span className="mission-tag">DEMO 01</span>
-                <span className="mission-formula">v = √(GM/r)</span>
-              </div>
-              <strong className="mission-title">EXPLORE ORBITS</strong>
-              <span className="mission-desc">Simulate 0.50× orbital velocity decay</span>
-            </button>
-
-            <button
-              className="mission-card"
-              onClick={() => {
-                const solarExp = availableExperiments.find((e) => e.id === 'solar-system')
-                if (solarExp) setActiveExperiment(solarExp)
-                sceneApi?.setBodyVelocity?.('earth', 1.45)
-                setIsChallengeOpen(true)
-              }}
-              type="button"
-            >
-              <div className="mission-card-top">
-                <span className="mission-tag">DEMO 02</span>
-                <span className="mission-formula">v_e = √2 · v₀</span>
-              </div>
-              <strong className="mission-title">EXPLORE ESCAPE</strong>
-              <span className="mission-desc">Break gravitational binding energy</span>
-            </button>
+      {/* Phase 3 UI Cleanup: Observer & Quick Explorer Hero omitted for Experiment 01 Planet */}
+      {displayedExperiment.id !== 'planet' && (
+        <section
+          aria-labelledby="hero-title"
+          className={`hero ${transition ? 'is-transitioning' : ''} ${labMode ? '' : 'is-clean-hero'}`}
+          id="top"
+        >
+          <p className="eyebrow">{displayedExperiment.eyebrow}</p>
+          <h1 id="hero-title">
+            {displayedExperiment.titleLead}<br />
+            <em>{displayedExperiment.titleAccent}</em>
+          </h1>
+          <p className="intro">{displayedExperiment.description}</p>
+          <div className="instruction">
+            <span className="cursor-icon">⌁</span> MOVE TO EXPLORE
           </div>
-        )}
-      </section>
+
+          {/* Phase 12 Milestone 2: Mission Control Quick Physics Explorers */}
+          {labMode && (
+            <div aria-label="Interactive Physics Explorers" className="hero-mission-control">
+              <button
+                className="mission-card"
+                onClick={() => {
+                  setIsMissionOpen(true)
+                }}
+                type="button"
+              >
+                <div className="mission-card-top">
+                  <span className="mission-tag">INQUIRY</span>
+                  <span className="mission-formula">START MISSION</span>
+                </div>
+                <strong className="mission-title">SCIENTIFIC MISSION</strong>
+                <span className="mission-desc">Formulate hypothesis & calibrate variables</span>
+              </button>
+
+              <button
+                className="mission-card"
+                onClick={() => {
+                  const solarExp = availableExperiments.find((e) => e.id === 'solar-system')
+                  if (solarExp) setActiveExperiment(solarExp)
+                  sceneApi?.setBodyVelocity?.('earth', 0.5)
+                  setIsChallengeOpen(true)
+                }}
+                type="button"
+              >
+                <div className="mission-card-top">
+                  <span className="mission-tag">DEMO 01</span>
+                  <span className="mission-formula">v = √(GM/r)</span>
+                </div>
+                <strong className="mission-title">EXPLORE ORBITS</strong>
+                <span className="mission-desc">Simulate 0.50× orbital velocity decay</span>
+              </button>
+
+              <button
+                className="mission-card"
+                onClick={() => {
+                  const solarExp = availableExperiments.find((e) => e.id === 'solar-system')
+                  if (solarExp) setActiveExperiment(solarExp)
+                  sceneApi?.setBodyVelocity?.('earth', 1.45)
+                  setIsChallengeOpen(true)
+                }}
+                type="button"
+              >
+                <div className="mission-card-top">
+                  <span className="mission-tag">DEMO 02</span>
+                  <span className="mission-formula">v_e = √2 · v₀</span>
+                </div>
+                <strong className="mission-title">EXPLORE ESCAPE</strong>
+                <span className="mission-desc">Break gravitational binding energy</span>
+              </button>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Solar System Bottom Planet Selector */}
       {isSolarSystem && (
