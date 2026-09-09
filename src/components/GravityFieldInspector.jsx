@@ -24,8 +24,10 @@ function GravityFieldInspector({
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleCollapse?.() }}
           role="button"
           tabIndex={0}
+          title="Expand Gravity Field Inspector"
         >
-          <span className="collapsed-tab-text">GRAVITY FIELD INSPECTOR</span>
+          <span className="collapsed-tab-dot" aria-hidden="true">◉</span>
+          <span className="collapsed-tab-text">GRAVITY FIELD</span>
           <span className="collapsed-tab-badge">
             <span className="planet-pill-dot" style={{ background: planet.color }} />
             {planet.name.toUpperCase()}

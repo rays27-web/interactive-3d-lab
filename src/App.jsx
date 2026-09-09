@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ExperimentControls from './components/ExperimentControls'
 import ExperimentInfoPanel from './components/ExperimentInfoPanel'
 import ExperimentNavigator from './components/ExperimentNavigator'
+import LaboratoryNavDrawer from './components/LaboratoryNavDrawer'
 import LaboratoryTelemetry from './components/LaboratoryTelemetry'
 import LabModeToggle from './components/LabModeToggle'
 import PlanetDetailPanel from './components/PlanetDetailPanel'
@@ -49,6 +50,7 @@ function App() {
   const [isChallengeOpen, setIsChallengeOpen] = useState(false)
   const [isAskLabOpen, setIsAskLabOpen] = useState(false)
   const [isIndexOpen, setIsIndexOpen] = useState(false)
+  const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false)
 
   // Phase 29 & 38: Planet and Pulsar dedicated laboratory instruments
   const [selectedPlanetComparisonId, setSelectedPlanetComparisonId] = useState('earth')
@@ -69,7 +71,8 @@ function App() {
     isAskLabOpen ||
     isMissionOpen ||
     isPlanetCardOpen ||
-    isIndexOpen
+    isIndexOpen ||
+    isNavDrawerOpen
   )
 
   const handleToggleInspectorCollapse = useCallback(() => {
@@ -326,7 +329,9 @@ function App() {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape') {
-        if (isIndexOpen) {
+        if (isNavDrawerOpen) {
+          setIsNavDrawerOpen(false)
+        } else if (isIndexOpen) {
           setIsIndexOpen(false)
         } else if (isMissionOpen) {
           setIsMissionOpen(false)
@@ -353,6 +358,7 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [
+    isNavDrawerOpen,
     isIndexOpen,
     isMissionOpen,
     isAskLabOpen,
@@ -391,6 +397,29 @@ function App() {
           <strong>GENERATING {transition.experiment.name}</strong>
         </div>
       )}
+
+      {/* Phase 4A: Single Left-Side Navigation Icon */}
+      <button
+        aria-expanded={isNavDrawerOpen}
+        aria-label="Laboratory Modules"
+        className={`lab-nav-trigger ${isNavDrawerOpen ? 'is-active' : ''}`}
+        onClick={() => setIsNavDrawerOpen((prev) => !prev)}
+        title="LABORATORY MODULES"
+        type="button"
+      >
+        <span aria-hidden="true" className="lab-nav-icon">☰</span>
+      </button>
+
+      {/* Phase 4A: Compact Left Slide-Out Navigation Drawer */}
+      <LaboratoryNavDrawer
+        activeExperiment={activeExperiment}
+        isOpen={isNavDrawerOpen}
+        onClose={() => setIsNavDrawerOpen(false)}
+        onSelectExperiment={(exp) => {
+          setActiveExperiment(exp)
+          setIsNavDrawerOpen(false)
+        }}
+      />
 
       {/* Phase 4: Topbar navigation hidden for Experiment 01 Planet (clean UI reset) */}
       {displayedExperiment.id !== 'planet' && (
