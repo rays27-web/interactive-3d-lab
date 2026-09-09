@@ -7630,11 +7630,12 @@ h1 em {
 
 .gravity-field-inspector {
   position: fixed;
-  top: 76px;
-  right: 24px;
+  top: 28px;
+  left: 24px;
+  right: auto;
   width: 350px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 96px);
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 80px);
   overflow-y: auto;
   background: rgba(9, 14, 30, 0.88);
   backdrop-filter: blur(16px);
@@ -7918,8 +7919,9 @@ h1 em {
 /* Collapsed Tab Representation */
 .gravity-field-inspector.is-collapsed {
   position: fixed;
-  top: 84px;
-  right: 20px;
+  top: 28px;
+  left: 24px;
+  right: auto;
   width: auto;
   height: auto;
   max-width: none;
@@ -7945,7 +7947,7 @@ h1 em {
   border-color: #73ffd3;
   background: rgba(14, 25, 55, 0.95);
   box-shadow: 0 8px 26px rgba(0, 0, 0, 0.7), 0 0 16px rgba(115, 255, 211, 0.35);
-  transform: translateX(-2px);
+  transform: translateX(2px);
 }
 
 .collapsed-tab-symbol {
@@ -8020,8 +8022,9 @@ h1 em {
 /* When a right-side drawer/overlay is active on desktop, position inspector/tab left of drawer */
 @media (min-width: 769px) {
   .gravity-field-inspector.has-active-overlay {
-    top: 130px;
-    right: 390px;
+    top: 28px;
+    left: 24px;
+    right: auto;
   }
 }
 
@@ -8040,8 +8043,8 @@ h1 em {
   .gravity-field-inspector.is-collapsed {
     top: auto;
     bottom: 12px;
-    right: 12px;
-    left: auto;
+    left: 12px;
+    right: auto;
     padding: 6px 12px;
   }
   .inspector-title {

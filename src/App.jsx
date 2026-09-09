@@ -56,8 +56,8 @@ function App() {
   const [isPlanetCardOpen, setIsPlanetCardOpen] = useState(false)
   const [isOscilloscopeOpen, setIsOscilloscopeOpen] = useState(false)
 
-  // Phase 3: Persistent inspector collapse state (no auto-reopen)
-  const [isInspectorCollapsed, setIsInspectorCollapsed] = useState(false)
+  // Phase 3 & 4: Persistent inspector collapse state (minimized by default, no auto-reopen)
+  const [isInspectorCollapsed, setIsInspectorCollapsed] = useState(true)
 
   const hasActiveOverlay = Boolean(
     isHistoryOpen ||
@@ -392,254 +392,258 @@ function App() {
         </div>
       )}
 
-      <header className="topbar">
-        <div className="topbar-left">
-          <a className="brand" href="#top" aria-label="Interactive 3D Lab home">
-            <span className="brand-mark" />
-            INTERACTIVE 3D LAB
-          </a>
+      {/* Phase 4: Topbar navigation hidden for Experiment 01 Planet (clean UI reset) */}
+      {displayedExperiment.id !== 'planet' && (
+        <header className="topbar">
+          <div className="topbar-left">
+            <a className="brand" href="#top" aria-label="Interactive 3D Lab home">
+              <span className="brand-mark" />
+              INTERACTIVE 3D LAB
+            </a>
 
-          <button
-            aria-controls="experiment-index-drawer"
-            aria-expanded={isIndexOpen}
-            aria-label="Open experiment index"
-            className={`topbar-index-btn ${isIndexOpen ? 'is-active' : ''}`}
-            onClick={() => setIsIndexOpen((prev) => !prev)}
-            type="button"
-          >
-            <span aria-hidden="true" className="index-btn-icon">☰</span>
-            <span>INDEX</span>
-          </button>
-        </div>
+            <button
+              aria-controls="experiment-index-drawer"
+              aria-expanded={isIndexOpen}
+              aria-label="Open experiment index"
+              className={`topbar-index-btn ${isIndexOpen ? 'is-active' : ''}`}
+              onClick={() => setIsIndexOpen((prev) => !prev)}
+              type="button"
+            >
+              <span aria-hidden="true" className="index-btn-icon">☰</span>
+              <span>INDEX</span>
+            </button>
+          </div>
 
-        <div className="topbar-actions">
-          <LabModeToggle
-            labMode={labMode}
-            onToggle={() => setLabMode((prev) => !prev)}
-          />
+          <div className="topbar-actions">
+            <LabModeToggle
+              labMode={labMode}
+              onToggle={() => setLabMode((prev) => !prev)}
+            />
 
-          {/* Phase 2: Physics Laboratory Tools & Supporting Information */}
-          {labMode && (
-            <div aria-label="Physics Laboratory Tools" className="physics-nav-cluster" role="group">
-              {/* Supporting Information Segmented Group: [ LOG ] [ PHYSICS ] [ VISUAL ] */}
-              <div
-                aria-label="Supporting Information Panels"
-                className="supporting-info-segment"
-                role="tablist"
-              >
-                <button
-                  aria-expanded={isHistoryOpen}
-                  aria-selected={isHistoryOpen}
-                  className={`physics-nav-btn segment-tab-btn ${isHistoryOpen ? 'is-active' : ''}`}
-                  onClick={() => {
-                    const next = !isHistoryOpen
-                    setIsHistoryOpen(next)
-                    if (next) {
-                      setIsPhysicsOpen(false)
-                      setIsControlsOpen(false)
-                      setIsMissionOpen(false)
-                      setIsMeasureOpen(false)
-                      setIsChallengeOpen(false)
-                      setIsAskLabOpen(false)
-                    }
-                  }}
-                  role="tab"
-                  title="Observation Log & Recorded Notes"
-                  type="button"
+            {/* Phase 2: Physics Laboratory Tools & Supporting Information */}
+            {labMode && (
+              <div aria-label="Physics Laboratory Tools" className="physics-nav-cluster" role="group">
+                {/* Supporting Information Segmented Group: [ LOG ] [ PHYSICS ] [ VISUAL ] */}
+                <div
+                  aria-label="Supporting Information Panels"
+                  className="supporting-info-segment"
+                  role="tablist"
                 >
-                  <ScientificIcon name="clipboard" size={13} className="nav-btn-icon" />
-                  <span>LOG</span>
-                </button>
-
-                <button
-                  aria-expanded={isPhysicsOpen}
-                  aria-selected={isPhysicsOpen}
-                  className={`physics-nav-btn segment-tab-btn ${isPhysicsOpen ? 'is-active' : ''}`}
-                  onClick={() => {
-                    const next = !isPhysicsOpen
-                    setIsPhysicsOpen(next)
-                    if (next) {
-                      setIsHistoryOpen(false)
-                      setIsControlsOpen(false)
-                      setIsMissionOpen(false)
-                      setIsMeasureOpen(false)
-                      setIsChallengeOpen(false)
-                      setIsAskLabOpen(false)
-                    }
-                  }}
-                  role="tab"
-                  title="Physics Inspector & Reference Laws"
-                  type="button"
-                >
-                  <ScientificIcon name="atom" size={13} className="nav-btn-icon" />
-                  <span>PHYSICS</span>
-                </button>
-
-                <button
-                  aria-expanded={isControlsOpen}
-                  aria-selected={isControlsOpen}
-                  className={`physics-nav-btn segment-tab-btn ${isControlsOpen ? 'is-active' : ''}`}
-                  onClick={() => {
-                    const next = !isControlsOpen
-                    setIsControlsOpen(next)
-                    if (next) {
-                      setIsHistoryOpen(false)
-                      setIsPhysicsOpen(false)
-                      setIsMissionOpen(false)
-                      setIsMeasureOpen(false)
-                      setIsChallengeOpen(false)
-                      setIsAskLabOpen(false)
-                    }
-                  }}
-                  role="tab"
-                  title="Visual Parameters & Controls"
-                  type="button"
-                >
-                  <span className="segment-icon" aria-hidden="true">⌁</span>
-                  <span>VISUAL</span>
-                </button>
-              </div>
-
-              {/* Secondary / Auxiliary Exploratory Tools */}
-              <div className="auxiliary-nav-group">
-                <button
-                  aria-expanded={isMissionOpen}
-                  className={`physics-nav-btn ${isMissionOpen ? 'is-active' : ''}`}
-                  onClick={() => {
-                    const next = !isMissionOpen
-                    setIsMissionOpen(next)
-                    if (next) {
-                      setIsPhysicsOpen(false)
-                      setIsMeasureOpen(false)
-                      setIsHistoryOpen(false)
-                      setIsChallengeOpen(false)
-                      setIsAskLabOpen(false)
-                      setIsControlsOpen(false)
-                    }
-                  }}
-                  type="button"
-                >
-                  <ScientificIcon name="target" size={13} className="nav-btn-icon" />
-                  <span>MISSION</span>
-                </button>
-
-                <button
-                  aria-expanded={isMeasureOpen}
-                  className={`physics-nav-btn ${isMeasureOpen ? 'is-active' : ''}`}
-                  onClick={() => {
-                    const next = !isMeasureOpen
-                    setIsMeasureOpen(next)
-                    if (next) {
-                      setIsMissionOpen(false)
-                      setIsPhysicsOpen(false)
-                      setIsHistoryOpen(false)
-                      setIsChallengeOpen(false)
-                      setIsAskLabOpen(false)
-                      setIsControlsOpen(false)
-                    }
-                  }}
-                  type="button"
-                >
-                  <ScientificIcon name="ruler" size={13} className="nav-btn-icon" />
-                  <span>MEASURE</span>
-                </button>
-
-                <button
-                  aria-expanded={isChallengeOpen}
-                  className={`physics-nav-btn ${isChallengeOpen ? 'is-active' : ''}`}
-                  onClick={() => {
-                    const next = !isChallengeOpen
-                    setIsChallengeOpen(next)
-                    if (next) {
-                      setIsMissionOpen(false)
-                      setIsPhysicsOpen(false)
-                      setIsMeasureOpen(false)
-                      setIsHistoryOpen(false)
-                      setIsAskLabOpen(false)
-                      setIsControlsOpen(false)
-                    }
-                  }}
-                  type="button"
-                >
-                  <ScientificIcon name="planet" size={13} className="nav-btn-icon" />
-                  <span>DEMOS</span>
-                </button>
-
-                <button
-                  aria-expanded={isAskLabOpen}
-                  className={`physics-nav-btn ${isAskLabOpen ? 'is-active' : ''}`}
-                  onClick={() => {
-                    const next = !isAskLabOpen
-                    setIsAskLabOpen(next)
-                    if (next) {
-                      setIsMissionOpen(false)
-                      setIsPhysicsOpen(false)
-                      setIsMeasureOpen(false)
-                      setIsHistoryOpen(false)
-                      setIsChallengeOpen(false)
-                      setIsControlsOpen(false)
-                    }
-                  }}
-                  type="button"
-                >
-                  <ScientificIcon name="atom" size={13} className="nav-btn-icon" />
-                  <span>ASK THE LAB</span>
-                </button>
-
-                {displayedExperiment.id === 'planet' && (
                   <button
-                    aria-expanded={isPlanetCardOpen}
-                    className={`physics-nav-btn ${isPlanetCardOpen ? 'is-active' : ''}`}
-                    onClick={() => setIsPlanetCardOpen((prev) => !prev)}
+                    aria-expanded={isHistoryOpen}
+                    aria-selected={isHistoryOpen}
+                    className={`physics-nav-btn segment-tab-btn ${isHistoryOpen ? 'is-active' : ''}`}
+                    onClick={() => {
+                      const next = !isHistoryOpen
+                      setIsHistoryOpen(next)
+                      if (next) {
+                        setIsPhysicsOpen(false)
+                        setIsControlsOpen(false)
+                        setIsMissionOpen(false)
+                        setIsMeasureOpen(false)
+                        setIsChallengeOpen(false)
+                        setIsAskLabOpen(false)
+                      }
+                    }}
+                    role="tab"
+                    title="Observation Log & Recorded Notes"
+                    type="button"
+                  >
+                    <ScientificIcon name="clipboard" size={13} className="nav-btn-icon" />
+                    <span>LOG</span>
+                  </button>
+
+                  <button
+                    aria-expanded={isPhysicsOpen}
+                    aria-selected={isPhysicsOpen}
+                    className={`physics-nav-btn segment-tab-btn ${isPhysicsOpen ? 'is-active' : ''}`}
+                    onClick={() => {
+                      const next = !isPhysicsOpen
+                      setIsPhysicsOpen(next)
+                      if (next) {
+                        setIsHistoryOpen(false)
+                        setIsControlsOpen(false)
+                        setIsMissionOpen(false)
+                        setIsMeasureOpen(false)
+                        setIsChallengeOpen(false)
+                        setIsAskLabOpen(false)
+                      }
+                    }}
+                    role="tab"
+                    title="Physics Inspector & Reference Laws"
+                    type="button"
+                  >
+                    <ScientificIcon name="atom" size={13} className="nav-btn-icon" />
+                    <span>PHYSICS</span>
+                  </button>
+
+                  <button
+                    aria-expanded={isControlsOpen}
+                    aria-selected={isControlsOpen}
+                    className={`physics-nav-btn segment-tab-btn ${isControlsOpen ? 'is-active' : ''}`}
+                    onClick={() => {
+                      const next = !isControlsOpen
+                      setIsControlsOpen(next)
+                      if (next) {
+                        setIsHistoryOpen(false)
+                        setIsPhysicsOpen(false)
+                        setIsMissionOpen(false)
+                        setIsMeasureOpen(false)
+                        setIsChallengeOpen(false)
+                        setIsAskLabOpen(false)
+                      }
+                    }}
+                    role="tab"
+                    title="Visual Parameters & Controls"
+                    type="button"
+                  >
+                    <span className="segment-icon" aria-hidden="true">⌁</span>
+                    <span>VISUAL</span>
+                  </button>
+                </div>
+
+                {/* Secondary / Auxiliary Exploratory Tools */}
+                <div className="auxiliary-nav-group">
+                  <button
+                    aria-expanded={isMissionOpen}
+                    className={`physics-nav-btn ${isMissionOpen ? 'is-active' : ''}`}
+                    onClick={() => {
+                      const next = !isMissionOpen
+                      setIsMissionOpen(next)
+                      if (next) {
+                        setIsPhysicsOpen(false)
+                        setIsMeasureOpen(false)
+                        setIsHistoryOpen(false)
+                        setIsChallengeOpen(false)
+                        setIsAskLabOpen(false)
+                        setIsControlsOpen(false)
+                      }
+                    }}
+                    type="button"
+                  >
+                    <ScientificIcon name="target" size={13} className="nav-btn-icon" />
+                    <span>MISSION</span>
+                  </button>
+
+                  <button
+                    aria-expanded={isMeasureOpen}
+                    className={`physics-nav-btn ${isMeasureOpen ? 'is-active' : ''}`}
+                    onClick={() => {
+                      const next = !isMeasureOpen
+                      setIsMeasureOpen(next)
+                      if (next) {
+                        setIsMissionOpen(false)
+                        setIsPhysicsOpen(false)
+                        setIsHistoryOpen(false)
+                        setIsChallengeOpen(false)
+                        setIsAskLabOpen(false)
+                        setIsControlsOpen(false)
+                      }
+                    }}
                     type="button"
                   >
                     <ScientificIcon name="ruler" size={13} className="nav-btn-icon" />
-                    <span>APPARATUS</span>
+                    <span>MEASURE</span>
                   </button>
-                )}
 
-                {displayedExperiment.id === 'pulsar' && (
                   <button
-                    aria-expanded={isOscilloscopeOpen}
-                    className={`physics-nav-btn ${isOscilloscopeOpen ? 'is-active' : ''}`}
-                    onClick={() => setIsOscilloscopeOpen((prev) => !prev)}
+                    aria-expanded={isChallengeOpen}
+                    className={`physics-nav-btn ${isChallengeOpen ? 'is-active' : ''}`}
+                    onClick={() => {
+                      const next = !isChallengeOpen
+                      setIsChallengeOpen(next)
+                      if (next) {
+                        setIsMissionOpen(false)
+                        setIsPhysicsOpen(false)
+                        setIsMeasureOpen(false)
+                        setIsHistoryOpen(false)
+                        setIsAskLabOpen(false)
+                        setIsControlsOpen(false)
+                      }
+                    }}
                     type="button"
                   >
-                    <ScientificIcon name="time" size={13} className="nav-btn-icon" />
-                    <span>OSCILLOSCOPE</span>
+                    <ScientificIcon name="planet" size={13} className="nav-btn-icon" />
+                    <span>DEMOS</span>
                   </button>
-                )}
+
+                  <button
+                    aria-expanded={isAskLabOpen}
+                    className={`physics-nav-btn ${isAskLabOpen ? 'is-active' : ''}`}
+                    onClick={() => {
+                      const next = !isAskLabOpen
+                      setIsAskLabOpen(next)
+                      if (next) {
+                        setIsMissionOpen(false)
+                        setIsPhysicsOpen(false)
+                        setIsMeasureOpen(false)
+                        setIsHistoryOpen(false)
+                        setIsChallengeOpen(false)
+                        setIsControlsOpen(false)
+                      }
+                    }}
+                    type="button"
+                  >
+                    <ScientificIcon name="atom" size={13} className="nav-btn-icon" />
+                    <span>ASK THE LAB</span>
+                  </button>
+
+                  {displayedExperiment.id === 'planet' && (
+                    <button
+                      aria-expanded={isPlanetCardOpen}
+                      className={`physics-nav-btn ${isPlanetCardOpen ? 'is-active' : ''}`}
+                      onClick={() => setIsPlanetCardOpen((prev) => !prev)}
+                      type="button"
+                    >
+                      <ScientificIcon name="ruler" size={13} className="nav-btn-icon" />
+                      <span>APPARATUS</span>
+                    </button>
+                  )}
+
+                  {displayedExperiment.id === 'pulsar' && (
+                    <button
+                      aria-expanded={isOscilloscopeOpen}
+                      className={`physics-nav-btn ${isOscilloscopeOpen ? 'is-active' : ''}`}
+                      onClick={() => setIsOscilloscopeOpen((prev) => !prev)}
+                      type="button"
+                    >
+                      <ScientificIcon name="time" size={13} className="nav-btn-icon" />
+                      <span>OSCILLOSCOPE</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <button
-            aria-controls="dossier-panel"
-            aria-expanded={isInfoOpen}
-            className={`dossier-trigger ${isInfoOpen ? 'is-open' : ''}`}
-            onClick={() => setIsInfoOpen((prev) => !prev)}
-            type="button"
-          >
-            <span className="dossier-trigger-icon" aria-hidden="true">✦</span>
-            <span>DOSSIER</span>
-          </button>
+            <button
+              aria-controls="dossier-panel"
+              aria-expanded={isInfoOpen}
+              className={`dossier-trigger ${isInfoOpen ? 'is-open' : ''}`}
+              onClick={() => setIsInfoOpen((prev) => !prev)}
+              type="button"
+            >
+              <span className="dossier-trigger-icon" aria-hidden="true">✦</span>
+              <span>DOSSIER</span>
+            </button>
 
-          <span className="status"><i /> LIVE EXP {displayedExperiment.index}</span>
+            <span className="status"><i /> LIVE EXP {displayedExperiment.index}</span>
 
-          <ExperimentControls
-            experiment={displayedExperiment}
-            isOpen={isControlsOpen}
-            onApplyPreset={handleApplyPreset}
-            onChange={handleParamChange}
-            onLearnMore={() => setIsPhysicsOpen(true)}
-            onReset={handleParamReset}
-            onToggleOpen={() => setIsControlsOpen((prev) => !prev)}
-            values={paramsByExperiment[displayedExperiment.id] || {}}
-          />
-        </div>
-      </header>
+            <ExperimentControls
+              experiment={displayedExperiment}
+              isOpen={isControlsOpen}
+              onApplyPreset={handleApplyPreset}
+              onChange={handleParamChange}
+              onLearnMore={() => setIsPhysicsOpen(true)}
+              onReset={handleParamReset}
+              onToggleOpen={() => setIsControlsOpen((prev) => !prev)}
+              values={paramsByExperiment[displayedExperiment.id] || {}}
+            />
+          </div>
+        </header>
+      )}
 
-      {labMode && (
+      {/* Phase 4: Telemetry ("WHAT AM I MEASURING?") hidden for Experiment 01 Planet */}
+      {labMode && displayedExperiment.id !== 'planet' && (
         <LaboratoryTelemetry
           experiment={displayedExperiment}
           onOpenExplanation={() => setIsPhysicsOpen(true)}
@@ -883,8 +887,12 @@ function App() {
       )}
 
       <footer className="footer-note">
-        <span className="footer-params">{displayedExperiment.parameters}</span>
-        <span className="footer-nav-hint">EXPLORE THE INDEX</span>
+        <span className="footer-params">
+          {displayedExperiment.id === 'planet' ? 'SPACETIME WELL · 1,540 STELLAR BODIES' : displayedExperiment.parameters}
+        </span>
+        {displayedExperiment.id !== 'planet' && (
+          <span className="footer-nav-hint">EXPLORE THE INDEX</span>
+        )}
       </footer>
 
       <ExperimentNavigator
