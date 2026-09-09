@@ -22,6 +22,7 @@ import PlanetComparisonCard from './components/PlanetComparisonCard'
 import SignalOscilloscope from './components/SignalOscilloscope'
 import ScientificIcon from './components/ScientificIcon'
 import GravityFieldInspector from './components/GravityFieldInspector'
+import ApparatusMeasurementReadout from './components/ApparatusMeasurementReadout'
 import { PLANETS_DATA } from './data/planets'
 import { availableExperiments, experimentRegistry } from './experiments/registry'
 import { CELESTIAL_BODIES } from './scenes/SolarSystemScene'
@@ -816,18 +817,25 @@ function App() {
             sceneApi={sceneApi}
           />
 
-          {/* Phase 59 & Phase 1.1: 3D Gravity Field Chamber Inspector */}
+          {/* Phase 59 & Phase 1.1: 3D Gravity Field Chamber Inspector & Apparatus Readout HUD */}
           {displayedExperiment.id === 'planet' && labMode && (
-            <GravityFieldInspector
-              hasActiveOverlay={hasActiveOverlay}
-              isCollapsed={isInspectorCollapsed}
-              objectMassKg={objectMassKg}
-              onChangeObjectMass={handleChangeObjectMass}
-              onSelectPlanet={handleSelectPlanetComparison}
-              onToggleCollapse={handleToggleInspectorCollapse}
-              onTriggerDrop={handleTriggerDrop}
-              planet={PLANETS_DATA.find((p) => p.id === selectedPlanetComparisonId) || PLANETS_DATA[2]}
-            />
+            <>
+              <ApparatusMeasurementReadout
+                hasActiveOverlay={hasActiveOverlay}
+                objectMassKg={objectMassKg}
+                planet={PLANETS_DATA.find((p) => p.id === selectedPlanetComparisonId) || PLANETS_DATA[2]}
+              />
+              <GravityFieldInspector
+                hasActiveOverlay={hasActiveOverlay}
+                isCollapsed={isInspectorCollapsed}
+                objectMassKg={objectMassKg}
+                onChangeObjectMass={handleChangeObjectMass}
+                onSelectPlanet={handleSelectPlanetComparison}
+                onToggleCollapse={handleToggleInspectorCollapse}
+                onTriggerDrop={handleTriggerDrop}
+                planet={PLANETS_DATA.find((p) => p.id === selectedPlanetComparisonId) || PLANETS_DATA[2]}
+              />
+            </>
           )}
 
           {/* Phase 29: Planet Comparison Card (Mass vs Weight Apparatus) */}

@@ -526,50 +526,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   const weightArrow = new THREE.ArrowHelper(arrowDir, arrowOrigin, 1.0, 0xff5533, 0.2, 0.12)
   testObjectMesh.add(weightArrow)
 
-  // Real-time 3D Spring Scale Digital Readout Sprite
-  const readoutCanvas = document.createElement('canvas')
-  readoutCanvas.width = 256
-  readoutCanvas.height = 128
-  const readoutCtx = readoutCanvas.getContext('2d')
-  const readoutTexture = new THREE.CanvasTexture(readoutCanvas)
-  readoutTexture.colorSpace = THREE.SRGBColorSpace
-  const readoutMat = new THREE.SpriteMaterial({ map: readoutTexture, transparent: true })
-  const readoutSprite = new THREE.Sprite(readoutMat)
-  readoutSprite.scale.set(1.2, 0.6, 1.0)
-  readoutSprite.position.set(0, -1.45, 0)
-  apparatusGroup.add(readoutSprite)
 
-  function updateForceReadout(mass, g) {
-    if (!readoutCtx) return
-    const forceN = (mass * g).toFixed(1)
-    readoutCtx.clearRect(0, 0, 256, 128)
-    readoutCtx.fillStyle = 'rgba(8, 16, 38, 0.88)'
-    if (readoutCtx.roundRect) {
-      readoutCtx.beginPath()
-      readoutCtx.roundRect(8, 8, 240, 112, 12)
-      readoutCtx.fill()
-    } else {
-      readoutCtx.fillRect(8, 8, 240, 112)
-    }
-    readoutCtx.strokeStyle = 'rgba(115, 255, 211, 0.6)'
-    readoutCtx.lineWidth = 3
-    readoutCtx.stroke()
-
-    readoutCtx.textAlign = 'center'
-    readoutCtx.fillStyle = '#73ffd3'
-    readoutCtx.font = 'bold 20px "DM Mono", monospace'
-    readoutCtx.fillText('SPRING SCALE', 128, 38)
-
-    readoutCtx.fillStyle = '#ffffff'
-    readoutCtx.font = 'bold 36px "DM Mono", monospace'
-    readoutCtx.fillText(`${forceN} N`, 128, 78)
-
-    readoutCtx.fillStyle = '#ffb450'
-    readoutCtx.font = '16px "DM Mono", monospace'
-    readoutCtx.fillText(`m = ${mass} kg · g = ${g.toFixed(2)}`, 128, 105)
-
-    readoutTexture.needsUpdate = true
-  }
 
   // Free fall physics state
   let isDropping = false
@@ -601,14 +558,12 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     dropVelocityY = 0
     isDropping = true
     updateWeightArrow(g, objectMass)
-    updateForceReadout(objectMass, g)
     springMesh.scale.y = 1.0
     springMesh.position.y = -0.95
   }
 
-  // Initial setup of apparatus visuals & readout
+  // Initial setup of apparatus visuals
   updateWeightArrow(surfaceAcceleration, objectMass)
-  updateForceReadout(objectMass, surfaceAcceleration)
 
   function setPlanet(planetId) {
     const p = PLANETS_DATA.find((item) => item.id === planetId)
@@ -633,7 +588,6 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
 
     // Update weight arrow & trigger visual drop on planet change
     updateWeightArrow(p.surfaceGravityMs2, objectMass)
-    updateForceReadout(objectMass, p.surfaceGravityMs2)
     triggerDrop(p.surfaceGravityMs2)
   }
 
@@ -762,7 +716,6 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
       const s = Math.min(1.4, Math.max(0.6, Math.cbrt(objectMass / 70)))
       testObjectMesh.scale.setScalar(s)
       updateWeightArrow(surfaceAcceleration, objectMass)
-      updateForceReadout(objectMass, surfaceAcceleration)
       if (!isDropping) {
         dropPosY = getRestingHeight(surfaceAcceleration, objectMass)
         testObjectMesh.position.y = dropPosY
@@ -802,8 +755,6 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     springMat.dispose()
     testObjectGeo.dispose()
     testObjectMat.dispose()
-    readoutTexture.dispose()
-    readoutMat.dispose()
     ;[farStars, middleStars, nearStars].forEach((layer) => {
       layer.geometry.dispose()
       layer.material.dispose()
@@ -821,7 +772,6 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
       const s = Math.min(1.4, Math.max(0.6, Math.cbrt(objectMass / 70)))
       testObjectMesh.scale.setScalar(s)
       updateWeightArrow(surfaceAcceleration, objectMass)
-      updateForceReadout(objectMass, surfaceAcceleration)
       if (!isDropping) {
         dropPosY = getRestingHeight(surfaceAcceleration, objectMass)
         testObjectMesh.position.y = dropPosY

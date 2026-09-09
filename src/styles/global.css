@@ -8231,6 +8231,173 @@ h1 em {
   gap: 2px;
 }
 
+/* ==========================================================================
+   APPARATUS OBJECT MEASUREMENT READOUT HUD
+   ========================================================================== */
+.object-measurement-readout {
+  position: fixed;
+  top: clamp(84px, 19vh, 175px);
+  right: clamp(24px, 14vw, 240px);
+  z-index: 15;
+  background: rgba(8, 16, 38, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(115, 255, 211, 0.35);
+  border-left: 3px solid #73ffd3;
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 195px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 16px rgba(115, 255, 211, 0.14);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+  transition: all 180ms ease;
+  font-family: 'DM Mono', monospace;
+}
+
+.object-measurement-readout:hover {
+  border-color: #73ffd3;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75), 0 0 20px rgba(115, 255, 211, 0.25);
+  transform: translateY(-1px);
+}
+
+.readout-hud-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(135, 186, 255, 0.16);
+  padding-bottom: 6px;
+}
+
+.readout-hud-dot {
+  color: #73ffd3;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.readout-hud-title {
+  font: 700 10px/1 'DM Mono', monospace;
+  letter-spacing: 0.12em;
+  color: #73ffd3;
+}
+
+.readout-hud-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.readout-hud-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.readout-hud-label {
+  font: 700 11px 'DM Mono', monospace;
+  letter-spacing: 0.08em;
+  color: #8ea4c8;
+}
+
+.readout-hud-val {
+  font-family: 'DM Mono', monospace;
+  font-variant-numeric: tabular-nums lining-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.readout-hud-val .hud-num {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.readout-hud-val .hud-unit {
+  font-size: 11px;
+  font-weight: 700;
+  color: #73ffd3;
+}
+
+.row-mass .hud-num {
+  color: #ffb866;
+}
+
+.row-gravity .hud-num {
+  color: #73ffd3;
+}
+
+.row-weight .hud-num {
+  color: #ff7777;
+}
+
+.readout-hud-val.highlight .hud-num {
+  font-size: 15px;
+}
+
+.readout-hud-footer {
+  border-top: 1px solid rgba(135, 186, 255, 0.12);
+  padding-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.readout-hud-formula {
+  font: 700 9.5px 'DM Mono', monospace;
+  color: #9cb5db;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+/* Dim slightly when an overlay (like Gravitation Index) is active */
+.object-measurement-readout.has-active-overlay {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .object-measurement-readout {
+    top: 78px;
+    right: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .object-measurement-readout {
+    top: 72px;
+    right: 16px;
+    padding: 8px 12px;
+    min-width: 170px;
+    gap: 6px;
+  }
+  .readout-hud-val .hud-num {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .object-measurement-readout {
+    top: 66px;
+    right: 12px;
+    padding: 6px 10px;
+    min-width: 155px;
+    gap: 4px;
+  }
+  .readout-hud-title {
+    font-size: 9px;
+  }
+  .readout-hud-label {
+    font-size: 10px;
+  }
+  .readout-hud-val .hud-num {
+    font-size: 12.5px;
+  }
+}
+
 /* When an overlay is active on desktop, inspector remains bottom-left */
 @media (min-width: 769px) {
   .gravity-field-inspector.has-active-overlay {
