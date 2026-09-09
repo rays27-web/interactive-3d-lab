@@ -3,6 +3,7 @@ import ExperimentControls from './components/ExperimentControls'
 import ExperimentInfoPanel from './components/ExperimentInfoPanel'
 import ExperimentNavigator from './components/ExperimentNavigator'
 import LaboratoryNavDrawer from './components/LaboratoryNavDrawer'
+import GravitationIndexDrawer from './components/GravitationIndex/GravitationIndexDrawer'
 import LaboratoryTelemetry from './components/LaboratoryTelemetry'
 import LabModeToggle from './components/LabModeToggle'
 import PlanetDetailPanel from './components/PlanetDetailPanel'
@@ -51,6 +52,7 @@ function App() {
   const [isAskLabOpen, setIsAskLabOpen] = useState(false)
   const [isIndexOpen, setIsIndexOpen] = useState(false)
   const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false)
+  const [isGravitationIndexOpen, setIsGravitationIndexOpen] = useState(false)
 
   // Phase 29 & 38: Planet and Pulsar dedicated laboratory instruments
   const [selectedPlanetComparisonId, setSelectedPlanetComparisonId] = useState('earth')
@@ -72,7 +74,8 @@ function App() {
     isMissionOpen ||
     isPlanetCardOpen ||
     isIndexOpen ||
-    isNavDrawerOpen
+    isNavDrawerOpen ||
+    isGravitationIndexOpen
   )
 
   const handleToggleInspectorCollapse = useCallback(() => {
@@ -329,7 +332,9 @@ function App() {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.key === 'Escape') {
-        if (isNavDrawerOpen) {
+        if (isGravitationIndexOpen) {
+          setIsGravitationIndexOpen(false)
+        } else if (isNavDrawerOpen) {
           setIsNavDrawerOpen(false)
         } else if (isIndexOpen) {
           setIsIndexOpen(false)
@@ -358,6 +363,7 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [
+    isGravitationIndexOpen,
     isNavDrawerOpen,
     isIndexOpen,
     isMissionOpen,
@@ -419,6 +425,25 @@ function App() {
           setActiveExperiment(exp)
           setIsNavDrawerOpen(false)
         }}
+      />
+
+      {/* Gravitation Learning Index: Upper-Right Trigger Button */}
+      <button
+        aria-expanded={isGravitationIndexOpen}
+        aria-label="Gravitation Index"
+        className={`grav-index-trigger ${isGravitationIndexOpen ? 'is-active' : ''}`}
+        onClick={() => setIsGravitationIndexOpen((prev) => !prev)}
+        title="GRAVITATION INDEX"
+        type="button"
+      >
+        <span aria-hidden="true" className="grav-index-icon">📖</span>
+        <span className="grav-index-trigger-label">GRAVITATION INDEX</span>
+      </button>
+
+      {/* Gravitation Learning Index: Right-Side Drawer */}
+      <GravitationIndexDrawer
+        isOpen={isGravitationIndexOpen}
+        onClose={() => setIsGravitationIndexOpen(false)}
       />
 
       {/* Phase 4: Topbar navigation hidden for Experiment 01 Planet (clean UI reset) */}
