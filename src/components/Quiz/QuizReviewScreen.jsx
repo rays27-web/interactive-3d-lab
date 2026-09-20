@@ -146,11 +146,75 @@ export function QuizReviewScreen({ evaluation, onBackToResults, onRetakeQuiz }) 
                 <div className="review-solution-block">
                   <div className="solution-head">
                     <span className="head-icon">📐</span>
-                    <strong>FULL SOLUTION DERIVATION</strong>
+                    <strong>FULL SOLUTION DERIVATION & ANALYSIS</strong>
                   </div>
-                  <div className="solution-body">
-                    <QuizFormulaText text={question.explanation} />
-                  </div>
+
+                  {question.stepByStep ? (
+                    <div className="step-by-step-container">
+                      {question.stepByStep.given && (
+                        <div className="solution-step-item">
+                          <span className="step-label">1. GIVEN & CONSTRAINTS:</span>
+                          <QuizFormulaText text={question.stepByStep.given} className="step-content" />
+                        </div>
+                      )}
+
+                      {question.stepByStep.asked && (
+                        <div className="solution-step-item">
+                          <span className="step-label">2. ASKED / TARGET:</span>
+                          <QuizFormulaText text={question.stepByStep.asked} className="step-content" />
+                        </div>
+                      )}
+
+                      {question.stepByStep.formula && (
+                        <div className="solution-step-item">
+                          <span className="step-label">3. GOVERNING EQUATION:</span>
+                          <div className="solution-formula-box">
+                            <QuizFormulaText text={question.stepByStep.formula} className="step-math-formula" />
+                          </div>
+                        </div>
+                      )}
+
+                      {question.stepByStep.substitution && (
+                        <div className="solution-step-item">
+                          <span className="step-label">4. SUBSTITUTION & VALUES:</span>
+                          <QuizFormulaText text={question.stepByStep.substitution} className="step-content" />
+                        </div>
+                      )}
+
+                      {question.stepByStep.calculation && (
+                        <div className="solution-step-item">
+                          <span className="step-label">5. CALCULATION STEPS:</span>
+                          <QuizFormulaText text={question.stepByStep.calculation} className="step-content" />
+                        </div>
+                      )}
+
+                      {question.stepByStep.finalAnswer && (
+                        <div className="solution-step-item is-final-step">
+                          <span className="step-label">6. FINAL ANSWER:</span>
+                          <QuizFormulaText text={question.stepByStep.finalAnswer} className="step-final-box" />
+                        </div>
+                      )}
+
+                      {question.stepByStep.keyTakeaway && (
+                        <div className="solution-callout-takeaway">
+                          <span className="callout-badge">💡 KEY TAKEAWAY</span>
+                          <QuizFormulaText text={question.stepByStep.keyTakeaway} className="callout-text" />
+                        </div>
+                      )}
+
+                      {question.stepByStep.commonTrap && (
+                        <div className="solution-callout-trap">
+                          <span className="callout-badge">⚠️ COMMON TRAP</span>
+                          <QuizFormulaText text={question.stepByStep.commonTrap} className="callout-text" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="solution-body">
+                      <QuizFormulaText text={question.explanation} />
+                    </div>
+                  )}
+
                   {(question.conceptTested || question.concept) && (
                     <div className="solution-concept">
                       <span className="concept-label">CONCEPT TESTED:</span>

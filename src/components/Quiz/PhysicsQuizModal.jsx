@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { filterAndSampleQuestions, evaluateQuizSession } from '../../quiz/quizEngine'
+import { recordQuestionsAnswered } from '../../quiz/questionHistory'
 import { QuizStartScreen } from './QuizStartScreen'
 import { QuizActiveQuestion } from './QuizActiveQuestion'
 import { QuizResultsScreen } from './QuizResultsScreen'
 import { QuizReviewScreen } from './QuizReviewScreen'
 
-export function PhysicsQuizModal({ isOpen, onClose }) {
+export function PhysicsQuizModal({ isOpen, onClose, onOpenAITutor }) {
   const [viewMode, setViewMode] = useState('start') // 'start' | 'active' | 'results' | 'review'
   const [activeQuestions, setActiveQuestions] = useState([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -38,11 +39,32 @@ export function PhysicsQuizModal({ isOpen, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
+  // Dev & Automated Test hook to directly load a specific question
+  useEffect(() => {
+    window.__LOAD_QUIZ_QUESTION_BY_ID__ = (id) => {
+      import('../../quiz/questionBank').then(({ QUESTION_BANK }) => {
+        const target = QUESTION_BANK.find((q) => q.id === id)
+        if (target) {
+          setActiveQuestions([target])
+          setCurrentQuestionIndex(0)
+          setUserAnswers({})
+          setEvaluation(null)
+          setViewMode('active')
+        }
+      })
+    }
+    return () => {
+      delete window.__LOAD_QUIZ_QUESTION_BY_ID__
+    }
+  }, [])
+
   if (!isOpen) return null
 
   // 1. Start a new quiz session with chosen options
   const handleStartQuiz = (config) => {
     const questions = filterAndSampleQuestions(config)
+    // Mark questions as seen in history
+    recordQuestionsAnswered(questions.map((q) => q.id))
     setActiveQuestions(questions)
     setCurrentQuestionIndex(0)
     setUserAnswers({})
@@ -69,6 +91,13 @@ export function PhysicsQuizModal({ isOpen, onClose }) {
       const evalReport = evaluateQuizSession(activeQuestions, userAnswers)
       setEvaluation(evalReport)
       setViewMode('results')
+    }
+  }
+
+  // 3b. User returns to previous question
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1)
     }
   }
 
@@ -149,9 +178,11 @@ export function PhysicsQuizModal({ isOpen, onClose }) {
               totalQuestions={activeQuestions.length}
               selectedOption={userAnswers[currentQ.id]}
               onSelectOption={handleSelectOption}
+              onPrevQuestion={handlePrevQuestion}
               onNextQuestion={handleNextQuestion}
               isLastQuestion={isLastQuestion}
               correctCount={correctCount}
+              onOpenAITutor={onOpenAITutor}
             />
           )}
 
