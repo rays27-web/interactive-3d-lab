@@ -33,6 +33,8 @@ function ExperimentNavigator({
   onOpenAskLab,
   onOpenHistory,
   onOpenMission,
+  isMissionHubOpen = false,
+  onTogglePlanetMissions,
 }) {
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const isControlled = controlledIsOpen !== undefined
@@ -267,16 +269,23 @@ function ExperimentNavigator({
       {/* Bottom Footer Navigator Trigger */}
       <nav aria-label="Experiment index" className="experiment-nav">
         <button
-          aria-controls="experiment-index-drawer"
-          aria-expanded={isOpen}
-          aria-label="Toggle experiment index"
+          aria-controls={activeExperiment.id === 'planet' ? 'planet-mission-hub' : 'experiment-index-drawer'}
+          aria-expanded={activeExperiment.id === 'planet' ? isMissionHubOpen : isOpen}
+          aria-label={activeExperiment.id === 'planet' ? 'Open Planet Missions' : 'Toggle experiment index'}
           className="experiment-trigger"
-          onClick={handleToggle}
+          onClick={() => {
+            if (activeExperiment.id === 'planet' && onTogglePlanetMissions) {
+              onTogglePlanetMissions()
+            } else {
+              handleToggle()
+            }
+          }}
+          title={activeExperiment.id === 'planet' ? 'Open Planet Missions' : undefined}
           type="button"
         >
           <span aria-hidden="true" className="trigger-orbit" />
           <span>{activeExperiment.index} / {activeExperiment.name}</span>
-          <span aria-hidden="true">{isOpen ? '−' : '+'}</span>
+          <span aria-hidden="true">{activeExperiment.id === 'planet' ? (isMissionHubOpen ? '−' : '+') : (isOpen ? '−' : '+')}</span>
         </button>
       </nav>
     </>

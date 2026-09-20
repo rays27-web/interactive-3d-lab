@@ -107,6 +107,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Centrifugal acceleration increased to 6.25× baseline (a_c ∝ ω²), reducing effective equatorial gravity.',
         },
         conclusion: 'Empirically demonstrated that angular rotation velocity directly dictates surface kinetic energy and centrifugal force scaling quadratically (ω²).',
+        governingLaw: {
+          name: 'Centrifugal Acceleration Law',
+          formula: 'a_c = \\omega^2 R',
+          secondaryFormula: 'g_{\\text{eff}} = g - \\omega^2 R',
+          description: 'Centrifugal acceleration scales quadratically with angular rotation rate (ω²), reducing effective downward gravity at the equator.',
+        },
       },
       {
         id: 'planet-mission-2',
@@ -158,6 +164,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Grazing line-of-sight photon scattering probability doubled, expanding the visible planetary envelope.',
         },
         conclusion: 'Confirmed that atmospheric optical thickness governs limb brightening through radiative transfer path length amplification.',
+        governingLaw: {
+          name: 'Beer-Lambert Law & Optical Depth',
+          formula: '\\tau = \\int \\rho(s) \\kappa \\, ds',
+          secondaryFormula: 'I = I_0 e^{-\\tau}',
+          description: 'Atmospheric optical path length and density dictate radiative extinction and Rayleigh scattering along the planetary limb.',
+        },
       },
       {
         id: 'planet-mission-3',
@@ -209,6 +221,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Intrinsic mass m remains 50 kg, but downward gravitational force W increases by 2.53×.',
         },
         conclusion: 'Demonstrated the fundamental physical distinction: Mass is invariant matter quantity, whereas Weight is local gravitational force W = mg.',
+        governingLaw: {
+          name: "Newton's Second Law & Weight Force",
+          formula: 'W = m \\cdot g',
+          secondaryFormula: 'g = \\frac{GM}{R^2}',
+          description: 'Invariant mass (m) remains constant across the cosmos, while weight force (W) scales directly with local surface gravity (g).',
+        },
       },
     ],
   },
@@ -310,6 +328,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Arm-to-interarm stellar density contrast increased by 80%, demonstrating gravitational compression.',
         },
         conclusion: 'Verified that spiral arms act as persistent gravitational density waves rather than material arms subject to the winding catastrophe.',
+        governingLaw: {
+          name: 'Lin-Shu Density Wave Theory',
+          formula: '\\Omega_p = \\text{const}',
+          secondaryFormula: '\\theta(r) = r^{0.74} k + \\phi_{\\text{arm}}',
+          description: 'Spiral arms are rotating gravitational compression waves that preserve their pattern speed (Ω_p), preventing winding.',
+        },
       },
     ],
   },
@@ -416,6 +440,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Doppler factor δ amplified approaching photon flux by ~5.8× relative to receding plasma.',
         },
         conclusion: 'Confirmed that relativistic motion breaks disk symmetry via Doppler boosting and gravitational aberration.',
+        governingLaw: {
+          name: 'Relativistic Doppler Beaming',
+          formula: 'I_{\\text{obs}} = I_0 \\cdot \\delta^{3+\\alpha}',
+          secondaryFormula: '\\delta = [\\gamma(1 - \\beta \\cos\\theta)]^{-1}',
+          description: 'Relativistic velocities strongly amplify radiation intensity along the forward line of sight via kinematic Doppler boosting.',
+        },
       },
       {
         id: 'black-hole-mission-2',
@@ -467,6 +497,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Effective gravitational deflection angle doubled, widening the background Einstein ring radius.',
         },
         conclusion: 'Demonstrated gravitational light bending in accordance with Einsteinian null geodesic equations.',
+        governingLaw: {
+          name: 'Einstein Gravitational Deflection',
+          formula: '\\hat{\\alpha} = \\frac{4GM}{c^2 b}',
+          secondaryFormula: 'r_s = \\frac{2GM}{c^2}',
+          description: 'Spacetime curvature bends passing light rays by an angle twice the Newtonian prediction, forming Einstein rings.',
+        },
       },
     ],
   },
@@ -573,6 +609,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Reynolds number decreased by 54%, suppressing high-frequency Kolmogorov turbulent cascade.',
         },
         conclusion: 'Demonstrated that viscous dissipation suppresses small-scale shear eddies in conformance with the Navier-Stokes diffusion term.',
+        governingLaw: {
+          name: 'Incompressible Navier-Stokes & Diffusion',
+          formula: '\\nabla \\cdot \\mathbf{v} = 0, \\quad \\frac{\\partial \\boldsymbol{\\omega}}{\\partial t} = \\nu \\nabla^2 \\boldsymbol{\\omega}',
+          secondaryFormula: '\\mathrm{Re} = \\frac{U L}{\\nu}',
+          description: 'Viscous dissipation dampens turbulent vorticity eddies at small scales in conformance with the Navier-Stokes diffusion term.',
+        },
       },
     ],
   },
@@ -679,6 +721,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Light cylinder radius contracted to 40% of baseline; pulse repetition rate multiplied by 2.5×.',
         },
         conclusion: 'Demonstrated the periodic lighthouse effect and the inverse dependence of the co-rotation light cylinder on spin frequency.',
+        governingLaw: {
+          name: 'Magnetic Dipole Radiation & Light Cylinder',
+          formula: '\\dot{E} = \\frac{B^2 R^6 \\Omega^4}{6 c^3}',
+          secondaryFormula: 'R_{\\text{LC}} = \\frac{c}{\\Omega}',
+          description: 'Spinning magnetized neutron stars radiate dipole power (Ω⁴) and sweep periodic lighthouse beams inside the light cylinder (c/Ω).',
+        },
       },
     ],
   },
@@ -785,6 +833,12 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Gravitational attraction dropped by 75%, confirming the inverse-square law F ∝ 1/r².',
         },
         conclusion: 'Empirically validated Newton’s Inverse-Square Law of Gravitation (F ∝ 1/r²).',
+        governingLaw: {
+          name: "Newton's Universal Gravitation Law",
+          formula: 'F = G \\frac{M m}{r^2}',
+          secondaryFormula: 'a = \\frac{GM}{r^2}',
+          description: 'Gravitational attraction between two celestial bodies drops with the square of the distance (1/r²).',
+        },
       },
       {
         id: 'solar-mission-2',
@@ -836,7 +890,93 @@ export const EXPERIMENT_MISSIONS_DATA = {
           physicalMeaning: 'Enhanced gravitational well requires higher orbital velocity to sustain stable circular balance.',
         },
         conclusion: 'Demonstrated the requirement of Keplerian circular velocity equilibrium (v_orb = √(GM/r)).',
+        governingLaw: {
+          name: 'Circular Orbital Velocity Equilibrium',
+          formula: 'v_{\\text{orb}} = \\sqrt{\\frac{GM}{r}}',
+          secondaryFormula: '\\frac{T^2}{a^3} = \\frac{4\\pi^2}{GM}',
+          description: 'Stable circular orbits require central gravitational pull to precisely match centripetal acceleration at radial distance r.',
+        },
       },
     ],
   },
 }
+
+/**
+ * Universal lookup mapping every experiment mission to its verified governing physical law.
+ */
+export const MISSION_GOVERNING_LAWS = {
+  'planet-mission-1': {
+    name: 'Centrifugal Acceleration Law',
+    formula: 'a_c = \\omega^2 R',
+    secondaryFormula: 'g_{\\text{eff}} = g - \\omega^2 R',
+    description: 'Centrifugal acceleration scales quadratically with angular rotation rate (ω²), reducing effective downward gravity at the equator.',
+  },
+  'planet-mission-2': {
+    name: 'Beer-Lambert Law & Optical Depth',
+    formula: '\\tau = \\int \\rho(s) \\kappa \\, ds',
+    secondaryFormula: 'I = I_0 e^{-\\tau}',
+    description: 'Atmospheric optical path length and density dictate radiative extinction and Rayleigh scattering along the planetary limb.',
+  },
+  'planet-mission-3': {
+    name: "Newton's Second Law & Weight Force",
+    formula: 'W = m \\cdot g',
+    secondaryFormula: 'g = \\frac{GM}{R^2}',
+    description: 'Invariant mass (m) remains constant across the cosmos, while weight force (W) scales directly with local surface gravity (g).',
+  },
+  'galaxy-mission-1': {
+    name: 'Lin-Shu Density Wave Theory',
+    formula: '\\Omega_p = \\text{const}',
+    secondaryFormula: '\\theta(r) = r^{0.74} k + \\phi_{\\text{arm}}',
+    description: 'Spiral arms are rotating gravitational compression waves that preserve their pattern speed (Ω_p), preventing winding.',
+  },
+  'black-hole-mission-1': {
+    name: 'Relativistic Doppler Beaming',
+    formula: 'I_{\\text{obs}} = I_0 \\cdot \\delta^{3+\\alpha}',
+    secondaryFormula: '\\delta = [\\gamma(1 - \\beta \\cos\\theta)]^{-1}',
+    description: 'Relativistic velocities strongly amplify radiation intensity along the forward line of sight via kinematic Doppler boosting.',
+  },
+  'black-hole-mission-2': {
+    name: 'Einstein Gravitational Deflection',
+    formula: '\\hat{\\alpha} = \\frac{4GM}{c^2 b}',
+    secondaryFormula: 'r_s = \\frac{2GM}{c^2}',
+    description: 'Spacetime curvature bends passing light rays by an angle twice the Newtonian prediction, forming Einstein rings.',
+  },
+  'fluid-mission-1': {
+    name: 'Incompressible Navier-Stokes & Diffusion',
+    formula: '\\nabla \\cdot \\mathbf{v} = 0, \\quad \\frac{\\partial \\boldsymbol{\\omega}}{\\partial t} = \\nu \\nabla^2 \\boldsymbol{\\omega}',
+    secondaryFormula: '\\mathrm{Re} = \\frac{U L}{\\nu}',
+    description: 'Viscous dissipation dampens turbulent vorticity eddies at small scales in conformance with the Navier-Stokes diffusion term.',
+  },
+  'pulsar-mission-1': {
+    name: 'Magnetic Dipole Radiation & Light Cylinder',
+    formula: '\\dot{E} = \\frac{B^2 R^6 \\Omega^4}{6 c^3}',
+    secondaryFormula: 'R_{\\text{LC}} = \\frac{c}{\\Omega}',
+    description: 'Spinning magnetized neutron stars radiate dipole power (Ω⁴) and sweep periodic lighthouse beams inside the light cylinder (c/Ω).',
+  },
+  'solar-mission-1': {
+    name: "Newton's Universal Gravitation Law",
+    formula: 'F = G \\frac{M m}{r^2}',
+    secondaryFormula: 'a = \\frac{GM}{r^2}',
+    description: 'Gravitational attraction between two celestial bodies drops with the square of the distance (1/r²).',
+  },
+  'solar-mission-2': {
+    name: 'Circular Orbital Velocity Equilibrium',
+    formula: 'v_{\\text{orb}} = \\sqrt{\\frac{GM}{r}}',
+    secondaryFormula: '\\frac{T^2}{a^3} = \\frac{4\\pi^2}{GM}',
+    description: 'Stable circular orbits require central gravitational pull to precisely match centripetal acceleration at radial distance r.',
+  },
+}
+
+/**
+ * Returns the exact verified physical governing law for a given mission.
+ */
+export function getMissionGoverningLaw(mission, expData) {
+  if (mission?.governingLaw) return mission.governingLaw
+  if (mission?.id && MISSION_GOVERNING_LAWS[mission.id]) return MISSION_GOVERNING_LAWS[mission.id]
+  return {
+    name: expData?.governingPrinciple || 'Governing Physical Law',
+    formula: expData?.formula || 'F = m a',
+    description: expData?.learningObjective || 'Governing physical principles verified through simulation.',
+  }
+}
+
