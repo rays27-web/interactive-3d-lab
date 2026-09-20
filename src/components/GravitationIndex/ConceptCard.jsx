@@ -1,3 +1,6 @@
+import React from 'react'
+import { renderMathExpression, cleanLatexString, formatInlineMathText } from '../MathFormulaRenderer'
+
 function ConceptCard({ subsection }) {
   const { title, summary, points, properties, cases, valueDisplay, siUnit, dimension, distinction, formulaDisplay, formulaAlt, question, answer, rules } = subsection
 
@@ -5,7 +8,11 @@ function ConceptCard({ subsection }) {
     <article className="grav-card grav-concept-card">
       <h4 className="grav-card-title">{title}</h4>
       
-      {summary && <p className="grav-card-summary">{summary}</p>}
+      {summary && (
+        <p className="grav-card-summary">
+          {formatInlineMathText(summary, `sum-${subsection.id}`)}
+        </p>
+      )}
 
       {/* Prominent Value / Display */}
       {valueDisplay && (
@@ -18,9 +25,18 @@ function ConceptCard({ subsection }) {
 
       {/* Vector / Special Formula Display */}
       {formulaDisplay && (
-        <div className="grav-formula-box">
-          <code className="grav-formula-code">{formulaDisplay}</code>
-          {formulaAlt && <code className="grav-formula-alt">{formulaAlt}</code>}
+        <div className="grav-formula-hero">
+          <div className="grav-formula-render">
+            {renderMathExpression(cleanLatexString(formulaDisplay), `concept-${subsection.id}`)}
+          </div>
+          {formulaAlt && (
+            <div className="grav-formula-alt-math">
+              <span className="grav-alt-label">Alt form:</span>
+              <span className="grav-alt-render">
+                {renderMathExpression(cleanLatexString(formulaAlt), `concept-alt-${subsection.id}`)}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -45,7 +61,7 @@ function ConceptCard({ subsection }) {
           {points.map((pt, idx) => (
             <li key={idx} className="grav-point-item">
               <span className="grav-bullet" aria-hidden="true">▪</span>
-              <span>{pt}</span>
+              <span>{formatInlineMathText(pt, `pt-${subsection.id}-${idx}`)}</span>
             </li>
           ))}
         </ul>

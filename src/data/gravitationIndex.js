@@ -58,10 +58,10 @@ export const GRAVITATION_INDEX_MODULES = [
       },
       {
         id: '1-d',
-        type: 'vector',
+        type: 'vector-law',
         title: 'D. VECTOR FORM OF GRAVITATIONAL LAW',
-        formulaDisplay: 'F⃗₁₂ = -G · [m₁ m₂ / |r⃗₁ - r⃗₂|³] · (r⃗₁ - r⃗₂)',
-        formulaAlt: 'F⃗₁₂ = - (G m₁ m₂ / r²) · r̂₁₂',
+        formulaDisplay: 'F⃗₁₂ = - (G m₁ m₂ / r²) · r̂₁₂',
+        formulaAlt: 'F⃗₁₂ = -G · [m₁ m₂ / |r⃗₁ - r⃗₂|³] · (r⃗₁ - r⃗₂)',
         points: [
           'Force is a vector quantity with both magnitude and direction.',
           'F⃗₁₂ is the gravitational force exerted ON mass 1 BY mass 2.',
@@ -384,20 +384,21 @@ export const GRAVITATION_INDEX_MODULES = [
     subsections: [
       {
         id: '3-a',
-        type: 'formula',
+        type: 'field-hierarchy',
         title: 'A. GRAVITATIONAL FIELD INTENSITY',
         statement: 'Gravitational field is the gravitational force exerted per unit test mass at a given point in space.',
-        formulaDisplay: 'g⃗ = F⃗ / m   |   g⃗ = -(GM / r²) · r̂',
-        magnitude: 'g = GM / r²',
+        formulaDisplay: 'g⃗ = F⃗ / m   ⟹   g⃗ = -(GM / r²) · r̂',
+        magnitude: '|g⃗| = GM / r²',
+        direction: 'Radially inward toward source mass M',
         points: [
           'Field is a VECTOR pointing radially inward toward the source mass.',
           'SI unit: N/kg or m/s².',
-          'Dimension: [L T⁻²] (same as acceleration).',
+          'Dimension: [L T⁻²] (identical to acceleration).',
         ],
       },
       {
         id: '3-b',
-        type: 'concept',
+        type: 'superposition',
         title: 'B. PRINCIPLE OF SUPERPOSITION',
         formulaDisplay: 'g⃗_net = Σ g⃗ᵢ = g⃗₁ + g⃗₂ + ... + g⃗ₙ',
         points: [
@@ -691,7 +692,27 @@ export const GRAVITATION_INDEX_MODULES = [
         title: 'A. ORBITAL VELOCITY (v_o)',
         statement:
           'The horizontal speed required for a satellite to maintain a stable circular orbit at radius r around a celestial body.',
-        formulaDisplay: 'v_o = √(GM / r)',
+        formulaDisplay: 'v_o = \\sqrt{\\frac{GM}{r}}',
+        sequence: [
+          {
+            step: 'STEP 01',
+            label: 'Centripetal Force = Gravitational Attraction',
+            formula: '\\frac{m v_o^2}{r} = \\frac{GMm}{r^2}',
+            explanation: 'Gravity provides the inward centripetal acceleration required to maintain a closed circular orbit.',
+          },
+          {
+            step: 'STEP 02',
+            label: 'Orbital Speed Expression (Mass m Cancels)',
+            formula: 'v_o = \\sqrt{\\frac{GM}{r}}',
+            explanation: 'Orbital speed decays with the square root of radial distance (v_o ∝ 1/√r) and is independent of satellite mass.',
+          },
+          {
+            step: 'STEP 03',
+            label: 'Near Earth Surface Reference (r ≈ R)',
+            formula: 'v_o = \\sqrt{gR} \\approx 7.92\\text{ km/s}',
+            explanation: 'Substituting Earth radius R = 6,400 km and g = 9.81 m/s² yields approximately 7.92 km/s (~8 km/s).',
+          },
+        ],
         notes: 'Near Earth surface (r ≈ R): v_o = √(gR) ≈ 7.92 km/s (~8 km/s).',
         points: [
           'Derived by balancing centripetal force with gravitational force: m v_o² / r = G M m / r².',
@@ -703,7 +724,28 @@ export const GRAVITATION_INDEX_MODULES = [
         id: '5-b',
         type: 'formula',
         title: 'B. ORBITAL PERIOD OF SATELLITE (T)',
-        formulaDisplay: 'T = 2πr / v_o = 2π √(r³ / GM)',
+        statement: 'The time duration required for a satellite to complete one full revolution in a circular orbit of radius r.',
+        formulaDisplay: 'T = \\frac{2\\pi r}{v_o} = 2\\pi \\sqrt{\\frac{r^3}{GM}}',
+        sequence: [
+          {
+            step: 'STEP 01',
+            label: 'Circumference over Orbital Velocity',
+            formula: 'T = \\frac{2\\pi r}{v_o}',
+            explanation: 'Total circular orbit perimeter (2πr) divided by constant orbital tangential speed v_o.',
+          },
+          {
+            step: 'STEP 02',
+            label: 'Substituting v_o = √(GM/r)',
+            formula: 'T = \\frac{2\\pi r}{\\sqrt{GM / r}} = 2\\pi \\sqrt{\\frac{r^3}{GM}}',
+            explanation: 'Directly relates orbital period T to the semi-major orbital radius r.',
+          },
+          {
+            step: 'STEP 03',
+            label: 'Keplerian Harmonic Formulation (Squaring Both Sides)',
+            formula: 'T^2 = \\left(\\frac{4\\pi^2}{GM}\\right) r^3 \\implies T^2 \\propto r^3',
+            explanation: 'Rigorously derives Kepler’s Third Law of Periods from Newtonian universal gravitation.',
+          },
+        ],
         notes: 'Near Earth surface orbit (r ≈ R = 6400 km): T ≈ 84.6 minutes ≈ 1.41 hours.',
         points: [
           'Geostationary satellite: Orbit in equatorial plane with T = 24 hours, parked at altitude h ≈ 35,786 km (r ≈ 42,164 km).',
@@ -716,7 +758,7 @@ export const GRAVITATION_INDEX_MODULES = [
         title: 'C. ESCAPE VELOCITY (v_e)',
         statement:
           'The minimum speed with which an object must be projected from the surface of a celestial body to overcome its gravitational field and never return.',
-        formulaDisplay: 'v_e = √(2GM / R) = √(2gR)',
+        formulaDisplay: 'v_e = \\sqrt{\\frac{2GM}{R}} = \\sqrt{2gR}',
         notes: 'On Earth: v_e = √(2 × 9.81 × 6.4×10⁶) ≈ 11.2 km/s.',
         points: [
           'On Moon: v_e ≈ 2.38 km/s (thermal speed of gas molecules exceeds v_e, explaining absence of lunar atmosphere).',
@@ -727,7 +769,34 @@ export const GRAVITATION_INDEX_MODULES = [
         id: '5-d',
         type: 'formula',
         title: 'D. COMPARISON: ESCAPE VS ORBITAL VELOCITY',
-        formulaDisplay: 'v_e = √2 · v_o ≈ 1.414 · v_o',
+        statement: 'Exact mathematical relationship between circular orbital speed and parabolic escape threshold.',
+        formulaDisplay: 'v_e = \\sqrt{2} \\cdot v_o \\approx 1.414 \\cdot v_o',
+        sequence: [
+          {
+            step: 'STEP 01',
+            label: 'Surface Circular Orbital Speed',
+            formula: 'v_o = \\sqrt{\\frac{GM}{R}}',
+            explanation: 'Speed required to sustain a stable circular orbit skimming the planetary surface.',
+          },
+          {
+            step: 'STEP 02',
+            label: 'Surface Parabolic Escape Speed',
+            formula: 'v_e = \\sqrt{\\frac{2GM}{R}} = \\sqrt{2} \\cdot \\sqrt{\\frac{GM}{R}}',
+            explanation: 'Speed required to achieve parabolic unbound trajectory with zero total mechanical energy.',
+          },
+          {
+            step: 'STEP 03',
+            label: 'Exact Ratio & Relationship',
+            formula: 'v_e = \\sqrt{2} \\cdot v_o \\approx 1.414 \\cdot v_o',
+            explanation: 'Escape velocity from the planetary surface is exactly √2 (≈ 1.414) times the surface orbital velocity.',
+          },
+          {
+            step: 'STEP 04',
+            label: 'Velocity Boost to Escape from Circular Orbit',
+            formula: '\\Delta v = (\\sqrt{2} - 1) \\cdot v_o \\approx +41.4%',
+            explanation: 'A satellite in circular orbit requires an extra 41.4% speed boost (or doubling kinetic energy by 100%) to escape.',
+          },
+        ],
         points: [
           'Escape velocity from the surface is exactly √2 times the surface orbital velocity.',
           'Percentage increase needed to escape from circular orbit: (√2 - 1) × 100% ≈ 41.4%.',
@@ -737,7 +806,34 @@ export const GRAVITATION_INDEX_MODULES = [
         id: '5-e',
         type: 'formula',
         title: 'E. ENERGY INTERPRETATION AT ESCAPE THRESHOLD',
-        formulaDisplay: 'E = K + U = ½m v_e² - (GMm / R) = 0   ⟹   v_e = √(2GM / R)',
+        statement: 'First-principles derivation of escape velocity using conservation of total mechanical energy.',
+        formulaDisplay: 'v_e = \\sqrt{\\frac{2GM}{R}} = \\sqrt{2gR}',
+        sequence: [
+          {
+            step: 'STEP 01',
+            label: 'Total Mechanical Energy at Surface (r = R)',
+            formula: 'E = K + U = \\frac{1}{2}m v_e^2 - \\frac{GMm}{R}',
+            explanation: 'Sum of initial kinetic energy (launch velocity v_e) and negative gravitational potential energy in Earth’s well.',
+          },
+          {
+            step: 'STEP 02',
+            label: 'Escape Boundary Condition at Infinity (r → ∞)',
+            formula: 'E_{\\text{final}} = K_{∞} + U_{∞} \\ge 0 \\implies E_{\\text{min}} = 0',
+            explanation: 'To just barely escape, the projectile reaches r → ∞ with zero residual kinetic energy (K_∞ = 0) and zero potential energy (U_∞ = 0).',
+          },
+          {
+            step: 'STEP 03',
+            label: 'Conservation of Energy Balance',
+            formula: '\\frac{1}{2}m v_e^2 = \\frac{GMm}{R}',
+            explanation: 'Equating surface energy to zero threshold (E = 0 ⟹ ½m v_e² - GMm/R = 0): launch kinetic energy must equal gravitational potential well depth.',
+          },
+          {
+            step: 'STEP 04',
+            label: 'Solving for Escape Velocity (Mass m Cancels)',
+            formula: 'v_e = \\sqrt{\\frac{2GM}{R}} = \\sqrt{2gR}',
+            explanation: 'Because mass m cancels out on both sides, escape speed is independent of projectile mass (substituting GM = gR² gives √(2gR)).',
+          },
+        ],
         points: [
           'At infinity, both kinetic energy and potential energy can reach zero asymptotically (E = 0).',
           'The mass m of the projectile cancels out on both sides of the energy conservation equation.',
@@ -943,7 +1039,7 @@ export const FORMULA_QUICK_SHEET = [
   {
     id: 'f7',
     name: 'Gravitational Field',
-    formula: 'g⃗ = -GM / r² · r̂',
+    formula: 'g⃗ = -(GM / r²) r̂  [|g⃗| = GM / r²]',
     category: 'Field',
   },
   {

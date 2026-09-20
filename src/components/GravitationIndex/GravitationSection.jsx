@@ -3,6 +3,9 @@ import ConceptCard from './ConceptCard'
 import FormulaCard from './FormulaCard'
 import JEETrapCard from './JEETrapCard'
 import JEEQuestionCard from './JEEQuestionCard'
+import GravitationalFieldHierarchy from './GravitationalFieldHierarchy'
+import SuperpositionCard from './SuperpositionCard'
+import VectorGravitationLawCard from './VectorGravitationLawCard'
 
 function GravitationSection({ module, isExpanded, onToggle }) {
   const { number, title, tag, description, subsections, pyqs } = module
@@ -37,6 +40,15 @@ function GravitationSection({ module, isExpanded, onToggle }) {
           {/* Subsections */}
           <div className="module-subsections">
             {subsections.map((sub) => {
+              if (sub.id === '3-a' || sub.type === 'field-hierarchy') {
+                return <GravitationalFieldHierarchy key={sub.id} subsection={sub} />
+              }
+              if (sub.id === '3-b' || sub.type === 'superposition') {
+                return <SuperpositionCard key={sub.id} subsection={sub} />
+              }
+              if (sub.id === '1-d' || sub.type === 'vector-law') {
+                return <VectorGravitationLawCard key={sub.id} subsection={sub} />
+              }
               if (sub.type === 'traps') {
                 return <JEETrapCard key={sub.id} traps={sub.traps} title={sub.title} />
               }

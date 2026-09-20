@@ -8,7 +8,7 @@ import GravitationSection from './GravitationSection'
 import ProblemSolvingGuide from './ProblemSolvingGuide'
 import FormulaQuickSheet from './FormulaQuickSheet'
 
-function GravitationIndexDrawer({ isOpen, onClose }) {
+function GravitationIndexDrawer({ isOpen, onClose, onOpenAITutor }) {
   // Only one section open at a time to keep UI focused and uncrowded
   const [activeModuleId, setActiveModuleId] = useState(null)
 
@@ -40,6 +40,23 @@ function GravitationIndexDrawer({ isOpen, onClose }) {
         <div className="grav-header-content">
           <div className="grav-header-tag-row">
             <span className="grav-curriculum-badge">CLASS 12 • JEE MAIN • JEE ADVANCED</span>
+            {onOpenAITutor && (
+              <button
+                type="button"
+                className="grav-ask-tutor-btn"
+                onClick={() => {
+                  const activeMod = GRAVITATION_INDEX_MODULES.find((m) => m.id === activeModuleId)
+                  onOpenAITutor({
+                    source: 'index',
+                    topic: activeMod ? `${activeMod.title}` : 'Gravitation Curriculum Index',
+                  })
+                }}
+                title="Ask Panda AI Tutor about this topic"
+              >
+                <span>🐼</span>
+                <span>Ask AI Tutor</span>
+              </button>
+            )}
           </div>
           <h2 className="grav-drawer-title">GRAVITATION INDEX</h2>
           <p className="grav-drawer-desc">
