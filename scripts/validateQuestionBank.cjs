@@ -18,7 +18,10 @@ async function validate() {
   console.log('====================================================\n');
 
   const bankUrl = pathToFileURL(path.resolve('src/quiz/questionBank.js')).href;
-  const { QUESTION_BANK, QUESTION_BANK_BY_TOPIC } = await import(bankUrl);
+  const { QUESTION_BANK, QUESTION_BANK_BY_TOPIC, loadAllQuestions } = await import(bankUrl);
+  if (typeof loadAllQuestions === 'function') {
+    await loadAllQuestions();
+  }
 
   const errors = [];
   const warnings = [];

@@ -26,7 +26,10 @@ async function runTests() {
 
   const { filterAndSampleQuestions, getAvailableQuestions, getAvailableQuestionStats } = await import(engineUrl);
   const { resetQuestionHistory, recordQuestionsAnswered, getSeenQuestionIds } = await import(historyUrl);
-  const { QUESTION_BANK, QUESTION_BANK_BY_TOPIC } = await import(bankUrl);
+  const { QUESTION_BANK, QUESTION_BANK_BY_TOPIC, loadAllQuestions } = await import(bankUrl);
+  if (typeof loadAllQuestions === 'function') {
+    await loadAllQuestions();
+  }
 
   let passed = 0;
   let failed = 0;

@@ -1,4 +1,5 @@
-import { QUESTION_BANK, QUESTION_BANK_BY_TOPIC } from './questionBank.js'
+import { QUESTION_BANK, QUESTION_BANK_BY_TOPIC, loadTopicQuestions, loadAllQuestions } from './questionBank.js'
+import { QUESTION_METADATA } from './questionMetadata.js'
 import { QUIZ_TOPICS, QUIZ_CATEGORIES } from './quizCategories.js'
 import {
   getSeenQuestionIds,
@@ -9,18 +10,31 @@ import {
 /**
  * Retrieve the available question pool matching exact topic and difficulty criteria.
  * ZERO topic leak and ZERO difficulty leak.
- * 
+ *
+ * When full question bodies are not yet loaded, gracefully falls back to lightweight
+ * metadata so that counts and history stats can be computed synchronously without
+ * needing to fetch the 1.9 MB question files.
+ *
  * @param {Object} options
  * @param {string} options.topic - 'all' | 'fundamentalNewtonLaw' | 'accelerationDueToGravity' | etc.
  * @param {string} options.categoryId - alias for topic for backward compatibility
  * @param {string} options.difficulty - 'ALL' | 'EASY' | 'MEDIUM' | 'HARD'
  * @param {string} options.level - 'MIXED' | 'CLASS 11-12' | 'JEE MAIN' | 'JEE ADVANCED' (optional secondary filter)
- * @returns {Array} Matching questions from the question bank
+ * @param {Array|null} [customPool] - Optional explicit pool to filter from
+ * @returns {Array} Matching questions or question metadata descriptors
  */
-export function getAvailableQuestions({ topic = 'all', categoryId, difficulty = 'ALL', level = 'MIXED' } = {}) {
+export function getAvailableQuestions(
+  { topic = 'all', categoryId, difficulty = 'ALL', level = 'MIXED' } = {},
+  customPool = null
+) {
   const topicKey = topic !== 'all' ? topic : (categoryId && categoryId !== 'all' ? categoryId : 'all')
 
-  let pool = [...QUESTION_BANK]
+  // Prioritize provided customPool -> loaded QUESTION_BANK in memory -> lightweight QUESTION_METADATA
+  let pool = customPool
+    ? [...customPool]
+    : QUESTION_BANK.length > 0
+    ? [...QUESTION_BANK]
+    : [...QUESTION_METADATA]
 
   // 1. Strict Topic Filtering
   if (topicKey && topicKey !== 'all') {
@@ -39,10 +53,11 @@ export function getAvailableQuestions({ topic = 'all', categoryId, difficulty = 
 }
 
 /**
- * Get count of total available and unseen questions for given criteria
+ * Get count of total available and unseen questions for given criteria.
+ * Operates synchronously against lightweight metadata or loaded in-memory questions.
  */
-export function getAvailableQuestionStats(options = {}) {
-  const pool = getAvailableQuestions(options)
+export function getAvailableQuestionStats(options = {}, customPool = null) {
+  const pool = getAvailableQuestions(options, customPool)
   const seenIds = getSeenQuestionIds()
   const unseenCount = getUnseenQuestionCount(pool, seenIds)
 
@@ -54,10 +69,11 @@ export function getAvailableQuestionStats(options = {}) {
 }
 
 /**
- * Get count of available questions for given topic and difficulty
+ * Get count of available questions for given topic and difficulty.
+ * Operates synchronously against lightweight metadata or loaded in-memory questions.
  */
-export function getAvailableQuestionCount(options = {}) {
-  return getAvailableQuestions(options).length
+export function getAvailableQuestionCount(options = {}, customPool = null) {
+  return getAvailableQuestions(options, customPool).length
 }
 
 /**
@@ -74,7 +90,7 @@ function shuffleArray(arr) {
 
 /**
  * Filter and sample questions according to user criteria with strict validation.
- * 
+ *
  * Guaranteed:
  * - 100% of questions belong strictly to the chosen topic.
  * - 100% of questions match the chosen difficulty (unless ALL/MIXED is selected).
@@ -86,22 +102,28 @@ function shuffleArray(arr) {
  * @param {string} options.categoryId - Backward compatibility alias
  * @param {string} options.difficulty - 'EASY' | 'MEDIUM' | 'HARD' | 'ALL'
  * @param {string} options.level - Exam level
- * @param {number} options.count - Requested question count (10, 20, 30, 50)
+ * @param {number|string} options.count - Requested question count (10, 20, 30, 50, 'ALL')
  * @param {boolean} options.preferUnseen - If true, prioritizes questions not yet seen
  * @param {boolean} options.includeSeenIfExhausted - If true, fills with seen questions if unseen are insufficient
+ * @param {Array|null} [customPool] - Optional explicit question pool to sample from
  * @returns {Array} Array of sampled questions with attached metadata
  */
-export function filterAndSampleQuestions({
-  topic = 'all',
-  categoryId,
-  difficulty = 'MEDIUM',
-  level = 'MIXED',
-  count = 10,
-  preferUnseen = true,
-  includeSeenIfExhausted = true,
-} = {}) {
+export function filterAndSampleQuestions(
+  {
+    topic = 'all',
+    categoryId,
+    difficulty = 'MEDIUM',
+    level = 'MIXED',
+    count = 10,
+    preferUnseen = true,
+    includeSeenIfExhausted = true,
+  } = {},
+  customPool = null
+) {
   // Step 1 & 2: Strict Topic and Difficulty Isolation
-  const pool = getAvailableQuestions({ topic, categoryId, difficulty, level })
+  const pool = customPool
+    ? getAvailableQuestions({ topic, categoryId, difficulty, level }, customPool)
+    : getAvailableQuestions({ topic, categoryId, difficulty, level })
 
   const seenIds = getSeenQuestionIds()
   const { unseen, seen } = partitionByHistory(pool, seenIds)
@@ -149,6 +171,33 @@ export function filterAndSampleQuestions({
   finalResult.isExhausted = unseen.length === 0
 
   return finalResult
+}
+
+/**
+ * High-level lazy-loading quiz session initiator.
+ * Loads ONLY the required question module(s) on demand before sampling.
+ *
+ * - Single topic mode: loads ONLY the requested topic module (~380 KB).
+ * - ALL-topics mode: loads all 5 topic modules in parallel.
+ *
+ * @param {Object} options - Options passed from QuizStartScreen
+ * @returns {Promise<Array>} Array of sampled, fully-loaded question objects
+ */
+export async function loadAndSampleQuestions(options = {}) {
+  const topicKey = options.topic !== 'all' && options.topic
+    ? options.topic
+    : (options.categoryId && options.categoryId !== 'all' ? options.categoryId : 'all')
+
+  let pool
+  if (!topicKey || topicKey === 'all') {
+    // Load all 5 question banks in parallel
+    pool = await loadAllQuestions()
+  } else {
+    // Load ONLY the requested topic bank
+    pool = await loadTopicQuestions(topicKey)
+  }
+
+  return filterAndSampleQuestions(options, pool)
 }
 
 /**

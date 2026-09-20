@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { filterAndSampleQuestions, evaluateQuizSession } from '../../quiz/quizEngine'
+import { loadAndSampleQuestions, evaluateQuizSession } from '../../quiz/quizEngine'
 import { recordQuestionsAnswered } from '../../quiz/questionHistory'
-import { QUESTION_BANK } from '../../quiz/questionBank.js'
+import { loadQuestionById } from '../../quiz/questionBank.js'
 import { QuizStartScreen } from './QuizStartScreen'
 import { QuizActiveQuestion } from './QuizActiveQuestion'
 import { QuizResultsScreen } from './QuizResultsScreen'
@@ -40,10 +40,10 @@ export function PhysicsQuizModal({ isOpen, onClose, onOpenAITutor }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
-  // Dev & Automated Test hook to directly load a specific question
+  // Dev & Automated Test hook to directly load a specific question on demand
   useEffect(() => {
-    window.__LOAD_QUIZ_QUESTION_BY_ID__ = (id) => {
-      const target = QUESTION_BANK.find((q) => q.id === id)
+    window.__LOAD_QUIZ_QUESTION_BY_ID__ = async (id) => {
+      const target = await loadQuestionById(id)
       if (target) {
         setActiveQuestions([target])
         setCurrentQuestionIndex(0)
@@ -51,6 +51,7 @@ export function PhysicsQuizModal({ isOpen, onClose, onOpenAITutor }) {
         setEvaluation(null)
         setViewMode('active')
       }
+      return target
     }
     return () => {
       delete window.__LOAD_QUIZ_QUESTION_BY_ID__
@@ -59,16 +60,20 @@ export function PhysicsQuizModal({ isOpen, onClose, onOpenAITutor }) {
 
   if (!isOpen) return null
 
-  // 1. Start a new quiz session with chosen options
-  const handleStartQuiz = (config) => {
-    const questions = filterAndSampleQuestions(config)
-    // Mark questions as seen in history
-    recordQuestionsAnswered(questions.map((q) => q.id))
-    setActiveQuestions(questions)
-    setCurrentQuestionIndex(0)
-    setUserAnswers({})
-    setEvaluation(null)
-    setViewMode('active')
+  // 1. Start a new quiz session with chosen options (lazy-loading requested questions on demand)
+  const handleStartQuiz = async (config) => {
+    try {
+      const questions = await loadAndSampleQuestions(config)
+      // Mark questions as seen in history
+      recordQuestionsAnswered(questions.map((q) => q.id))
+      setActiveQuestions(questions)
+      setCurrentQuestionIndex(0)
+      setUserAnswers({})
+      setEvaluation(null)
+      setViewMode('active')
+    } catch (err) {
+      console.error('Failed to load questions for quiz session:', err)
+    }
   }
 
   // 2. User selects an answer option for current question
