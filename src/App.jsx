@@ -5,6 +5,9 @@ import ExperimentNavigator from './components/ExperimentNavigator'
 import LaboratoryNavDrawer from './components/LaboratoryNavDrawer'
 import GravitationIndexDrawer from './components/GravitationIndex/GravitationIndexDrawer'
 import PhysicsQuizModal from './components/Quiz/PhysicsQuizModal'
+import AITutorDrawer from './components/AITutor/AITutorDrawer'
+import PandaMascot from './components/AITutor/PandaMascot'
+import { createTutorContext } from './tutor/tutorConfig'
 import LaboratoryTelemetry from './components/LaboratoryTelemetry'
 import LabModeToggle from './components/LabModeToggle'
 import PlanetDetailPanel from './components/PlanetDetailPanel'
@@ -23,7 +26,9 @@ import PlanetComparisonCard from './components/PlanetComparisonCard'
 import SignalOscilloscope from './components/SignalOscilloscope'
 import ScientificIcon from './components/ScientificIcon'
 import GravityFieldInspector from './components/GravityFieldInspector'
-import ApparatusMeasurementReadout from './components/ApparatusMeasurementReadout'
+import PlanetMissionHub from './components/PlanetMissionHub'
+import MissionObserveHUD from './components/MissionObserveHUD'
+import { EXPERIMENT_MISSIONS_DATA } from './physics/experimentMissions'
 import { PLANETS_DATA } from './data/planets'
 import { availableExperiments, experimentRegistry } from './experiments/registry'
 import { CELESTIAL_BODIES } from './scenes/SolarSystemScene'
@@ -56,15 +61,40 @@ function App() {
   const [isNavDrawerOpen, setIsNavDrawerOpen] = useState(false)
   const [isGravitationIndexOpen, setIsGravitationIndexOpen] = useState(false)
   const [isQuizOpen, setIsQuizOpen] = useState(false)
+  const [isAITutorOpen, setIsAITutorOpen] = useState(false)
+  const [aiTutorContext, setAiTutorContext] = useState(() =>
+    createTutorContext({
+      source: 'experiment',
+      topic: 'Planetary Surface Gravity & Weight',
+      experimentId: 'planet',
+      telemetry: { planetName: 'Earth', gravity: '9.81 m/s²', mass: '70 kg' },
+      explanationLevel: 'LEARN',
+    })
+  )
+
+  // Planet Mission Hub & 3D Observation HUD state
+  const [isMissionHubOpen, setIsMissionHubOpen] = useState(false)
+  const [isObservingMission, setIsObservingMission] = useState(false)
+  const [selectedMissionIndex, setSelectedMissionIndex] = useState(0)
+  const [missionResumeStep, setMissionResumeStep] = useState(0)
 
   // Phase 29 & 38: Planet and Pulsar dedicated laboratory instruments
   const [selectedPlanetComparisonId, setSelectedPlanetComparisonId] = useState('earth')
   const [objectMassKg, setObjectMassKg] = useState(70)
+  const [isDropPaused, setIsDropPaused] = useState(false)
   const [isPlanetCardOpen, setIsPlanetCardOpen] = useState(false)
   const [isOscilloscopeOpen, setIsOscilloscopeOpen] = useState(false)
 
   // Phase 3 & 4: Persistent inspector collapse state (minimized by default, no auto-reopen)
   const [isInspectorCollapsed, setIsInspectorCollapsed] = useState(true)
+
+  const handleOpenAITutor = useCallback((contextUpdates = {}) => {
+    setAiTutorContext((prev) => ({
+      ...prev,
+      ...contextUpdates,
+    }))
+    setIsAITutorOpen(true)
+  }, [])
 
   const hasActiveOverlay = Boolean(
     isHistoryOpen ||
@@ -78,7 +108,10 @@ function App() {
     isPlanetCardOpen ||
     isIndexOpen ||
     isNavDrawerOpen ||
-    isGravitationIndexOpen
+    isGravitationIndexOpen ||
+    isQuizOpen ||
+    isMissionHubOpen ||
+    isAITutorOpen
   )
 
   const handleToggleInspectorCollapse = useCallback(() => {
@@ -264,13 +297,25 @@ function App() {
   }, [sceneApi, handleParamChange])
 
   const handleChangeObjectMass = useCallback((mass) => {
-    setObjectMassKg(mass)
-    sceneApi?.setObjectMass?.(mass)
-    handleParamChange('objectMass', mass)
+    const clamped = Math.min(200, Math.max(1, Number(mass) || 70))
+    setObjectMassKg(clamped)
+    sceneApi?.setObjectMass?.(clamped)
+    handleParamChange('objectMass', clamped)
   }, [sceneApi, handleParamChange])
 
   const handleTriggerDrop = useCallback((g) => {
+    setIsDropPaused(false)
     sceneApi?.triggerDrop?.(g)
+  }, [sceneApi])
+
+  const handleResetDrop = useCallback(() => {
+    setIsDropPaused(false)
+    sceneApi?.resetDrop?.()
+  }, [sceneApi])
+
+  const handleTogglePauseDrop = useCallback(() => {
+    const nextPaused = sceneApi?.togglePauseDrop?.()
+    setIsDropPaused(Boolean(nextPaused))
   }, [sceneApi])
 
   // Callbacks passed to active scene
@@ -437,42 +482,113 @@ function App() {
         }}
       />
 
-      {/* Physics Quiz: Upper-Right Trigger Button */}
-      <button
-        aria-expanded={isQuizOpen}
-        aria-label="Physics Quiz"
-        className={`physics-quiz-trigger ${isQuizOpen ? 'is-active' : ''}`}
-        onClick={() => setIsQuizOpen((prev) => !prev)}
-        title="Physics Quiz"
-        type="button"
-      >
-        <span aria-hidden="true" className="quiz-trigger-icon">⚡</span>
-        <span className="quiz-trigger-label">QUIZ</span>
-      </button>
+      {/* Planet Experiment: Dedicated Mission Hub Trigger & Drawer */}
+      {displayedExperiment.id === 'planet' && (
+        <PlanetMissionHub
+          isOpen={isMissionHubOpen}
+          onClose={() => setIsMissionHubOpen(false)}
+          onOpenMission={(missionIdx) => {
+            setSelectedMissionIndex(missionIdx)
+            setMissionResumeStep(0)
+            setIsMissionOpen(true)
+            setIsMissionHubOpen(false)
+          }}
+          onToggleOpen={() => setIsMissionHubOpen((prev) => !prev)}
+        />
+      )}
 
-      {/* Gravitation Learning Index: Upper-Right Trigger Button */}
-      <button
-        aria-expanded={isGravitationIndexOpen}
-        aria-label="Gravitation Index"
-        className={`grav-index-trigger ${isGravitationIndexOpen ? 'is-active' : ''}`}
-        onClick={() => setIsGravitationIndexOpen((prev) => !prev)}
-        title="GRAVITATION INDEX"
-        type="button"
-      >
-        <span aria-hidden="true" className="grav-index-icon">📖</span>
-        <span className="grav-index-trigger-label">GRAVITATION INDEX</span>
-      </button>
+      {/* 3D Simulation Observation HUD during Mission Execution */}
+      {isObservingMission && displayedExperiment.id === 'planet' && (
+        <MissionObserveHUD
+          activeMission={EXPERIMENT_MISSIONS_DATA.planet.missions[selectedMissionIndex] || EXPERIMENT_MISSIONS_DATA.planet.missions[0]}
+          onResetCalibration={() => {
+            sceneApi?.resetCalibration?.()
+            setIsObservingMission(false)
+          }}
+          onReturnToMission={() => {
+            setIsObservingMission(false)
+            setMissionResumeStep(3) // Step 04 OBSERVE
+            setIsMissionOpen(true)
+          }}
+          sceneApi={sceneApi}
+        />
+      )}
+
+      {/* Upper-Right Utility Area: Strict Order [ PANDA AI TUTOR ] [ QUIZ ] [ GRAVITATION INDEX ] */}
+      <div className="top-right-utility-bar" role="toolbar" aria-label="Laboratory Utility Actions">
+        {/* 1. Panda AI Physics Tutor: Upper-Right Utility Trigger Button */}
+        <button
+          aria-expanded={isAITutorOpen}
+          aria-label="Ask Physics AI Tutor"
+          className={`ai-tutor-trigger ${isAITutorOpen ? 'is-active' : ''}`}
+          onClick={() => {
+            const currentPlanet = PLANETS_DATA.find((p) => p.id === (selectedPlanet || 'earth')) || PLANETS_DATA[2]
+            handleOpenAITutor({
+              source: 'experiment',
+              experimentId: displayedExperiment.id,
+              topic: 'Planetary Gravitation & Surface Weight',
+              telemetry: {
+                planetName: currentPlanet.name,
+                gravity: `${currentPlanet.gravity || 9.81} m/s²`,
+                mass: `${objectMassKg} kg`,
+                weight: `${((currentPlanet.gravity || 9.81) * objectMassKg).toFixed(1)} N`,
+              },
+            })
+          }}
+          title="Ask Physics AI Tutor"
+          type="button"
+        >
+          <PandaMascot variant="icon" size={18} glow />
+          <span className="ai-tutor-trigger-label">AI TUTOR</span>
+        </button>
+
+        {/* 2. Physics Quiz: Upper-Right Trigger Button */}
+        <button
+          aria-expanded={isQuizOpen}
+          aria-label="Physics Quiz"
+          className={`physics-quiz-trigger ${isQuizOpen ? 'is-active' : ''}`}
+          onClick={() => setIsQuizOpen((prev) => !prev)}
+          title="Physics Quiz"
+          type="button"
+        >
+          <span aria-hidden="true" className="quiz-trigger-icon">⚡</span>
+          <span className="quiz-trigger-label">QUIZ</span>
+        </button>
+
+        {/* 3. Gravitation Learning Index: Upper-Right Trigger Button */}
+        <button
+          aria-expanded={isGravitationIndexOpen}
+          aria-label="Gravitation Index"
+          className={`grav-index-trigger ${isGravitationIndexOpen ? 'is-active' : ''}`}
+          onClick={() => setIsGravitationIndexOpen((prev) => !prev)}
+          title="GRAVITATION INDEX"
+          type="button"
+        >
+          <span aria-hidden="true" className="grav-index-icon">📖</span>
+          <span className="grav-index-trigger-label">GRAVITATION INDEX</span>
+        </button>
+      </div>
+
+      {/* Panda AI Physics Tutor Drawer */}
+      <AITutorDrawer
+        isOpen={isAITutorOpen}
+        onClose={() => setIsAITutorOpen(false)}
+        context={aiTutorContext}
+        onUpdateContext={(newCtx) => setAiTutorContext((prev) => ({ ...prev, ...newCtx }))}
+      />
 
       {/* Gravitation Learning Index: Right-Side Drawer */}
       <GravitationIndexDrawer
         isOpen={isGravitationIndexOpen}
         onClose={() => setIsGravitationIndexOpen(false)}
+        onOpenAITutor={handleOpenAITutor}
       />
 
       {/* Physics Quiz Modal / Assessment Suite */}
       <PhysicsQuizModal
         isOpen={isQuizOpen}
         onClose={() => setIsQuizOpen(false)}
+        onOpenAITutor={handleOpenAITutor}
       />
 
       {/* Phase 4: Topbar navigation hidden for Experiment 01 Planet (clean UI reset) */}
@@ -788,10 +904,17 @@ function App() {
           <ExperimentMission
             currentParams={currentParams}
             experiment={displayedExperiment}
+            initialMissionIndex={selectedMissionIndex}
+            initialStepIndex={missionResumeStep}
             isOpen={isMissionOpen}
             onApplyParams={handleApplyPreset}
             onClose={() => setIsMissionOpen(false)}
             onRecordObservation={handleAddObservation}
+            onTransitionTo3D={(activeMission, { resumeStepIndex }) => {
+              setIsMissionOpen(false)
+              setIsObservingMission(true)
+              setMissionResumeStep(resumeStepIndex ?? 3)
+            }}
             sceneApi={sceneApi}
           />
 
@@ -841,25 +964,21 @@ function App() {
             sceneApi={sceneApi}
           />
 
-          {/* Phase 59 & Phase 1.1: 3D Gravity Field Chamber Inspector & Apparatus Readout HUD */}
+          {/* Phase 59 & Phase 1.1: 3D Gravity Field Chamber Inspector (Single Source of Truth) */}
           {displayedExperiment.id === 'planet' && labMode && (
-            <>
-              <ApparatusMeasurementReadout
-                hasActiveOverlay={hasActiveOverlay}
-                objectMassKg={objectMassKg}
-                planet={PLANETS_DATA.find((p) => p.id === selectedPlanetComparisonId) || PLANETS_DATA[2]}
-              />
-              <GravityFieldInspector
-                hasActiveOverlay={hasActiveOverlay}
-                isCollapsed={isInspectorCollapsed}
-                objectMassKg={objectMassKg}
-                onChangeObjectMass={handleChangeObjectMass}
-                onSelectPlanet={handleSelectPlanetComparison}
-                onToggleCollapse={handleToggleInspectorCollapse}
-                onTriggerDrop={handleTriggerDrop}
-                planet={PLANETS_DATA.find((p) => p.id === selectedPlanetComparisonId) || PLANETS_DATA[2]}
-              />
-            </>
+            <GravityFieldInspector
+              hasActiveOverlay={hasActiveOverlay}
+              isCollapsed={isInspectorCollapsed}
+              isDropPaused={isDropPaused}
+              objectMassKg={objectMassKg}
+              onChangeObjectMass={handleChangeObjectMass}
+              onResetDrop={handleResetDrop}
+              onSelectPlanet={handleSelectPlanetComparison}
+              onToggleCollapse={handleToggleInspectorCollapse}
+              onTogglePauseDrop={handleTogglePauseDrop}
+              onTriggerDrop={handleTriggerDrop}
+              planet={PLANETS_DATA.find((p) => p.id === selectedPlanetComparisonId) || PLANETS_DATA[2]}
+            />
           )}
 
           {/* Phase 29: Planet Comparison Card (Mass vs Weight Apparatus) */}
@@ -989,6 +1108,8 @@ function App() {
       <ExperimentNavigator
         activeExperiment={activeExperiment}
         isOpen={isIndexOpen}
+        isMissionHubOpen={isMissionHubOpen}
+        onTogglePlanetMissions={() => setIsMissionHubOpen((prev) => !prev)}
         onClose={() => setIsIndexOpen(false)}
         onOpenAskLab={() => {
           setIsAskLabOpen(true)
