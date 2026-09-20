@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { filterAndSampleQuestions, evaluateQuizSession } from '../../quiz/quizEngine'
 import { recordQuestionsAnswered } from '../../quiz/questionHistory'
+import { QUESTION_BANK } from '../../quiz/questionBank.js'
 import { QuizStartScreen } from './QuizStartScreen'
 import { QuizActiveQuestion } from './QuizActiveQuestion'
 import { QuizResultsScreen } from './QuizResultsScreen'
@@ -42,16 +43,14 @@ export function PhysicsQuizModal({ isOpen, onClose, onOpenAITutor }) {
   // Dev & Automated Test hook to directly load a specific question
   useEffect(() => {
     window.__LOAD_QUIZ_QUESTION_BY_ID__ = (id) => {
-      import('../../quiz/questionBank').then(({ QUESTION_BANK }) => {
-        const target = QUESTION_BANK.find((q) => q.id === id)
-        if (target) {
-          setActiveQuestions([target])
-          setCurrentQuestionIndex(0)
-          setUserAnswers({})
-          setEvaluation(null)
-          setViewMode('active')
-        }
-      })
+      const target = QUESTION_BANK.find((q) => q.id === id)
+      if (target) {
+        setActiveQuestions([target])
+        setCurrentQuestionIndex(0)
+        setUserAnswers({})
+        setEvaluation(null)
+        setViewMode('active')
+      }
     }
     return () => {
       delete window.__LOAD_QUIZ_QUESTION_BY_ID__
