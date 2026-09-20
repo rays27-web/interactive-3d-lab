@@ -4,6 +4,9 @@ function GravityFieldInspector({
   planet = PLANETS_DATA[2],
   onSelectPlanet,
   onTriggerDrop,
+  onResetDrop,
+  onTogglePauseDrop,
+  isDropPaused = false,
   objectMassKg = 70,
   onChangeObjectMass,
   isCollapsed = false,
@@ -25,7 +28,7 @@ function GravityFieldInspector({
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onToggleCollapse?.() }}
           role="button"
           tabIndex={0}
-          title="Expand Gravity Field Inspector"
+          title="Expand Gravity Field Info"
         >
           <span className="collapsed-tab-dot" aria-hidden="true">◉</span>
           <span className="collapsed-tab-text">GRAVITY FIELD</span>
@@ -38,10 +41,10 @@ function GravityFieldInspector({
         </div>
         <button
           aria-expanded={false}
-          aria-label="Expand Gravity Field Inspector"
+          aria-label="Expand Gravity Field Info"
           className="inspector-toggle-btn inspector-expand-btn"
           onClick={onToggleCollapse}
-          title="Expand Gravity Field Inspector"
+          title="Expand Gravity Field Info"
           type="button"
         >
           <span aria-hidden="true">[ + ]</span>
@@ -52,14 +55,14 @@ function GravityFieldInspector({
 
   return (
     <aside
-      aria-label="Gravity Field Inspector"
+      aria-label="Gravity Field Info & Object Measurement"
       className={`gravity-field-inspector is-expanded ${hasActiveOverlay ? 'has-active-overlay' : ''}`}
       role="region"
     >
       {/* Header */}
       <div className="inspector-header">
         <div className="inspector-title-group">
-          <span className="inspector-eyebrow">GRAVITY FIELD INSPECTOR</span>
+          <span className="inspector-eyebrow">GRAVITY FIELD INFO</span>
           <h2 className="inspector-title">{planet.name.toUpperCase()}</h2>
         </div>
         <div className="inspector-header-actions">
@@ -68,10 +71,10 @@ function GravityFieldInspector({
           </span>
           <button
             aria-expanded={true}
-            aria-label="Minimize Gravity Field Inspector"
+            aria-label="Minimize Gravity Field Info"
             className="inspector-toggle-btn inspector-collapse-btn"
             onClick={onToggleCollapse}
-            title="Minimize Gravity Field Inspector"
+            title="Minimize Gravity Field Info"
             type="button"
           >
             <span aria-hidden="true">[ − ]</span>
@@ -100,7 +103,7 @@ function GravityFieldInspector({
         })}
       </div>
 
-      {/* Interactive Object Mass Slider Control */}
+      {/* Interactive Object Mass Slider Control (1 - 200 kg) */}
       <div className="inspector-mass-control-card">
         <div className="inspector-mass-header">
           <span className="metric-label">OBJECT MASS (m)</span>
@@ -108,10 +111,10 @@ function GravityFieldInspector({
             <input
               aria-label="Object mass in kilograms"
               className="inspector-mass-number-input"
-              max="100"
+              max="200"
               min="1"
               onChange={(e) => {
-                const val = Math.min(100, Math.max(1, Number(e.target.value) || 1))
+                const val = Math.min(200, Math.max(1, Number(e.target.value) || 1))
                 onChangeObjectMass?.(val)
               }}
               step="1"
@@ -124,7 +127,7 @@ function GravityFieldInspector({
         <input
           aria-label="Adjust object mass slider"
           className="inspector-mass-slider"
-          max="100"
+          max="200"
           min="1"
           onChange={(e) => onChangeObjectMass?.(Number(e.target.value))}
           step="1"
@@ -134,7 +137,7 @@ function GravityFieldInspector({
         <div className="inspector-mass-scale-labels">
           <span>1 kg</span>
           <div className="inspector-mass-presets">
-            {[10, 50, 70, 100].map((preset) => (
+            {[10, 50, 70, 100, 150, 200].map((preset) => (
               <button
                 key={preset}
                 className={`mass-preset-btn ${objectMassKg === preset ? 'is-active' : ''}`}
@@ -145,73 +148,84 @@ function GravityFieldInspector({
               </button>
             ))}
           </div>
-          <span>100 kg</span>
+          <span>200 kg</span>
         </div>
       </div>
 
-      {/* Visual Dynamic Formula Relationship: m × g = W */}
-      <div className="inspector-formula-calc-card">
-        <span className="calc-card-eyebrow">EQUATION · W = m × g</span>
-        <div className="calc-equation-display">
-          <div className="calc-term term-mass">
-            <span className="term-label">OBJECT MASS</span>
-            <span className="term-val">{objectMassKg} <small>kg</small></span>
+      {/* Object Measurement Section (Single Source of Truth) */}
+      <div className="inspector-measurements-panel">
+        <div className="measurements-header">
+          <span className="measurements-title">OBJECT MEASUREMENT</span>
+          <span className="measurements-formula">W = m × g</span>
+        </div>
+
+        <div className="measurements-grid">
+          <div className="measurement-row row-mass">
+            <span className="measurement-label">MASS</span>
+            <span className="measurement-value">
+              <strong className="num-val">{objectMassKg}</strong> <span className="unit-val">kg</span>
+            </span>
           </div>
-          <span className="calc-operator">×</span>
-          <div className="calc-term term-gravity">
-            <span className="term-label">SURFACE GRAVITY</span>
-            <span className="term-val">{g.toFixed(2)} <small>m/s²</small></span>
+
+          <div className="measurement-row row-gravity">
+            <span className="measurement-label">GRAVITY</span>
+            <span className="measurement-value">
+              <strong className="num-val">{g.toFixed(2)}</strong> <span className="unit-val">m/s²</span>
+            </span>
           </div>
-          <span className="calc-operator">=</span>
-          <div className="calc-term term-weight">
-            <span className="term-label">WEIGHT FORCE</span>
-            <span className="term-val">{weightN} <small>N</small></span>
+
+          <div className="measurement-row row-weight">
+            <span className="measurement-label">WEIGHT</span>
+            <span className="measurement-value highlight">
+              <strong className="num-val">{weightN}</strong> <span className="unit-val">N</span>
+            </span>
           </div>
         </div>
+
+        <p className="measurements-note">
+          Mass remains constant on every planet. Weight depends on gravitational acceleration.
+        </p>
       </div>
 
-      {/* Essential Physical Measurements with 3-Tier Hierarchy */}
-      <div className="inspector-measurements">
-        {/* Surface Gravity */}
-        <div className="inspector-metric-card metric-gravity">
-          <span className="metric-label">SURFACE GRAVITY</span>
-          <div className="metric-value-row">
-            <strong className="metric-val">{g.toFixed(2)}</strong>
-            <span className="metric-unit">m/s²</span>
-          </div>
-          <p className="metric-desc">Downward acceleration at the surface.</p>
-        </div>
+      {/* Compact Experiment Controls: [ DROP OBJECT ] [ RESET ] [ PAUSE ] */}
+      <div className="inspector-controls-strip">
+        <button
+          className="inspector-drop-btn"
+          onClick={() => onTriggerDrop?.(g)}
+          type="button"
+          aria-label="Drop test object"
+          title="Drop test object under local gravity"
+        >
+          <span className="drop-icon" aria-hidden="true">⤓</span>
+          <span>DROP OBJECT</span>
+        </button>
 
-        {/* Object Mass */}
-        <div className="inspector-metric-card metric-mass">
-          <span className="metric-label">OBJECT MASS</span>
-          <div className="metric-value-row">
-            <strong className="metric-val">{objectMassKg}</strong>
-            <span className="metric-unit">kg</span>
-          </div>
-          <p className="metric-desc">Mass remains constant on every planet.</p>
-        </div>
+        {onResetDrop && (
+          <button
+            className="inspector-reset-btn"
+            onClick={() => onResetDrop?.()}
+            type="button"
+            aria-label="Reset experiment"
+            title="Reset object to starting height"
+          >
+            <span aria-hidden="true">↺</span>
+            <span>RESET</span>
+          </button>
+        )}
 
-        {/* Weight Force */}
-        <div className="inspector-metric-card metric-weight">
-          <span className="metric-label">WEIGHT FORCE</span>
-          <div className="metric-value-row">
-            <strong className="metric-val">{weightN}</strong>
-            <span className="metric-unit">N</span>
-          </div>
-          <p className="metric-desc">W = m × g</p>
-        </div>
+        {onTogglePauseDrop && (
+          <button
+            className={`inspector-pause-btn ${isDropPaused ? 'is-paused' : ''}`}
+            onClick={() => onTogglePauseDrop?.()}
+            type="button"
+            aria-label={isDropPaused ? 'Resume free fall' : 'Pause free fall'}
+            title={isDropPaused ? 'Resume free fall' : 'Pause free fall'}
+          >
+            <span aria-hidden="true">{isDropPaused ? '▶' : '⏸'}</span>
+            <span>{isDropPaused ? 'RESUME' : 'PAUSE'}</span>
+          </button>
+        )}
       </div>
-
-      {/* Primary Action Button */}
-      <button
-        className="inspector-drop-btn"
-        onClick={() => onTriggerDrop?.(g)}
-        type="button"
-      >
-        <span className="drop-icon" aria-hidden="true">↓</span>
-        <span>TEST DROP IN 3D (g = {g.toFixed(2)} m/s²)</span>
-      </button>
 
       {/* Educational Distinction Callout */}
       <div className="inspector-distinction-banner">
@@ -222,21 +236,66 @@ function GravityFieldInspector({
         </p>
       </div>
 
-      {/* Educational Guidance */}
-      <div className="inspector-guidance">
-        <div className="guidance-step">
-          <span className="guidance-tag physics-tag">MASS VS WEIGHT</span>
-          <div className="guidance-bullets">
-            <p className="guidance-text"><strong>MASS (kg):</strong> Amount of matter in the object.</p>
-            <p className="guidance-text"><strong>WEIGHT (N):</strong> Gravitational force acting on the object.</p>
-            <p className="guidance-text"><strong>EQUATION:</strong> W = m × g</p>
-          </div>
+      {/* Educational Planetary Weight Comparison Table across all 8 Planets */}
+      <div className="inspector-comparison-card">
+        <div className="comparison-card-header">
+          <span className="comparison-tag">PLANETARY WEIGHT COMPARISON</span>
+          <span className="comparison-formula">m = {objectMassKg} kg</span>
         </div>
-        <div className="guidance-step">
-          <span className="guidance-tag watch-tag">FREE FALL PHYSICS</span>
-          <p className="guidance-text">
-            For ideal free fall, acceleration is <strong>a = g</strong> (identical for all masses). The spring scale measures weight <strong>W</strong> upon landing.
-          </p>
+        <p className="comparison-explainer">
+          Compare the same object on different planets. Surface gravity determines the object's weight.
+        </p>
+
+        <div className="comparison-table-wrapper">
+          <table className="comparison-table" aria-label="Planetary Surface Gravity and Object Weight Comparison">
+            <thead>
+              <tr>
+                <th scope="col">PLANET</th>
+                <th scope="col" className="text-right">GRAVITY (g)</th>
+                <th scope="col" className="text-right">WEIGHT (W)</th>
+                <th scope="col" className="text-right">vs EARTH</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PLANETS_DATA.map((p) => {
+                const pG = p.surfaceGravityMs2
+                const pWeight = (objectMassKg * pG).toFixed(1)
+                const ratio = (pG / 9.81).toFixed(2)
+                const isSelected = p.id === planet.id
+                return (
+                  <tr
+                    key={p.id}
+                    className={`comparison-row ${isSelected ? 'is-selected' : ''}`}
+                    onClick={() => onSelectPlanet?.(p.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onSelectPlanet?.(p.id)
+                      }
+                    }}
+                    title={`Click to switch to ${p.name} (g = ${pG.toFixed(2)} m/s²)`}
+                  >
+                    <td className="planet-col">
+                      <span className="planet-dot" style={{ background: p.color }} aria-hidden="true" />
+                      <strong className="planet-name">{p.name}</strong>
+                      {isSelected && <span className="current-indicator">ACTIVE</span>}
+                    </td>
+                    <td className="text-right gravity-col">
+                      {pG.toFixed(2)} <span className="unit">m/s²</span>
+                    </td>
+                    <td className="text-right weight-col">
+                      <strong className="weight-num">{pWeight}</strong> <span className="unit">N</span>
+                    </td>
+                    <td className="text-right ratio-col">
+                      {ratio}×
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </aside>

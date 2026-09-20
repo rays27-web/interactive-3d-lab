@@ -348,15 +348,16 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   const crossMesh = new THREE.LineSegments(crossGeo, crossMat)
   surfaceReference.add(crossMesh)
 
-  // 3. Polar Axis Indicator Points
-  const poleGeo = new THREE.BufferGeometry()
-  poleGeo.setAttribute('position', new THREE.Float32BufferAttribute([
-    0, graticuleRadius + 0.01, 0,
-    0, -graticuleRadius - 0.01, 0,
-  ], 3))
-  const poleMat = new THREE.PointsMaterial({ color: '#ffffff', size: 4, transparent: true, opacity: 0.85 })
-  const polePoints = new THREE.Points(poleGeo, poleMat)
-  surfaceReference.add(polePoints)
+  // 3. Polar Axis Indicator Markers (Crisp 3D spheres that never blow up into billboard squares)
+  const poleGroup = new THREE.Group()
+  const poleDotGeo = new THREE.SphereGeometry(0.022, 12, 12)
+  const poleDotMat = new THREE.MeshBasicMaterial({ color: '#73ffd3' })
+  const northPole = new THREE.Mesh(poleDotGeo, poleDotMat)
+  northPole.position.set(0, graticuleRadius + 0.01, 0)
+  const southPole = new THREE.Mesh(poleDotGeo, poleDotMat)
+  southPole.position.set(0, -graticuleRadius - 0.01, 0)
+  poleGroup.add(northPole, southPole)
+  surfaceReference.add(poleGroup)
 
   // Planetary axial tilt group: located at the gravitational source position (-1.9, 0, 0)
   const planetTiltGroup = new THREE.Group()
@@ -530,6 +531,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
 
   // Free fall physics state
   let isDropping = false
+  let isDropPaused = false
   let dropVelocityY = 0
   let dropPosY = 1.6
   let surfaceAcceleration = currentPlanetData.surfaceGravityMs2 // e.g. 9.81
@@ -557,9 +559,35 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     dropPosY = 1.6
     dropVelocityY = 0
     isDropping = true
+    isDropPaused = false
+    testObjectMesh.position.y = dropPosY
     updateWeightArrow(g, objectMass)
     springMesh.scale.y = 1.0
     springMesh.position.y = -0.95
+  }
+
+  function resetDrop() {
+    isDropping = false
+    isDropPaused = false
+    dropPosY = 1.6
+    dropVelocityY = 0
+    testObjectMesh.position.y = dropPosY
+    springMesh.scale.y = 1.0
+    springMesh.position.y = -0.95
+    updateWeightArrow(surfaceAcceleration, objectMass)
+  }
+
+  function pauseDrop() {
+    isDropPaused = true
+  }
+
+  function resumeDrop() {
+    isDropPaused = false
+  }
+
+  function togglePauseDrop() {
+    isDropPaused = !isDropPaused
+    return isDropPaused
   }
 
   // Initial setup of apparatus visuals
@@ -668,7 +696,7 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
 
     // Free fall physics simulation
     const currentRestingHeight = getRestingHeight(surfaceAcceleration, objectMass)
-    if (isDropping) {
+    if (isDropping && !isDropPaused) {
       // Normalized educational acceleration: dt * g * scaleFactor
       dropVelocityY -= surfaceAcceleration * dt * 0.42
       dropPosY += dropVelocityY * dt
@@ -739,8 +767,8 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     markerMat.dispose()
     crossGeo.dispose()
     crossMat.dispose()
-    poleGeo.dispose()
-    poleMat.dispose()
+    poleDotGeo.dispose()
+    poleDotMat.dispose()
     wellGeo.dispose()
     wellMat.dispose()
     equipotentialGeo.dispose()
@@ -767,6 +795,18 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
   const sceneApi = {
     selectPlanet: setPlanet,
     triggerDrop,
+    resetDrop,
+    pauseDrop,
+    resumeDrop,
+    togglePauseDrop,
+    getDropState: () => ({
+      isDropping,
+      isPaused: isDropPaused,
+      dropPosY,
+      dropVelocityY,
+      surfaceAcceleration,
+      objectMass,
+    }),
     setObjectMass: (m) => {
       objectMass = Number(m) || 70.0
       const s = Math.min(1.4, Math.max(0.6, Math.cbrt(objectMass / 70)))
@@ -820,6 +860,10 @@ export function createPlanetScene(container, initialParams = {}, callbacks = {})
     sceneApi,
     selectPlanet: setPlanet,
     triggerDrop,
+    resetDrop,
+    pauseDrop,
+    resumeDrop,
+    togglePauseDrop,
     setObjectMass: sceneApi.setObjectMass,
     getRotationState: sceneApi.getRotationState,
     setCalibration: sceneApi.setCalibration,

@@ -101,13 +101,13 @@ function PlanetComparisonCard({
             <label className="mass-control-label" htmlFor="object-mass-slider">
               OBJECT MASS (m):
               <strong>{objectMassKg} kg</strong>
-              <small>(Constant across universe)</small>
+              <small>(Constant across universe: 1–200 kg)</small>
             </label>
             <input
               aria-label="Adjust object mass in kilograms"
               className="mass-slider"
               id="object-mass-slider"
-              max={150}
+              max={200}
               min={1}
               onChange={(e) => onChangeObjectMass?.(parseFloat(e.target.value))}
               step={1}
@@ -127,6 +127,48 @@ function PlanetComparisonCard({
               <strong className="readout-val weight-val highlight">{weightNewtons} N</strong>
               <small>({weightRatio}× Earth weight)</small>
             </div>
+          </div>
+
+          {/* 8-Planet Dynamic Weight Table */}
+          <div className="card-comparison-table-wrap">
+            <div className="table-caption">
+              <strong>COMPARE THE SAME OBJECT ({objectMassKg} kg) ACROSS ALL PLANETS</strong>
+              <p>Mass stays {objectMassKg} kg everywhere. Weight depends on local surface gravity (W = m · g).</p>
+            </div>
+            <table className="card-comparison-table">
+              <thead>
+                <tr>
+                  <th>PLANET</th>
+                  <th style={{ textAlign: 'right' }}>GRAVITY</th>
+                  <th style={{ textAlign: 'right' }}>WEIGHT (W = mg)</th>
+                  <th style={{ textAlign: 'right' }}>vs EARTH</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PLANETS_DATA.map((p) => {
+                  const pG = p.surfaceGravityMs2
+                  const pWeight = (objectMassKg * pG).toFixed(1)
+                  const pRatio = (pG / 9.81).toFixed(2)
+                  const isCurrent = p.id === activePlanetId
+                  return (
+                    <tr
+                      key={p.id}
+                      className={`card-table-row ${isCurrent ? 'is-active' : ''}`}
+                      onClick={() => handleSelect(p.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <td>
+                        <span className="planet-pill-dot" style={{ background: p.color, display: 'inline-block', marginRight: '6px' }} />
+                        <strong>{p.name}</strong>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>{pG.toFixed(2)} m/s²</td>
+                      <td style={{ textAlign: 'right', color: isCurrent ? '#73ffd3' : '#ffffff', fontWeight: 'bold' }}>{pWeight} N</td>
+                      <td style={{ textAlign: 'right', color: '#ffb866' }}>{pRatio}×</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
 
           <div className="apparatus-actions apparatus-drop-action">
