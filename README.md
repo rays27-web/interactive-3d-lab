@@ -1,529 +1,1036 @@
 # Interactive 3D Lab
 
-An evolving collection of immersive browser-based 3D experiments. This first experiment is a mouse-reactive, planet-like visual built as a clean foundation for future scenes such as a black hole, galaxy, fluid, or fractal study.
+An evolving collection of immersive, browser-based 3D physics experiments designed to make scientific concepts **observable, interactive, and measurable**.
 
-## Technology
+The project combines **React, Three.js, WebGL, procedural graphics, numerical simulation, and physics-based computation** into a virtual laboratory where users can change physical parameters, observe the consequences in real time, and connect those observations to the underlying mathematics.
 
-- **React** provides the page and UI component structure.
-- **Vite** is the fast local development and production-build tool.
-- **Three.js** creates the WebGL scene, camera, lights, geometry, particles, and animation.
-- **JavaScript** is used intentionally at this stage: it keeps the core Three.js concepts easy to inspect while learning. TypeScript can be introduced later if the scene configuration becomes substantially larger.
+> **Status:** Active / Ongoing Project
+> **Current focus:** Interactive physics visualization, scientific learning UX, simulation accuracy, and reusable laboratory infrastructure.
 
-## Run locally
+---
 
-This environment uses `pnpm` because `npm` is not installed.
+## What is this project?
 
-```bash
-pnpm install
-pnpm dev
-```
+Interactive 3D Lab is being developed as a long-term experimental platform rather than a single finished application.
 
-Open the local URL Vite prints (normally `http://localhost:5173`). To create a production build:
+The goal is to create a collection of browser-based scientific experiments where the user can:
 
-```bash
-pnpm build
-pnpm preview
-```
+* Explore physical phenomena in 3D.
+* Change meaningful physical parameters.
+* Observe the resulting change visually.
+* Measure simulation values.
+* Compare simulation values with astronomical reference data.
+* Understand the mathematical model behind the visualization.
+* Run interactive physics challenges.
+* Record observations.
+* Ask questions and connect them directly to visual experiments.
 
-## Architecture
+The core learning loop is:
 
-```text
-src/
-  physics/
-    gravity.js                  Pure Newtonian gravity, g, orbital velocity, escape velocity calculations
-    orbitalMechanics.js         Pure orbital period, centripetal acceleration, Keplerian harmonic ratio
-    formatPhysicsValue.js       Standardized scientific notation, SI prefixes, and astronomical formatting
-    celestialConstants.js       Shared astronomical constants & numerical reference data for solar system bodies
-  components/
-    SceneCanvas.jsx             React lifecycle wrapper for the active Three.js scene
-    ExperimentNavigator.jsx     Accessible experiment index control
-    ExperimentControls.jsx      Contextual parameter controls & preset integration
-    PresetManager.jsx           Safe localStorage parameter preset manager
-    LaboratoryTelemetry.jsx     Throttled, non-allocating FPS & WebGL telemetry HUD
-    ExperimentInfoPanel.jsx     Collapsible scientific dossier & physical equations
-    LabModeToggle.jsx           Lab Mode vs Clean Mode presentation toggle
-    PlanetSelector.jsx          Docked celestial selector bar with real-time status pips
-    SolarSystemMiniMap.jsx      High-DPI 2D SVG radar overview & direct target selector
-    PlanetDetailPanel.jsx       Floating celestial telemetry dossier & kinematics HUD
-    PhysicsInspector.jsx        Reusable technical inspector with Reference vs Calculated physical values
-    MeasurementOverlay.jsx      Multi-tiered measurement HUD (Reference vs Simulation vs Visualization scale)
-    ExperimentHistory.jsx       In-memory structured observation log (timestamp, parameter, measured outcome)
-    ExperimentChallenge.jsx     Interactive physics challenge card (target conditions, progress, success state)
-  utils/
-    presetStorage.js            Schema-validated localStorage with bounds clamping
-  experiments/
-    registry.js                 Single source of truth for experiment configurations & dossier
-  scenes/
-    PlanetScene.js              Experiment 01: scene, lights, stars, interaction, animation
-    GalaxyScene.js              Experiment 02: 4-arm spiral, 3D bulge, stellar drift
-    BlackHoleScene.js           Experiment 03: gravitational lensing, accretion disk, photon ring
-    FluidScene.js               Experiment 04: curl-noise advection, kinetic impeller, thermal plume
-    PulsarScene.js              Experiment 05: oblique dipole, relativistic polar beams, synchrotron plasma
-    SolarSystemScene.js         Experiment 06: symplectic Velocity Verlet N-body gravity, 8 procedural planets
-  styles/
-    global.css                  Command Center visual layout, telemetry HUD, and responsive styling
-  App.jsx                       Command Center shell & keyboard orchestration
-  main.jsx                      React entry point
-```
+**OBSERVE → CHANGE A PHYSICAL PARAMETER → SEE THE 3D CONSEQUENCE → MEASURE → UNDERSTAND WHY**
 
-## Experiment architecture
+---
 
-The React application shell owns the active experiment state and navigation. The Three.js scenes remain completely decoupled from UI markup and labels. `experiments/registry.js` acts as the single source of truth for all experiment configurations and scientific metadata:
-- **Experiment 01 — PLANET**: Procedural physical icosahedron, atmospheric Fresnel scattering, and 3-tier stellar parallax.
-- **Experiment 02 — GALAXY**: 4-arm logarithmic spiral density waves, 3D oblate central bulge, and GPU-driven stellar kinematics.
-- **Experiment 03 — BLACK HOLE**: Relativistic gravitational lensing approximation, differential Keplerian shear, Doppler beaming asymmetry, and photon sphere silhouette.
-- **Experiment 04 — FLUID**: Incompressible divergence-free curl-noise advection, kinetic pointer vortex impeller, and astrochemical thermal plume.
-- **Experiment 05 — PULSAR**: Oblique rotator dipole precession, relativistic synchrotron lighthouse beams, and co-rotating magnetospheric plasma.
-- **Experiment 06 — SOLAR SYSTEM**: Symplectic Velocity Verlet N-body gravitation, Sun granulation & corona glow, 8 procedural planets with axial tilts and Saturnian rings, ring-buffered orbital trails, and real-time astronomical kinematics.
+# Technology Stack
 
-Each registry entry exposes metadata (`eyebrow`, `titleLead`, `titleAccent`, `description`, `parameters`) that dynamically populates the laboratory shell. When switching experiments, `SceneCanvas` manages a three-stage lifecycle:
-1. **Visual withdrawal**: Canvas and typography dim while a status indicator announces the target experiment.
-2. **Resource disposal & scene factory mount**: The active scene invokes its WebGL cleanup callback and the incoming scene factory initializes.
-3. **Emergence & stabilization**: The new scene and updated scientific parameters fade smoothly into view and settle into motion.
+* **React** — application shell, UI components, state management, and interaction flow.
+* **Vite** — development server and production build system.
+* **Three.js** — WebGL scenes, cameras, lighting, geometry, particles, shaders, and animation.
+* **JavaScript** — intentionally used at the current stage to keep the Three.js and physics implementation easy to inspect while learning.
+* **WebGL / GLSL** — GPU-based rendering, procedural effects, particle systems, and shader-driven simulations.
+* **CSS** — laboratory interface, responsive layouts, transitions, HUDs, and presentation modes.
+* **localStorage** — client-side experiment preset persistence.
 
+TypeScript may be introduced later if the scene configuration and application architecture become substantially larger.
 
-## How the 3D scene works
+---
 
-`PlanetScene.js` makes a **scene** (the 3D world), a perspective **camera** (the viewer), and a WebGL **renderer** (the GPU drawing surface). The planet is an icosahedron mesh with a physical material. A slightly larger shader-driven sphere creates its blue edge glow. Directional and point lights give the object shape; thousands of `Points` form the star field.
+# Experiments
 
-The `animate()` function runs once per display frame via `requestAnimationFrame`. It smoothly rotates and floats the planet, gently turns the star field, updates the camera, then renders the scene.
+The laboratory currently contains six major 3D experiments.
 
-Pointer coordinates are converted to values from roughly `-1` to `1`. Instead of immediately applying them, `lerp()` eases the camera and world rotation toward them. This makes mouse interaction feel cinematic rather than twitchy. The resize handler recalculates camera proportions and renderer size whenever the window changes.
+## Experiment 01 — Planet
 
-## Visual Techniques
+A procedural planet visualization demonstrating:
 
-### Procedural surface and physical lighting
+* Physical icosahedron geometry.
+* Procedural surface patterns.
+* Physical lighting.
+* Atmospheric Fresnel scattering.
+* Multi-layer stellar parallax.
+* Pointer-reactive camera movement.
+* GPU-driven star twinkling.
 
-The planet keeps a `MeshPhysicalMaterial`, so Three.js lights still create believable highlights and shadows. Its shader is extended with two inexpensive sine-wave patterns. Those patterns create gentle color bands and tiny surface displacement without downloading an image texture. The pattern runs on the GPU and receives only one changing value per frame: elapsed time.
+---
 
-### Atmosphere and Fresnel rim lighting
+## Experiment 02 — Galaxy
 
-The atmosphere is a second, slightly larger sphere rendered with additive blending. Its shader compares the surface normal with the direction toward the camera. A surface pointing toward us receives little glow; a surface viewed edge-on receives more. This is called a **Fresnel effect** or **rim lighting**, and it is why the glow hugs the edge of the planet.
+A procedural spiral galaxy containing:
 
-### Particle depth
+* Four logarithmic spiral arms.
+* A three-dimensional central bulge.
+* Inter-arm stellar density.
+* GPU-driven particle rendering.
+* Stellar drift and twinkling.
+* Pointer-based camera parallax.
 
-The stars are three `Points` layers: distant, middle-distance, and nearby. Each has a different radius range, point size, opacity, and rotation speed. Their different motion creates parallax, which helps the brain read the scene as deep space rather than a flat backdrop. The stars twinkle in a small GPU shader, so JavaScript does not need to update thousands of stars individually every frame.
-
-### Pointer interpolation and animation
-
-Pointer coordinates become a target value from about `-1` to `1`. `lerp()` moves the current pointer value gradually toward that target. The eased value shifts the camera, planet group, and each star layer by different small amounts. `requestAnimationFrame` updates the time uniforms, movement, and render once per browser frame.
-
-### Why GPU rendering helps
-
-WebGL sends geometry and shader programs to the GPU, which is designed to calculate many vertices and pixels in parallel. That makes it practical to render the lit planet, atmosphere, and thousands of star particles while JavaScript focuses on high-level scene control.
-
-## Experiment 02: Procedural Galaxy
-
-### Spiral galaxy mathematics
-
-The galaxy starts in polar coordinates: every particle receives a **radius** and an **angle**. Four spiral arms receive equally spaced starting angles. The arm progression follows a logarithmic curve:
+The galaxy uses polar coordinates and a logarithmic spiral relationship:
 
 ```text
 angle = radius^0.74 × spiralFactor + armOffset
 ```
 
-The code converts polar coordinates into the 3D plane with `x = cos(angle) × distance` and `z = sin(angle) × distance`. Rather than a flat disk, an astrophysical **oblate bulge** concentrates vertical thickness in the core with exponential falloff (`h ~ exp(-radius / 1.7)`), flattening into an accretion disk toward the rim. Inter-arm disk stars (~22%) provide cohesive interstellar density.
-
-### Particle data and GPU rendering
-
-Galaxy generation fills typed arrays for position, color, size, brightness, phase, and radius. Those arrays become `BufferGeometry` attributes, and one `THREE.Points` object draws the whole galaxy. This is important: tens of thousands of individual `Mesh` objects would be expensive for JavaScript and the renderer to manage.
-
-The particle shader uses the GPU to make each point soft, gently twinkle, and drift vertically. JavaScript updates only a time uniform and the group/camera transforms each frame. Desktop uses 30,000 galaxy particles; smaller viewports start with 14,000 to protect mobile performance.
-
-### Interaction and transition
-
-The Galaxy camera and the galaxy group follow an eased pointer value, creating small parallax shifts rather than direct mouse attachment. When switching Planet and Galaxy, `SceneCanvas` briefly fades the mounted canvas, disposes the old scene through its existing cleanup function, mounts the selected experiment, then fades it in. The app shell supplies the restrained initialization message while this occurs.
-
-## Experiment 03: Black Hole & Gravitational Lensing
-
-### Astrophysical approximations & rendering architecture
-
-Experiment 03 models an extreme relativistic gravitational environment centered on a Schwarzschild black hole with an active accretion disk and background gravitational lensing:
-
-1. **Central Event Horizon & Shadow ($R \approx 1.35$)**:
-   - A pure matte-black light-absorption sphere rendered with `depthWrite: true` and `color: 0x000000`.
-   - Naturally occludes the rear section of the equatorial accretion disk and background celestial objects, defining the photon capture shadow boundary.
-
-2. **Equatorial Accretion Disk**:
-   - **Differential Keplerian Shear**: Angular velocity follows Kepler's third law, $\Omega(r) \propto r^{-1.5}$, causing inner plasma rings near the Innermost Stable Circular Orbit (ISCO) to orbit dramatically faster than the outer rim.
-   - **Procedural Plasma Turbulence**: Multi-frequency harmonic sinusoids combined directly on the GPU create dynamic plasma filaments without image texture overhead.
-   - **Radial Density Gradient**: A steep ramp at ISCO ($r \approx 1.42$) transitioning into an exponential outer dropoff ($r \approx 6.40$).
-   - **Relativistic Doppler Beaming**: Plasma moving toward the observer (left limb) undergoes relativistic flux beaming and Doppler blueshift $(1 + \beta)^{3.2}$, appearing brighter and hotter ($T \sim \text{blue-white}$). Receding plasma (right limb) is redshifted and dimmed into deep amber-red.
-
-3. **Gravitational Lensing Upper & Lower Arcs**:
-   - In general relativity, strong spacetime curvature bends light rays emitted from the back of the accretion disk over and under the horizon toward the observer.
-   - Modeled via complementary curved geometry (`THREE.RingGeometry`) elevated and warped into the vertical observer plane, sharing the Keplerian shear and Doppler beaming GLSL pipeline.
-
-4. **Photon Ring Caustic ($r \in [1.36, 1.48]$)**:
-   - A concentrated, razor-sharp circular emission ring hugging the event horizon boundary, simulating photons trapped in unstable circular orbits at the photon sphere before escaping to infinity.
-
-5. **Gravitationally Lensed Starfield**:
-   - 1,200 background stars deflected dynamically on the GPU in a custom GLSL vertex shader.
-   - Uses the Einstein deflection approximation $\Delta \vec{r} = \frac{\theta_E^2}{r} \hat{r}$ away from the singularity.
-   - Incorporates central horizon shadow masking ($r < R_{\text{shadow}} \implies \text{discard}$) and flux amplification near the Einstein ring radius.
-
-### Real-Time Laboratory Controls
-
-The experiment exposes 4 laboratory parameters through `ExperimentControls.jsx`:
-- **Accretion Velocity** ($0.1\times - 3.0\times$): Modulates the Keplerian angular shear rate across the disk.
-- **Lensing Strength** ($0.2\times - 2.5\times$): Modulates the Einstein deflection coefficient $\theta_E$ in the starfield vertex shader.
-- **Disk Density** ($20\% - 200\%$): Adjusts plasma opacity and radial filament thickness.
-- **Emission Flux** ($20\% - 250\%$): Tunes the relativistic radiance and additive blending luminance of the disk and photon ring.
-
-All parameter updates mutate Three.js GLSL uniform values in place without scene disposal, texture re-allocation, or shader recompilation.
-
-## Experiment 04: Astrochemical Hydrodynamics & Fluid Vorticity
-
-### Physical principles & computational architecture
-
-Experiment 04 simulates the complex turbulent hydrodynamics of interstellar molecular clouds where star formation and shock waves take place:
-
-1. **Divergence-Free Curl Velocity Field ($\nabla \cdot \vec{v} \equiv 0$)**:
-   - Rather than relying on a heavy 3D grid solver requiring multi-pass ping-pong textures, the velocity field is computed directly on the GPU as the curl of a 3D procedural vector potential:
-     $$\vec{v}(\vec{x}, t) = \nabla \times \vec{\Psi}(\vec{x}, t)$$
-   - By vector calculus identity $\nabla \cdot (\nabla \times \vec{\Psi}) \equiv 0$, the velocity field is mathematically divergence-free everywhere in 3D space, guaranteeing strict volume preservation and eliminating unnatural particle clustering or artificial compression.
-   - Evaluated via exact analytical partial derivatives in the custom GLSL vertex shader.
-
-2. **Kinetic Pointer Vortex Impeller**:
-   - Pointer coordinates and instantaneous velocity inject localized rotational shear into the fluid medium:
-     $$\vec{F}_{\text{vortex}}(\vec{x}) = \frac{\vec{v}_{\text{pointer}} \times (\vec{x} - \vec{p}_{\text{pointer}})}{\|\vec{x} - \vec{p}_{\text{pointer}}\|^2 + \delta^2} \cdot \exp\left(-\frac{\|\vec{x} - \vec{p}_{\text{pointer}}\|^2}{2\sigma^2}\right)$$
-   - Swirling eddies propagate across streamlines as the user moves their cursor or drags on touch displays.
-
-3. **Thermal Convection & Buoyancy (Boussinesq Approximation)**:
-   - Simulates temperature-driven buoyancy where core energized plasma filaments experience upward convective lift:
-     $$\vec{a}_{\text{buoyant}} = \alpha (T_i - T_{\text{ambient}}) \hat{y}$$
-   - Cooler outer filaments descend gently in dissipative recirculation loops.
-
-4. **Astrochemical Spectral Mapping**:
-   - High kinetic shear / core shock: Doubly ionized oxygen $[O_{III}]$ emission at $500.7\text{ nm}$ ($\text{electric cyan/teal}$).
-   - Mid-velocity laminar filaments: Hydrogen-Alpha $H_\alpha$ spectral line at $656.3\text{ nm}$ ($\text{rich crimson/vermilion}$).
-   - Low-velocity dissipative margins: Polycyclic aromatic hydrocarbon dust and neutral gas in deep ultraviolet/violet.
-
-### Real-Time Laboratory Controls
-
-Experiment 04 exposes 4 parameters through `ExperimentControls.jsx`:
-- **Advection Velocity** ($0.2\times - 3.0\times$): Modulates the global kinetic energy and streamline transport speed.
-- **Vortex Scale** ($0.3\times - 2.5\times$): Modulates the spatial wavelength of turbulent eddies.
-- **Shear Viscosity** ($10\% - 250\%$): Tunes viscous dissipation between chaotic micro-turbulence and laminar flow.
-- **Thermal Buoyancy** ($0\% - 200\%$): Adjusts vertical convective lift and plume elongation.
-
-## Experiment 05: Pulsar & Relativistic Magnetosphere
-
-### Physical principles & computational architecture
-
-Experiment 05 models the high-energy electrodynamics of a rapidly rotating, magnetized neutron star (pulsar):
-
-1. **Oblique Rotator Precession**:
-   - The neutron star spins rapidly around a rotation axis $\hat{\Omega}$ while its magnetic dipole axis $\vec{M}(t)$ is tilted by an obliquity angle $\alpha \approx 36.7^\circ$ ($0.64\text{ rad}$).
-   - As the star rotates, the magnetic axis precesses in a 3D cone through space:
-     $$\vec{M}(t) = \sin\alpha \cos(\Omega t) \hat{x} + \cos\alpha \hat{y} + \sin\alpha \sin(\Omega t) \hat{z}$$
-   - This precession drives the iconic astrophysical "lighthouse effect".
-
-2. **Dipolar Magnetic Field Loops ($r(\theta) = r_0 \sin^2\theta$)**:
-   - Closed magnetic field lines are derived from the dipole potential in cylindrical coordinates:
-     $$\rho(\theta) = r_0 \sin^3\theta, \quad z(\theta) = r_0 \sin^2\theta \cos\theta$$
-   - Rendered via high-density line loops with a custom shader simulating relativistic electron-positron ($e^\pm$) wave packets streaming along the lines.
-
-3. **Relativistic Polar Radiation Beams ("Lighthouse Cones")**:
-   - Dual open cones expand outward from both magnetic poles.
-   - A custom GLSL shader calculates lateral collimation, longitudinal flux decay ($1/r^{1.6}$), and real-time observer line-of-sight interception.
-   - When the precessing magnetic beam sweeps across the camera's view vector, an intense optical pulsation flare is rendered via:
-     $$I_{\text{pulse}} = 1.0 + (\hat{M}_{\text{world}} \cdot \hat{v}_{\text{obs}})^{8 \cdot \theta_c} \cdot 4.2 \cdot \theta_c$$
-
-4. **Co-Rotating Magnetospheric Synchrotron Plasma Torus**:
-   - High-energy particles orbiting within the light cylinder radius $R_{\text{LC}} = c/\Omega$ are energized by synchrotron radiation.
-   - 12,000 particles on desktop (6,000 on mobile) rotate with relativistic shear $\Omega(r) \propto r^{-0.5}$, transitioning from cyan near the inner boundary to electric violet at the outer rim.
-
-5. **Neutron Star Core & Polar Cap Hotspots**:
-   - Superdense spherical core displaying relativistic limb darkening:
-     $$I_{\text{limb}} \propto (\hat{n} \cdot \hat{v})^{0.65}$$
-   - Incandescent magnetic polar cap hotspots ($T \sim 10^6\text{ K}$) glow at the magnetic poles and rotate synchronously with the magnetic axis.
-
-### Real-Time Laboratory Controls
-
-Experiment 05 exposes 4 parameters through `ExperimentControls.jsx`:
-- **Spin Frequency** ($0.2\times - 3.0\times$): Modulates the rotational angular velocity $\Omega$ and pulse rate.
-- **Magnetic Flux** ($0.2\times - 2.5\times$): Modulates dipole field line luminance and beam radiation flux.
-- **Beam Collimation** ($0.3\times - 2.5\times$): Adjusts polar beam cone tightness and observer pulse sharpness.
-- **Plasma Density** ($20\% - 200\%$): Tunes magnetospheric particle density, opacity, and polar cap hotspot intensity.
-
-## Experiment 06: Solar System & N-Body Gravitation
-
-### Physical principles & computational architecture
-
-Experiment 06 models the celestial mechanics of our solar system using an authentic N-body Newtonian gravitation framework integrated with a stable, symplectic numerical solver:
-
-1. **Newtonian Gravitation & N-Body Dynamics**:
-   - Universal Law of Gravitation:
-     $$\vec{F}_{ij} = -G \frac{m_i m_j}{\|\vec{r}_i - \vec{r}_j\|^2} \frac{\vec{r}_i - \vec{r}_j}{\|\vec{r}_i - \vec{r}_j\|}$$
-   - Acceleration on body $i$ due to the central mass and interplanetary gravitational perturbations with Plummer softening ($\epsilon = 0.5$):
-     $$\vec{a}_i = -\sum_{j \ne i} \frac{G m_j (\vec{r}_i - \vec{r}_j)}{(\|\vec{r}_i - \vec{r}_j\|^2 + \epsilon^2)^{3/2}}$$
-
-2. **Symplectic Velocity Verlet Numerical Integrator**:
-   - Standard Forward Euler integration causes rapid artificial energy growth and orbital spiral-out within seconds.
-   - Experiment 06 implements a symplectic **Velocity Verlet** scheme that preserves phase space volume and angular momentum over indefinite runtimes:
-     $$\vec{r}(t + \Delta t) = \vec{r}(t) + \vec{v}(t)\Delta t + \frac{1}{2}\vec{a}(t)\Delta t^2$$
-     $$\vec{v}(t + \Delta t) = \vec{v}(t) + \frac{1}{2}\left[\vec{a}(t) + \vec{a}(t + \Delta t)\right]\Delta t$$
-   - Multi-substep integration: executes 3 micro-steps per frame ($\Delta t_{\text{sub}} = \Delta t / 3$) to maintain orbital stability even at $50\times$ simulation speed.
-
-3. **Visual Scale Calibration vs. Physical Realism**:
-   - In physical reality, Neptune orbits at $30.1\text{ AU}$ while Mercury orbits at $0.39\text{ AU}$ (a $77:1$ distance ratio), and the Sun's radius is $109\times$ Earth's radius. A 1:1 linear scale renders inner planets invisible or outer planets far off-screen.
-   - Calibrated visualization scale:
-     $$r_{\text{vis}} = r_{\text{base}} \cdot a^{0.58}$$
-   - Compresses the distance ratio to $\approx 7.7:1$, keeping all 8 planets visible and interactable simultaneously while strictly maintaining relative orbital ordering, orbital velocities, and Kepler's Third Law ($T^2 \propto a^3$).
-
-4. **Procedural Celestial Bodies & Shaders**:
-   - **The Sun**: Dynamic procedural granulation shader driven by harmonic high-frequency noise, overlaid with an additive solar corona billboard and dynamic point light.
-   - **Earth**: Procedural terrestrial shader with continent/ocean elevation thresholds, atmospheric blue Rayleigh scattering, and semi-transparent orbiting cloud layer.
-   - **Jupiter**: Multi-frequency latitudinal bands with Great Red Spot atmospheric vortex perturbation.
-   - **Saturn**: Double-sided ring geometry with procedural radial Cassini division and density opacity gradient.
-   - **Uranus & Neptune**: Methane ice giants rendered in ice-cyan and azure with Uranus's realistic $97.8^\circ$ retrograde axial tilt.
-   - **Mercury, Venus, & Mars**: Distinct surface albedos, crater roughness, and Venusian sulfuric cloud blanket.
-
-5. **Preallocated Ring-Buffered Orbital Motion Trails**:
-   - Each planet records its trajectory into a fixed `Float32Array(MAX_TRAIL_POINTS * 3)` ring buffer.
-   - Zero heap allocations during animation: points are written directly into the preallocated buffer and flagged with `geometry.attributes.position.needsUpdate = true`.
-
-6. **Single-Canvas Invariant & High-DPI Radar Mini-Map (`SolarSystemMiniMap.jsx`)**:
-   - Displays a live 2D SVG radar overview of orbital tracks and planetary positions without creating a secondary WebGL canvas context.
-   - Features direct orbit/planet targeting and pulsing active target beacons.
-
-### Real-Time Laboratory Controls
-
-Experiment 06 exposes 9 laboratory parameters through `ExperimentControls.jsx`:
-- **Simulation Speed** ($0.1\times - 50.0\times$): Modulates physical time step $\Delta t$.
-- **Gravity Strength** ($0\% - 200\%$): Scales gravitational constant $G$.
-- **Orbit Scale** ($0.5\times - 2.0\times$): Expands or contracts orbital semi-major axes.
-- **Trail Length** ($0\% - 100\%$): Adjusts motion trail point retention.
-- **Time Integration** (`RUNNING` / `PAUSED`): Pauses physical integration while maintaining camera navigation.
-- **Orbit Paths** (`VISIBLE` / `HIDDEN`): Toggles precalculated elliptical orbit guide rings.
-- **Motion Trails** (`VISIBLE` / `HIDDEN`): Toggles dynamic historical trajectory trails.
-- **Gravity Vectors** (`VISIBLE` / `HIDDEN`): Renders real-time gravitational acceleration vectors pointing toward the Sun.
-- **Follow Planet** (`ENGAGED` / `DISENGAGED`): Locks camera focus to the selected celestial body.
-
-## Phase 10: Laboratory Command Center
-
-Phase 10 transforms the Interactive 3D Lab into a unified scientific **Laboratory Command Center** while preserving existing WebGL scene lifecycle and rendering performance:
-
-### 1. Throttled Telemetry Layer (`LaboratoryTelemetry.jsx`)
-- Displays live system status (`WebGL 2.0 · ACTIVE`), real-time FPS and frame time, active simulation entity count, viewport dimensions, and device pixel ratio (DPR).
-- **Performance Discipline**: Utilizes an internal `requestAnimationFrame` delta accumulator that flushes to React state strictly once every 500ms. Eliminates per-frame garbage generation and prevents unnecessary React component re-renders.
-
-### 2. Scientific Dossier & Physical Formulations (`ExperimentInfoPanel.jsx`)
-- An accessible, collapsible scientific dossier detailing:
-  - Scientific field and sub-discipline.
-  - Core mathematical models and governing equations.
-  - Physical phenomenon observation guide.
-  - Parameter operational guides explaining what each slider physically modulates.
-- Dismissible via on-screen close button, backdrop click, or keyboard `Escape`.
-
-### 3. Lab Mode vs. Clean Mode (`LabModeToggle.jsx`)
-- **Lab Mode**: Full telemetry HUD, active parameter controls, and scientific dossier access.
-- **Clean Mode**: Uncluttered, minimalist presentation focusing entirely on the 3D visualization.
-- **Scene Preservation**: Mode switching is implemented purely through React UI state and CSS transitions. The underlying WebGL canvas, Three.js scene, geometry, and shader programs are **never** recreated or unmounted when switching modes.
-
-### 4. Local Storage Preset Management (`presetStorage.js` & `PresetManager.jsx`)
-- Allows users to save up to 6 custom parameter presets per experiment to `localStorage` (`i3d_lab_presets_v1`).
-- **Defense-in-Depth Validation**:
-  - Validates JSON parse and handles corrupted storage safely without runtime crashes.
-  - Sanitizes all stored parameters by clamping numerical values strictly to `[min, max]` matching experiment control bounds.
-  - Protects against prototype pollution by discarding disallowed keys (`__proto__`, `constructor`, `prototype`).
-  - Gracefully recovers from storage quota limits or disabled `localStorage` (e.g. strict private browsing modes).
-  - Enables one-click preset loading, individual preset deletion, and restoration to baseline laboratory defaults.
-
-### 5. Accessibility & Keyboard Navigation
-- Enhanced semantic HTML controls (`button`, `role="region"`, `role="dialog"`, `role="tablist"`).
-- Visible focus rings (`*:focus-visible`) for keyboard navigation.
-- Global `Escape` key shortcut closes all open drawers, parameter panels, and dossiers.
-
-## Security & Deployment
-
-The Interactive 3D Lab applies a **defense-in-depth, security-hardened** design tailored for static single-page application (SPA) architectures and WebGL graphics runtimes.
-
-### Implemented Security Protections
-
-1. **Content Security Policy (CSP)**:
-   - Configured via `<meta http-equiv="Content-Security-Policy">` in `index.html` and HTTP response headers in `public/_headers`.
-   - Restricts resource loading strictly to trusted sources:
-     - `default-src 'self'`
-     - `script-src 'self' 'unsafe-inline'`
-     - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`
-     - `font-src 'self' https://fonts.gstatic.com data:`
-     - `img-src 'self' data:`
-     - `connect-src 'self' ws: wss: https://fonts.googleapis.com https://fonts.gstatic.com`
-     - `object-src 'none'` (disables legacy plugins like Flash or Java)
-     - `media-src 'none'` (blocks audio/video media execution since all audio/video is excluded)
-     - `base-uri 'self'` (prevents `<base>` tag injection attacks)
-     - `frame-ancestors 'none'` (mitigates clickjacking attacks in HTTP headers)
-     - `form-action 'self'`
-2. **MIME Sniffing & Referrer Defense**:
-   - `X-Content-Type-Options: nosniff` prevents browsers from MIME-sniffing responses away from declared content types.
-   - `Referrer-Policy: strict-origin-when-cross-origin` restricts referrer leakage across cross-origin requests.
-3. **Zero HTML Injection Surfaces**:
-   - React manages all UI state and text nodes declaratively.
-   - The codebase contains zero calls to `dangerouslySetInnerHTML`, `innerHTML`, `outerHTML`, `document.write`, or `eval()`.
-4. **Hardened Git Ignore Rules**:
-   - `.gitignore` strictly blocks all environment files (`.env`, `.env.local`, `.env.*.local`, `*.env`), certificates and keys (`*.pem`, `*.key`, `*.p12`, `*.pfx`), editor configurations, temporary test files, and build outputs (`dist/`).
-5. **Optimized Code Splitting & WebGL Memory Pooling**:
-   - `vite.config.js` separates `three` (~533 kB) and `react`/`react-dom` (~189 kB) into dedicated, long-term cacheable vendor chunks.
-   - The main application entry bundle is reduced to **~56 kB** (gzip ~15 kB).
-   - In `PulsarScene.js`, scratchpad math instances (`THREE.Quaternion`, `THREE.Vector3`) are pooled in module scope rather than allocated per frame inside the `animate()` loop, eliminating ~120 heap allocations per second and preventing garbage collector stutter.
-
-### What Must NEVER Be Committed
-
-- API keys, service tokens, personal access tokens (PATs), or passwords.
-- Private encryption keys and certificates (`.pem`, `.key`, `.p12`, `.pfx`).
-- Local `.env` or `.env.*` configuration files containing credentials.
-- Test artifacts or debugging session dumps.
-
-### Environment Variable Rules
-
-- Vite embeds all variables prefixed with `VITE_` into client-side bundles in plain text at build time.
-- **Rule**: NEVER store sensitive API secrets, server credentials, or private access tokens in `VITE_*` environment variables.
-- Environment variables should only be used for public, non-sensitive application settings (e.g. public API endpoints or feature flags).
-
-### Deployment-Level Protections
-
-When hosting the production build on a CDN or static hosting platform (e.g., Cloudflare Pages, Netlify, Vercel, Nginx, AWS CloudFront), ensure the following server-side response headers are enforced:
-
-- `X-Frame-Options: DENY`
-- `X-Content-Type-Options: nosniff`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()`
-- `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload`
-
-> Note: The included `public/_headers` file automatically applies these response headers for platforms supporting `_headers` syntax (Cloudflare Pages, Netlify).
-
-### GitHub Repository Security Recommendations
-
-For repository governance and automated supply-chain security on GitHub:
-
-1. **Branch Protection Rules** (for `main` branch):
-   - Require pull request reviews before merging.
-   - Require status checks (build & automated tests) to pass before merging.
-   - Restrict force pushes and branch deletions.
-2. **Secret Scanning & Push Protection**:
-   - Enable GitHub Secret Scanning to detect accidentally committed tokens or credentials.
-   - Enable Push Protection to block commits that contain detected credentials before they reach the remote repository.
-3. **Dependabot Alerts & Updates**:
-   - Enable Dependabot alerts and automated security updates to receive notices when security advisories affect project dependencies.
-
-## Phase 12 — Milestone 1: Physics Infrastructure + Measurement Foundation
-
-Milestone 1 establishes a reusable virtual physics laboratory layer across the Interactive 3D Lab:
-
-### 1. Pure Physics Utilities (`src/physics/`)
-- **Newtonian Gravitation (`gravity.js`)**: Pure functions for gravitational force ($F = G \frac{m_1 m_2}{r^2}$), surface gravity ($g = \frac{G M}{R^2}$), orbital speed ($v = \sqrt{\frac{G M}{r}}$), and escape velocity ($v_e = \sqrt{\frac{2 G M}{R}}$). Input validation prevents `NaN` or `Infinity` propagation with safe handling of $r \le 0$ and negative mass.
-- **Orbital Mechanics (`orbitalMechanics.js`)**: Circular & Keplerian orbital period ($T = 2\pi\sqrt{\frac{r^3}{G M}}$), centripetal acceleration ($a = \frac{v^2}{r}$), and Keplerian harmonic ratio ($K = \frac{T^2}{r^3}$).
-- **Scientific Formatting (`formatPhysicsValue.js`)**: Standardized SI units (kg, m/s, m/s², N, AU, yr) and Unicode superscript scientific notation ($5.972 \times 10^{24}\text{ kg}$).
-- **Celestial Dataset (`celestialConstants.js`)**: Exact SI numerical ground truth for the Sun and all 8 major planets.
-
-### 2. Reusable Measurement & Telemetry Components (`src/components/`)
-- **Physics Inspector (`PhysicsInspector.jsx`)**: Technical telemetry drawer displaying side-by-side **Reference Values** (astronomical truth) and dynamically calculated **Derived Values** ($g, v_e, v, F, T, a$).
-- **Measurement Laboratory Overlay (`MeasurementOverlay.jsx`)**: 3-tier measurement framework clearly distinguishing:
-  1. *Tier 1 — Astronomical Ground Truth* (Reference values in AU, km, km/s)
-  2. *Tier 2 — Numerical Integration State* (Simulation vector distance and velocity)
-  3. *Tier 3 — Visual Projection Scale* (Calibrated $r_{\text{vis}} \propto a^{0.58}$ power-law rendering)
-- **Experiment History (`ExperimentHistory.jsx`)**: In-memory client-side observation log recording parameter changes, measured results, and physical principles with clipboard export.
-- **Physics Challenges (`ExperimentChallenge.jsx`)**: Interactive challenge framework connecting parameter modifications (e.g. Inverse-Square Law, Kepler ratio, escape velocity) to real-time condition verification and physical explanations.
-
-### 3. Security & Performance Philosophy
-- **Zero DOM Injections**: Strictly avoids `dangerouslySetInnerHTML`, `innerHTML`, and `eval()`.
-- **Single Canvas Invariant**: Maintains exactly 1 WebGL canvas across all experiments and UI states.
-- **Memory Discipline**: Pure calculations with zero per-frame garbage collector allocations.
-- **Future Integration**: Designed as a decoupled, modular foundation to connect directly with Experiments 01–06 in subsequent Phase 12 milestones.
-
-## Phase 12 — Milestone 2: Interactive Physics Visualization & Scientific Learning UX
-
-Milestone 2 transitions the laboratory from "read and slide" to an active empirical scientific loop:
-$$\text{OBSERVE} \longrightarrow \text{CHANGE A PHYSICAL PARAMETER} \longrightarrow \text{SEE 3D CONSEQUENCE} \longrightarrow \text{MEASURE} \longrightarrow \text{UNDERSTAND WHY}$$
-
-### 1. Real 3D Physical Demos with Live Visual Consequences
-- **Demo 01: Inverse-Square Gravitation ($F \propto 1/r^2$)**:
-  - Manipulates orbital radius $r$ ($0.5\times$, $1.0\times$, $2.0\times$, $3.0\times$) in real time.
-  - Live 3D result: Doubling distance ($2r_0$) quarters the gravitational attraction ($0.25 F_0$) and dynamically adjusts the vector force lines in WebGL space.
-- **Demo 02: Orbital Velocity & Stability ($v_0 = \sqrt{GM/r}$)**:
-  - 3 interactive regimes via symplectic Velocity Verlet integration:
-    1. *Too Slow ($0.50\times v_0$)*: Centripetal acceleration $v^2/r$ falls below gravity $g$; planet spirals inward toward the Sun.
-    2. *Suitable ($1.00\times v_0$)*: Stable circular Keplerian orbit ($F_{\text{grav}} = m v^2 / r$).
-    3. *Super-Circular ($1.30\times v_0$)*: Kinetic energy stretches orbit into a high-eccentricity ellipse with aphelion in the outer solar system.
-- **Demo 03: Escape Velocity Threshold ($v_e = \sqrt{2GM/R} \approx 1.414 v_0$)**:
-  - Direct visualization of mechanical energy conservation ($E = K + U$).
-  - At $v \ge \sqrt{2} v_0$, total mechanical energy $E \ge 0$; the body breaks free from the gravitational well and follows an open hyperbolic escape trajectory.
-- **Demo 04: Gravitational Acceleration Comparison ($g = GM/R^2$)**:
-  - Direct planetary comparison across Mercury ($3.70\text{ m/s}^2$), Earth ($9.81\text{ m/s}^2$), Mars ($3.72\text{ m/s}^2$), and Jupiter ($24.79\text{ m/s}^2$).
-- **Demo 05: Kepler's Harmonic Law ($T^2 \propto a^3$)**:
-  - Real-time verification that $T^2 / a^3 = 4\pi^2 / (G M_\odot) \equiv 1.000\text{ yr}^2/\text{AU}^3$ for all planets.
-
-### 2. "Why Did This Happen?" Scientific Explanations (`PhysicsExplanation.jsx`)
-- Contextual card displaying:
-  1. *What Changed* (e.g., "Orbital speed set to 0.50x baseline").
-  2. *What Happened* (e.g., "Centripetal acceleration v²/r dropped below solar gravity; orbit collapsed into inward spiral").
-  3. *Governing Equation* ($v = \sqrt{GM/r}$, $F = G M m / r^2$, etc.).
-  4. *Curriculum Connection* (NCERT Class 11 Physics, Chapter 8: Gravitation).
-  5. *Expandable Mathematical Derivation* (Complete analytical proofs).
-
-### 3. Two-Body Relative Measurement Mode (`MeasurementOverlay.jsx`)
-- Multi-body mutual gravitation inspection:
-  - Relative distance $\Delta r = \|\vec{r}_B - \vec{r}_A\|$ in AU and km.
-  - Newton's Third Law mutual force: $F_{AB} = -F_{BA} = G \frac{m_A m_B}{r^2 + \epsilon^2}$.
-  - Asymmetric acceleration ratio: $a_A / a_B = m_B / m_A$, demonstrating why lighter bodies experience dramatic orbital curvature while massive anchors barely wobble.
-
-### 4. Empirical Observation Recorder (`ExperimentHistory.jsx`)
-- Structured logging with Before, After, Observed, Principle, and Result fields.
-- One-click clipboard export for lab reports.
-
-### 5. "Ask the Lab" Inquiry System (`AskTheLab.jsx`)
-- Search-indexed question-to-visualization mapper answering fundamental physics inquiries with a direct `[VISUALIZE THIS IN 3D]` action.
-
-### 6. Landing Page Mission Control Explorer Cards
-- Quick-access scientific entry points ("EXPLORE GRAVITY", "EXPLORE ORBITS", "EXPLORE ESCAPE") to instantly jump into 3D physical parameter experiments.
-
-## Phase 54 — UX Stabilization + Educational Clarity + Interaction Flow
-
-Phase 54 stabilizes and refines the interaction flow across all experiments:
-
-### 1. Strict Zero-Auto-Open Architecture
-- **Clean Initial State**: No panel, modal, drawer, or instrument auto-opens on page load or experiment switch.
-- **Explicit Triggers Only**: Every instrument (`SCIENTIFIC INQUIRY`, `MISSIONS`, `LOG`, `PHYSICS`, `MEASURE`, `DEMOS`, `ASK LAB`, `APPARATUS`, `OSCILLOSCOPE`, `DOSSIER`, `PARAMETERS`) opens only upon direct user interaction.
-- **Collapsible Scientific Inquiry**: `ExperimentHeader` defaults to a clean single-line badge with an `[ 🔬 SCIENTIFIC INQUIRY · ▾ EXPAND ]` trigger answering the 4 foundational pedagogical questions:
-  1. *What am I exploring?*
-  2. *What can I change?*
-  3. *What should I watch?*
-  4. *Why does it matter?*
-
-### 2. Non-Obstructive Mission Drawer
-- **Collapsible / Minimizable Drawer**: Includes `[ ▾ MINIMIZE ]` and `[ ▴ EXPAND ]` controls.
-- **Unobstructed 3D Observation**: Minimized state docks as an unobtrusive bottom status strip with pointer-events pass-through, ensuring continuous live 3D visual observation during experiments.
-
-### 3. Comprehensive Beginner-Friendly Knowledge Base (`physicsConcepts.js`)
-- **20 Foundational Physics Concepts**: Covers Gravity, Mass, Weight, Force, Acceleration, Velocity, Distance, Orbit, Pressure, Fluid flow, Density, Rotation, Revolution, Orbital period, Escape velocity, Centripetal force, Black holes, Galaxy, Pulsar, and Solar system.
-- **Everyday Analogies & Plain Explanations First**: Every concept presents a simple 1–2 sentence intuition and concrete real-world analogy before introducing optional mathematical formulas.
-- **Dual-Track "Ask the Lab" Flow**: Clear separation between `BASIC CONCEPT` (conceptual mental models) and `EXPERIMENT` (live parameter manipulation & measurement) bridging directly into understanding.
-
-### 4. Stability & Quality Invariants
-- **Strict Single WebGL Canvas Invariant**: Exactly 1 `<canvas>` rendered across all operations.
-- **Zero Browser Errors**: Clean console and network hygiene across desktop and mobile viewports.
-
-### Pre-Release Security Checklist
-
-Before releasing updates or deploying to production, execute the following audit routine:
-
-```bash
-# 1. Verify dependency security
-pnpm audit
-
-# 2. Check that no secret or environment files are tracked
-git status --ignored
-git ls-files | grep -E "(\.env|key|secret|token|credential)"
-
-# 3. Verify clean production build and chunk sizes
-pnpm build
-
-# 4. Verify automated physics laboratory suite
-node C:\Users\Admin\.gemini\antigravity\brain\f2445aab-c095-4045-83bd-b723184ccbd4\scratch\test_phase12_milestone2.cjs
+Polar coordinates are converted into the 3D scene using:
+
+```text
+x = cos(angle) × distance
+z = sin(angle) × distance
 ```
 
+Desktop rendering uses approximately 30,000 galaxy particles, while smaller viewports reduce the particle count for performance.
 
+---
 
+## Experiment 03 — Black Hole & Gravitational Lensing
 
+A visual approximation of an extreme relativistic gravitational environment around a Schwarzschild black hole.
+
+The experiment includes:
+
+* Central event-horizon shadow.
+* Equatorial accretion disk.
+* Differential Keplerian shear.
+* Procedural plasma turbulence.
+* Radial density gradients.
+* Relativistic Doppler-beaming approximation.
+* Photon-ring caustic.
+* Upper and lower gravitational-lensing arcs.
+* GPU-driven lensed background stars.
+
+The accretion disk uses approximately:
+
+```text
+Ω(r) ∝ r^-1.5
+```
+
+The experiment also exposes real-time controls for:
+
+* Accretion velocity.
+* Lensing strength.
+* Disk density.
+* Emission flux.
+
+> This experiment uses physically motivated approximations for visualization rather than attempting to perform a full general-relativistic ray-tracing simulation.
+
+---
+
+## Experiment 04 — Astrochemical Hydrodynamics & Fluid Vorticity
+
+A procedural visualization inspired by turbulent molecular clouds and astrophysical fluid dynamics.
+
+The simulation includes:
+
+* Divergence-free curl-noise velocity fields.
+* Pointer-driven vortex injection.
+* Thermal convection and buoyancy.
+* Procedural plasma filaments.
+* Astrochemical spectral mapping.
+
+The velocity field is constructed from a vector potential:
+
+```text
+v = ∇ × Ψ
+```
+
+Because:
+
+```text
+∇ · (∇ × Ψ) = 0
+```
+
+the resulting velocity field is mathematically divergence-free.
+
+The experiment exposes controls for:
+
+* Advection velocity.
+* Vortex scale.
+* Shear viscosity.
+* Thermal buoyancy.
+
+---
+
+## Experiment 05 — Pulsar & Relativistic Magnetosphere
+
+A procedural visualization of a rapidly rotating, magnetized neutron star.
+
+The experiment includes:
+
+* Oblique magnetic dipole rotation.
+* Dipolar magnetic field lines.
+* Relativistic polar radiation beams.
+* Lighthouse-effect visualization.
+* Co-rotating magnetospheric plasma.
+* Synchrotron-inspired particle effects.
+* Polar-cap hotspots.
+* Relativistic limb-darkening approximation.
+
+The magnetic dipole is tilted relative to the rotation axis, producing a continuously precessing magnetic field.
+
+The experiment exposes controls for:
+
+* Spin frequency.
+* Magnetic flux.
+* Beam collimation.
+* Plasma density.
+
+---
+
+## Experiment 06 — Solar System & N-Body Gravitation
+
+A numerical solar-system simulation using Newtonian N-body gravity and a symplectic Velocity Verlet integrator.
+
+The simulation includes:
+
+* The Sun.
+* Mercury.
+* Venus.
+* Earth.
+* Mars.
+* Jupiter.
+* Saturn.
+* Uranus.
+* Neptune.
+* Mutual gravitational interactions.
+* Orbital trajectories.
+* Motion trails.
+* Gravity vectors.
+* Planet-following camera mode.
+* Live astronomical measurements.
+
+The gravitational acceleration is calculated using an N-body formulation with Plummer softening:
+
+```text
+aᵢ = -Σ Gmⱼ(rᵢ-rⱼ) / (|rᵢ-rⱼ|² + ε²)^(3/2)
+```
+
+The simulation uses **Velocity Verlet** integration rather than basic Forward Euler integration:
+
+```text
+r(t+Δt) = r(t) + v(t)Δt + ½a(t)Δt²
+
+v(t+Δt) = v(t) + ½[a(t)+a(t+Δt)]Δt
+```
+
+Multiple micro-steps are used per rendered frame to improve orbital stability at higher simulation speeds.
+
+---
+
+# Physics Infrastructure
+
+The project contains a reusable physics layer under:
+
+```text
+src/physics/
+```
+
+### `gravity.js`
+
+Contains reusable calculations for:
+
+* Newtonian gravitational force.
+* Surface gravity.
+* Orbital velocity.
+* Escape velocity.
+
+Examples include:
+
+```text
+F = Gm₁m₂ / r²
+
+g = GM / R²
+
+v = √(GM / r)
+
+vₑ = √(2GM / R)
+```
+
+Input validation is included to avoid invalid `NaN` or `Infinity` propagation.
+
+### `orbitalMechanics.js`
+
+Contains reusable calculations for:
+
+* Circular orbital period.
+* Keplerian orbital period.
+* Centripetal acceleration.
+* Kepler harmonic ratio.
+
+### `formatPhysicsValue.js`
+
+Provides standardized scientific formatting for:
+
+* SI units.
+* Scientific notation.
+* Astronomical units.
+* Years.
+* Velocity.
+* Acceleration.
+* Mass and distance values.
+
+### `celestialConstants.js`
+
+Contains numerical reference data for:
+
+* Sun.
+* Mercury.
+* Venus.
+* Earth.
+* Mars.
+* Jupiter.
+* Saturn.
+* Uranus.
+* Neptune.
+
+---
+
+# Measurement & Scientific Learning Layer
+
+The laboratory is designed to go beyond visual effects.
+
+Reusable components provide scientific measurement and explanation:
+
+```text
+src/components/
+```
+
+Important components include:
+
+* `PhysicsInspector.jsx`
+* `MeasurementOverlay.jsx`
+* `ExperimentHistory.jsx`
+* `ExperimentChallenge.jsx`
+* `PhysicsExplanation.jsx`
+* `AskTheLab.jsx`
+
+## Measurement model
+
+Measurements are separated into three levels:
+
+### Tier 1 — Astronomical Ground Truth
+
+Reference values such as:
+
+* AU.
+* Kilometres.
+* km/s.
+* Planetary masses.
+* Planetary radii.
+* Orbital periods.
+
+### Tier 2 — Numerical Simulation State
+
+Values calculated directly from the simulation:
+
+* Position.
+* Velocity.
+* Distance.
+* Acceleration.
+* Gravitational force.
+* Orbital state.
+
+### Tier 3 — Visual Projection Scale
+
+The visualization may intentionally compress astronomical distances so that multiple bodies remain visible and interactable.
+
+For the solar-system visualization, the calibrated display scale follows approximately:
+
+```text
+r_visual ∝ a^0.58
+```
+
+This means the visualization scale is **not treated as physical distance**. The simulation preserves the relevant physical relationships while the rendering layer uses a calibrated visual representation.
+
+---
+
+# Interactive Physics Demonstrations
+
+The laboratory currently contains several focused demonstrations.
+
+## Demo 01 — Inverse-Square Gravitation
+
+Explores:
+
+```text
+F ∝ 1/r²
+```
+
+Changing orbital distance demonstrates how gravitational attraction changes with separation.
+
+---
+
+## Demo 02 — Orbital Velocity & Stability
+
+Compares different initial orbital velocities:
+
+* Too slow.
+* Circular-orbit velocity.
+* Super-circular velocity.
+
+The resulting trajectories demonstrate how velocity changes orbital behaviour.
+
+---
+
+## Demo 03 — Escape Velocity
+
+Explores the relationship between orbital velocity and escape velocity.
+
+The visualization connects:
+
+* Kinetic energy.
+* Gravitational potential energy.
+* Total mechanical energy.
+* Bound trajectories.
+* Escape trajectories.
+
+---
+
+## Demo 04 — Gravitational Acceleration Comparison
+
+Compares surface gravity across selected planets, including:
+
+* Mercury.
+* Earth.
+* Mars.
+* Jupiter.
+
+---
+
+## Demo 05 — Kepler's Harmonic Law
+
+Demonstrates:
+
+```text
+T² ∝ a³
+```
+
+and the relationship:
+
+```text
+T² / a³ = constant
+```
+
+for planetary orbital motion.
+
+---
+
+# Scientific Explanation System
+
+The project includes a contextual explanation layer designed to answer:
+
+### What changed?
+
+Example:
+
+> Orbital speed was changed to 0.50× the reference value.
+
+### What happened?
+
+Example:
+
+> Centripetal acceleration decreased relative to gravitational acceleration, causing the simulated orbit to move inward.
+
+### Why did it happen?
+
+The explanation connects the observed result to the governing physical relationship.
+
+### Curriculum connection
+
+Relevant experiments can be connected to foundational physics concepts such as:
+
+* Gravity.
+* Force.
+* Acceleration.
+* Velocity.
+* Orbital motion.
+* Escape velocity.
+* Centripetal force.
+* Kepler's laws.
+
+The intended educational flow is:
+
+**Concept → Experiment → Parameter Change → Observation → Measurement → Explanation**
+
+---
+
+# Laboratory Command Center
+
+The application has evolved into a unified laboratory interface rather than a collection of isolated scenes.
+
+## Telemetry
+
+`LaboratoryTelemetry.jsx` provides:
+
+* WebGL status.
+* FPS.
+* Frame time.
+* Active simulation entity count.
+* Viewport dimensions.
+* Device pixel ratio.
+
+Telemetry updates are throttled rather than forcing React state updates every animation frame.
+
+---
+
+## Scientific Dossier
+
+`ExperimentInfoPanel.jsx` provides:
+
+* Scientific field.
+* Sub-discipline.
+* Governing equations.
+* Physical phenomenon explanations.
+* Parameter guides.
+* Experiment context.
+
+The dossier can be dismissed through:
+
+* Close controls.
+* Backdrop interaction.
+* `Escape` key.
+
+---
+
+## Lab Mode & Clean Mode
+
+The application supports two presentation modes.
+
+### Lab Mode
+
+Provides:
+
+* Telemetry.
+* Parameters.
+* Scientific instruments.
+* Measurement tools.
+* Experiment information.
+
+### Clean Mode
+
+Provides:
+
+* Minimal interface.
+* Maximum visualization area.
+* Reduced interface clutter.
+
+Switching modes does not recreate the WebGL scene.
+
+---
+
+# Preset Management
+
+Experiment parameters can be saved using:
+
+```text
+localStorage
+```
+
+Preset management supports:
+
+* Up to six presets per experiment.
+* One-click loading.
+* Preset deletion.
+* Restoration of baseline parameters.
+
+Stored values are validated and clamped to experiment-specific parameter ranges.
+
+The storage layer also protects against:
+
+* Corrupted JSON.
+* Invalid parameter values.
+* Prototype-pollution keys.
+* Storage quota failures.
+* Disabled localStorage environments.
+
+---
+
+# Accessibility
+
+The interface uses semantic HTML and keyboard-friendly controls.
+
+Current accessibility features include:
+
+* Semantic buttons.
+* Dialog regions.
+* Tab lists.
+* Visible focus states.
+* Keyboard navigation.
+* Global `Escape` handling for open panels and drawers.
+
+The project also follows a strict **zero-auto-open** interaction philosophy.
+
+Panels and instruments should not automatically open when:
+
+* The application starts.
+* An experiment changes.
+* A scene finishes loading.
+
+Users explicitly open instruments through interaction.
+
+---
+
+# Application Architecture
+
+The project follows a separation between the React application layer and the Three.js rendering layer.
+
+```text
+src/
+├── physics/
+│   ├── gravity.js
+│   ├── orbitalMechanics.js
+│   ├── formatPhysicsValue.js
+│   └── celestialConstants.js
+│
+├── components/
+│   ├── SceneCanvas.jsx
+│   ├── ExperimentNavigator.jsx
+│   ├── ExperimentControls.jsx
+│   ├── PresetManager.jsx
+│   ├── LaboratoryTelemetry.jsx
+│   ├── ExperimentInfoPanel.jsx
+│   ├── LabModeToggle.jsx
+│   ├── PlanetSelector.jsx
+│   ├── SolarSystemMiniMap.jsx
+│   ├── PlanetDetailPanel.jsx
+│   ├── PhysicsInspector.jsx
+│   ├── MeasurementOverlay.jsx
+│   ├── ExperimentHistory.jsx
+│   ├── ExperimentChallenge.jsx
+│   ├── PhysicsExplanation.jsx
+│   └── AskTheLab.jsx
+│
+├── experiments/
+│   └── registry.js
+│
+├── scenes/
+│   ├── PlanetScene.js
+│   ├── GalaxyScene.js
+│   ├── BlackHoleScene.js
+│   ├── FluidScene.js
+│   ├── PulsarScene.js
+│   └── SolarSystemScene.js
+│
+├── utils/
+│   └── presetStorage.js
+│
+├── App.jsx
+└── main.jsx
+```
+
+---
+
+# Experiment Registry
+
+`experiments/registry.js` acts as the single source of truth for experiment configuration and scientific metadata.
+
+Each experiment exposes metadata such as:
+
+* Eyebrow.
+* Title.
+* Description.
+* Parameters.
+* Scientific information.
+
+This allows the application shell to dynamically adapt when experiments change.
+
+---
+
+# Scene Lifecycle
+
+`SceneCanvas` manages experiment transitions through three stages.
+
+### 1. Visual Withdrawal
+
+The current canvas and interface gradually dim.
+
+### 2. Scene Disposal & Mount
+
+The current Three.js scene executes its cleanup logic and the next scene factory initializes.
+
+### 3. Emergence & Stabilization
+
+The new experiment fades into view and stabilizes.
+
+The goal is to keep scenes decoupled from UI markup while ensuring WebGL resources are properly released.
+
+---
+
+# Rendering & Performance Philosophy
+
+Performance is treated as part of the architecture rather than an afterthought.
+
+Current principles include:
+
+### Single WebGL Canvas
+
+The application maintains one primary WebGL canvas.
+
+### GPU-first rendering
+
+Large particle systems and procedural visual effects are pushed toward shaders and GPU computation where practical.
+
+### Preallocated simulation buffers
+
+For example, solar-system orbital trails use fixed typed arrays rather than continuously creating new arrays.
+
+### Reduced per-frame allocations
+
+Reusable mathematical objects and buffers are preferred over creating temporary objects inside animation loops.
+
+### Throttled React updates
+
+Telemetry and other rapidly changing values are not unnecessarily pushed into React state every frame.
+
+### Responsive particle counts
+
+Heavy particle experiments reduce rendering density on smaller devices.
+
+---
+
+# Visual Techniques
+
+The project uses a mixture of procedural mathematics, shader programming, and conventional Three.js rendering.
+
+## Procedural surfaces
+
+Planetary surfaces use shader-generated patterns instead of requiring large texture assets.
+
+## Fresnel lighting
+
+Atmospheric effects use the relationship between surface normals and camera direction to create edge illumination.
+
+## Particle systems
+
+Large collections of stars and astrophysical particles are rendered using `THREE.Points` and GPU shaders.
+
+## Procedural turbulence
+
+Fluid and plasma experiments use mathematical noise and analytical fields to create dynamic motion.
+
+## GPU shaders
+
+GLSL is used for:
+
+* Particle movement.
+* Twinkling.
+* Atmospheric effects.
+* Plasma turbulence.
+* Gravitational-lensing approximations.
+* Procedural surfaces.
+* Radiation beams.
+
+---
+
+# Security
+
+The project follows a defense-in-depth approach appropriate for a static client-side application.
+
+## Content Security Policy
+
+The application uses CSP configuration through:
+
+```text
+index.html
+public/_headers
+```
+
+The policy restricts resource loading and disables unnecessary capabilities such as legacy plugins and media execution.
+
+## DOM injection protection
+
+The application intentionally avoids:
+
+```text
+dangerouslySetInnerHTML
+innerHTML
+outerHTML
+document.write
+eval()
+```
+
+## Environment variables
+
+Vite variables beginning with:
+
+```text
+VITE_
+```
+
+are exposed to the client bundle.
+
+Therefore:
+
+> Never place API keys, passwords, private tokens, or server credentials inside `VITE_*` variables.
+
+Only public configuration values should be exposed this way.
+
+---
+
+# Files That Must Never Be Committed
+
+Never commit:
+
+* API keys.
+* Service tokens.
+* GitHub personal access tokens.
+* Passwords.
+* Private encryption keys.
+* Certificates.
+* `.env` files containing secrets.
+* Debugging dumps containing sensitive information.
+
+The `.gitignore` is configured to exclude sensitive and generated files.
+
+---
+
+# Deployment Security
+
+When deploying the production build to a CDN or static hosting platform, recommended security headers include:
+
+```text
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+```
+
+Platforms supporting `_headers`, such as Cloudflare Pages and Netlify, can use:
+
+```text
+public/_headers
+```
+
+---
+
+# GitHub Repository Security
+
+Recommended repository protections include:
+
+* Branch protection for `main`.
+* Pull-request review requirements.
+* Required build/test checks.
+* Restricted force pushes.
+* Secret scanning.
+* Push protection.
+* Dependabot alerts.
+* Automated dependency security updates.
+
+---
+
+# Local Development
+
+Install dependencies:
+
+```bash
+pnpm install
+```
+
+Start the development server:
+
+```bash
+pnpm dev
+```
+
+Vite will provide the local development URL, normally:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# Production Build
+
+Create a production build:
+
+```bash
+pnpm build
+```
+
+Preview the production build locally:
+
+```bash
+pnpm preview
+```
+
+---
+
+# Validation & Testing
+
+The project contains automated validation for the physics question system and other laboratory functionality.
+
+Example validation commands include:
+
+```bash
+node scripts/validateQuestionBank.cjs
+```
+
+and:
+
+```bash
+node scripts/testQuizSystem.cjs
+```
+
+The automated quiz system validates properties such as:
+
+* Question counts.
+* Topic isolation.
+* Difficulty isolation.
+* Duplicate detection.
+* Question history behaviour.
+* Exhausted-question behaviour.
+* Question-bank integrity.
+* Large question-pool selection.
+
+The question-bank architecture currently supports more than 1,000 physics questions across multiple gravitation topics.
+
+---
+
+# Physics Quiz System
+
+The laboratory includes a structured physics question system designed to complement the visual experiments.
+
+Current gravitation topics include:
+
+* Fundamental & Newton's Universal Law.
+* Gravitational Field & Potential.
+* Kepler's Laws of Planetary Motion.
+* Satellite & Escape Velocity.
+
+The question system supports:
+
+* Easy.
+* Medium.
+* Hard.
+
+Questions can be selected according to topic, difficulty, and requested count.
+
+The system also tracks question history to support an **Always New Questions** behaviour when sufficient unseen questions are available.
+
+---
+
+# Educational Philosophy
+
+The project is intentionally designed around the idea that physics should not be limited to reading formulas.
+
+Instead:
+
+```text
+Formula
+   ↓
+Physical meaning
+   ↓
+Interactive parameter
+   ↓
+3D consequence
+   ↓
+Measurement
+   ↓
+Explanation
+   ↓
+Question / Challenge
+```
+
+The long-term goal is to make the laboratory useful both as a visual exploration tool and as a learning environment.
+
+---
+
+# Current Project Direction
+
+Interactive 3D Lab is an **ongoing project**.
+
+The architecture is intentionally designed so new experiments, simulations, measurements, challenges, and learning modules can be added without rebuilding the entire application.
+
+Potential future directions include:
+
+* Additional classical-mechanics experiments.
+* Electromagnetism visualizations.
+* Wave and oscillation experiments.
+* Optics simulations.
+* Thermodynamics visualizations.
+* More fluid simulations.
+* Advanced orbital mechanics.
+* Relativistic visualization experiments.
+* Additional astronomical systems.
+* More interactive mathematical demonstrations.
+* Expanded question banks.
+* Scientific experiment reports.
+* Improved mobile interaction.
+* WebGPU exploration.
+* Optional TypeScript migration.
+* More advanced GPU-based simulation techniques.
+
+---
+
+# Project Structure Philosophy
+
+The project follows several architectural principles:
+
+### Separate simulation from presentation
+
+Physics calculations should remain reusable and independent from UI components wherever possible.
+
+### Keep scenes independent
+
+Three.js scenes should not depend directly on React markup.
+
+### Make scientific assumptions explicit
+
+Approximations used for visualization should be documented rather than presented as exact physical simulations.
+
+### Prefer reusable infrastructure
+
+Measurement, telemetry, presets, explanations, challenges, and experiment navigation should work across multiple experiments.
+
+### Treat performance as a design constraint
+
+Rendering, memory usage, GPU workload, and React state updates should be considered during feature development.
+
+### Build incrementally
+
+The laboratory is intended to evolve through experiments and milestones rather than being treated as a single finished release.
+
+---
+
+# Development Philosophy
+
+This project is also a learning environment.
+
+The code is intentionally structured so that the underlying ideas remain inspectable:
+
+* Physics formulas are kept in reusable modules.
+* Three.js scene logic remains visible.
+* GLSL shaders are used where GPU computation provides a clear advantage.
+* Scientific metadata is separated from presentation.
+* Experiments can be studied individually.
+* Automated validation is used to prevent regressions.
+
+The objective is not simply to produce visually impressive effects.
+
+The objective is to understand how **physics, mathematics, simulation, graphics programming, and software architecture** can work together in an interactive environment.
+
+---
+
+# License
+
+This project is released under the **MIT License**.
+
+---
+
+## Project Status
+
+**Interactive 3D Lab is actively evolving.**
+
+Experiments, physics models, learning systems, UI architecture, performance optimizations, and scientific explanations will continue to change as the laboratory grows.
+
+The current implementation should therefore be viewed as a **living research-and-learning project**, not a final static product.
